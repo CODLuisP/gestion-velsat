@@ -8,6 +8,7 @@ import ModalBase from "@/app/components/modal/ModalBase";
 import { Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import { Usuario } from "@/app/interfaces/usuario.interface";
+import PasswordCell from "@/app/components/password/PasswordCell";
 
 export default function UsuariosPage() {
   const servidores = ["125", "107", "133"];
@@ -62,9 +63,9 @@ export default function UsuariosPage() {
     if (!usuario.description || !servidorActivo) return;
 
     if (modo === "editar" && seleccionado) {
-      setUsuarios((prev) => prev.map((u) => (u.id === seleccionado.id ? usuario : u)));
+      setUsuarios((prev) => prev.map((u) => (u.accountID === seleccionado.accountID ? usuario : u)));
     } else if (modo === "agregar") {
-      const nuevo: Usuario = { ...usuario, id: Date.now() }; // id temporal
+      const nuevo: Usuario = { ...usuario, creationTime: new Date() }; // id temporal
       setUsuarios((prev) => [...prev, nuevo]);
     }
 
@@ -72,15 +73,16 @@ export default function UsuariosPage() {
   };
 
   const columns = [
-    { key: "id", label: "ID" },
     { key: "description", label: "NOMBRE" },
     { key: "ruc", label: "DNI/RUC" },
     { key: "accountID", label: "ACCOUNT ID" },
-    { key: "password", label: "PASSWORD" },
+      { key: "password", label: "Password", render: (row: Usuario) => <PasswordCell password={row.password} /> },
     { key: "contactEmail", label: "CORREO" },
     { key: "contactPhone", label: "TELEFONO" },
     { key: "creationTime", label: "FECHA CREACION" },
-    { key: "isActive", label: "ACTIVO" },
+    { key: "isActive", label: "Activo", render: (row: Usuario) => (
+      <span className={`inline-block w-3 h-3 rounded-full ${row.isActive ? "bg-green-500" : "bg-red-500"}`} />
+    )},
     {
       key: "acciones",
       label: "ACCIONES",
@@ -239,12 +241,7 @@ export default function UsuariosPage() {
           <InputBase
             label="Fecha Creación"
             placeholder="YYYY-MM-DD"
-            defaultValue={seleccionado?.creationTime || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev ? { ...prev, fechaCreacion: e.target.value } : { creationTime: e.target.value } as Usuario
-              )
-            }
+            
           />
 
           {/* Botón guardar */}
