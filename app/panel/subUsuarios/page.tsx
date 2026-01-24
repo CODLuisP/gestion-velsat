@@ -7,35 +7,31 @@ import TablaBase from "@/app/components/tablas/TablaBase";
 import ModalBase from "@/app/components/modal/ModalBase";
 import { Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
-import { Usuario } from "@/app/interfaces/usuario.interface";
-import PasswordCell from "@/app/components/password/PasswordCell";
-import UnixNormal from "@/app/components/fecha/UnixNormal";
+import { SubUsuario } from "@/app/interfaces/usuario.interface";
 import InputBase1 from "@/app/components/ui/InputBase1";
 import ModalEliminar from "@/app/components/modal/ModalEliminar";
 import toast from "react-hot-toast";
 
-export default function UsuariosPage() {
+export default function subusuariosPage() {
   const servidores = ["125", "107", "133"];
   const [servidorActivo, setServidorActivo] = useState<string | null>(null);
-  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarios, setUsuarios] = useState<SubUsuario[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
   // Modal agregar/editar
   const [openModal, setOpenModal] = useState(false);
   const [modo, setModo] = useState<"editar" | "agregar">("agregar");
-  const [seleccionado, setSeleccionado] = useState<Usuario | null>(null);
+  const [seleccionado, setSeleccionado] = useState<SubUsuario | null>(null);
 
   // Modal eliminar
   const [openEliminarModal, setOpenEliminarModal] = useState(false);
-  const [usuarioAEliminar, setUsuarioAEliminar] = useState<Usuario | null>(null);
+  const [usuarioAEliminar, setUsuarioAEliminar] = useState<SubUsuario | null>(null);
 
   // 🔹 Traer usuarios por servidor de la API
   const fetchUsuarios = async (srv: string) => {
     setServidorActivo(srv);
     try {
-      const res = await axios.get<Usuario[]>(
-        `https://do.velsat.pe:2083/api/Admin/Usuarios`
-      );
+      const res = await axios.get<SubUsuario[]>(`https://do.velsat.pe:2083/api/Admin/SubUsuarios`);
       setUsuarios(res.data);
     } catch (error) {
       console.error("Error al cargar usuarios:", error);
@@ -47,7 +43,7 @@ export default function UsuariosPage() {
   const usuariosFiltrados = useMemo(() => {
     if (!busqueda) return usuarios;
     return usuarios.filter((u) =>
-      [u.description, u.ruc, u.accountID, u.contactEmail]
+      [u.userId, u.deviceName]
         .join(" ")
         .toLowerCase()
         .includes(busqueda.toLowerCase())
@@ -55,11 +51,11 @@ export default function UsuariosPage() {
   }, [busqueda, usuarios]);
 
   const usuariosOrdenados = useMemo(() => {
-    return [...usuariosFiltrados].sort((a, b) => b.creationTime - a.creationTime);
+    return [...usuariosFiltrados].sort((a, b) => b.id - a.id);
   }, [usuariosFiltrados]);
 
   // Modal abrir editar
-  const abrirEditar = (usuario: Usuario) => {
+  const abrirEditar = (usuario: SubUsuario) => {
     setSeleccionado(usuario);
     setModo("editar");
     setOpenModal(true);
@@ -73,30 +69,32 @@ export default function UsuariosPage() {
   };
 
   // Modal abrir eliminar
-  const abrirEliminar = (usuario: Usuario) => {
+  const abrirEliminar = (usuario: SubUsuario) => {
     setUsuarioAEliminar(usuario);
     setOpenEliminarModal(true);
   };
 
   // Guardar usuario
-  const guardarUsuario = async (usuario: Usuario) => {
+  const guardarUsuario = async (usuario: SubUsuario) => {
     if (!servidorActivo) return;
 
-    const payload = {
-      accountID: usuario.accountID,
-      password: usuario.password,
-      contactPhone: usuario.contactPhone,
-      contactEmail: usuario.contactEmail,
-      description: usuario.description,
-      ruc: usuario.ruc,
+    const payloadG = {
+      userId: usuario.userId,
+      deviceName: usuario.deviceName,
+      deviceID: usuario.deviceID,
     };
-
+    const payloadU = {
+      id: usuario.id,
+      userId: usuario.userId,
+      devicename: usuario.deviceName,
+      deviceID: usuario.deviceID,
+    };
     try {
       if (modo === "editar" && seleccionado) {
-        await axios.put(`https://do.velsat.pe:2083/api/Admin/UpdateUser`, payload);
+        await axios.put(`https://do.velsat.pe:2083/api/Admin/UpdateDeviceUser`, payloadU);
         toast.success("Usuario actulizado correctamente");
       } else if (modo === "agregar") {
-        await axios.post(`https://do.velsat.pe:2083/api/Admin/InsertUsuario`, payload);
+        await axios.post(`https://do.velsat.pe:2083/api/Admin/InsertDeviceUser`, payloadG);
         toast.success("Usuario guardado correctamente");
       }
       setOpenModal(false);
@@ -114,8 +112,8 @@ export default function UsuariosPage() {
     if (!servidorActivo || !usuarioAEliminar) return;
 
     try {
-      await axios.delete(`https://do.velsat.pe:2083/api/Admin/DeleteUsuario/${usuarioAEliminar.accountID}`, {
-        data: { accountID: usuarioAEliminar.accountID }
+      await axios.delete(`https://do.velsat.pe:2083/api/Admin/DeleteDeviceUser/${usuarioAEliminar.id}`, {
+        data: { id: usuarioAEliminar.id }
       });
       toast.success("Usuario eliminado");
       setOpenEliminarModal(false);
@@ -129,20 +127,17 @@ export default function UsuariosPage() {
   };
 
   const columns = [
-    { key: "description", label: "NOMBRE" },
-    { key: "ruc", label: "DNI/RUC" },
-    { key: "accountID", label: "ACCOUNT ID" },
-    { key: "password", label: "PASSWORD", render: (row: Usuario) => <PasswordCell password={row.password} /> },
-    { key: "contactEmail", label: "CORREO" },
-    { key: "contactPhone", label: "TELEFONO" },
-    { key: "creationTime", label: "FECHA CREACION", render: (row: Usuario) => <UnixNormal creationTime={row.creationTime} /> },
-    { key: "isActive", label: "Activo", render: (row: Usuario) => (
-      <span className={`inline-block w-3 h-3 rounded-full ${row.isActive ? "bg-green-500" : "bg-red-500"}`} />
+    { key: "id", label: "ID" },
+    { key: "userId", label: "NOMBRE" },
+    { key: "deviceName", label: "ACCOUNT" },
+    { key: "deviceID", label: "DIVICE ID" },
+    { key: "status", label: "Activo", render: (row: SubUsuario) => (
+      <span className={`inline-block w-3 h-3 rounded-full ${row.status === "1" ? "bg-green-500" : "bg-red-500"}`} />
     )},
     {
       key: "acciones",
       label: "ACCIONES",
-      render: (row: Usuario) => (
+      render: (row: SubUsuario) => (
         <div className="flex gap-2">
           <button
             className="p-2 rounded hover:bg-blue-100 text-blue-600"
@@ -167,7 +162,7 @@ export default function UsuariosPage() {
       <div className="flex h-full min-h-0 flex-col">
 
         <section className="mb-4 text-sky-950">
-          <h1 className="text-2xl font-bold">Gestión de usuarios</h1>
+          <h1 className="text-2xl font-bold">Gestión de Sub Usuarios</h1>
 
           <div className="mt-2 flex items-center gap-8">
             <span className="font-semibold text-[15px]">
@@ -244,98 +239,46 @@ export default function UsuariosPage() {
             />
           )}
 
+
           <InputBase1
             label="NOMBRE"
-            placeholder="Nombre/Descripcion"
+            placeholder="User id"
             type="text"
-            defaultValue={seleccionado?.description || ""}
+            defaultValue={seleccionado?.userId || ""}
             onChange={(e) =>
               setSeleccionado((prev) =>
                 prev
-                  ? { ...prev, description: e.target.value }
-                  : ({ description: e.target.value } as Usuario)
+                  ? { ...prev, userId: e.target.value }
+                  : ({ userId: e.target.value } as SubUsuario)
               )
             }
           />
           <InputBase1
-            label="DOCUMENTO"
-            placeholder="DNI / RUC"
+            label="ACCOUNT"
+            placeholder="DeviceName"
             type="text"
-            defaultValue={seleccionado?.ruc || ""}
+            defaultValue={seleccionado?.deviceName || ""}
             onChange={(e) =>
               setSeleccionado((prev) =>
                 prev
-                  ? { ...prev, ruc: e.target.value }
-                  : ({ ruc: e.target.value } as Usuario)
+                  ? { ...prev, deviceName: e.target.value }
+                  : ({ deviceName: e.target.value } as SubUsuario)
               )
             }
           />
           <InputBase1
-            label="ACCOUNT ID"
-            placeholder="AccountID"
+            label="DEVICE ID"
+            placeholder="DeviceId"
             type="text"
-            desabilitar={modo === "editar"}
-            defaultValue={seleccionado?.accountID || ""}
+            defaultValue={seleccionado?.deviceID || ""}
             onChange={(e) =>
               setSeleccionado((prev) =>
                 prev
-                  ? { ...prev, accountID: e.target.value }
-                  : ({ accountID: e.target.value } as Usuario)
+                  ? { ...prev, deviceID: e.target.value }
+                  : ({ deviceID: e.target.value } as SubUsuario)
               )
             }
           />
-          <InputBase1
-            label="PASSWORD"
-            placeholder="Password"
-            type="password"
-            defaultValue={seleccionado?.password || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, password: e.target.value }
-                  : ({ password: e.target.value } as Usuario)
-              )
-            }
-          />
-          <InputBase1
-            label="CORREO"
-            placeholder="usuario@gmail.com"
-            type="email"
-            defaultValue={seleccionado?.contactEmail || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, contactEmail: e.target.value }
-                  : ({ contactEmail: e.target.value } as Usuario)
-              )
-            }
-          />
-          <InputBase1
-            label="TELÉFONO"
-            placeholder="Teléfono"
-            type="text"
-            defaultValue={seleccionado?.contactPhone || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, contactPhone: e.target.value }
-                  : ({ contactPhone: e.target.value } as Usuario)
-              )
-            }
-          />
-          <InputBase1
-            label="FECHA CREACIÓN"
-            type="date"
-            desabilitar
-            defaultValue={
-              seleccionado?.creationTime
-                ? new Date(seleccionado.creationTime * 1000)
-                    .toISOString()
-                    .split("T")[0]
-                : new Date().toISOString().split("T")[0]
-            }
-          />
-
           {/* Botones */}
           <div className="col-span-2 flex justify-between gap-4 mt-4">
             <ButtonBase
@@ -368,7 +311,7 @@ export default function UsuariosPage() {
           <p className="text-shadow-md">
             ¿Está seguro de eliminar el usuario{" "}
             <br />
-            <strong>{usuarioAEliminar?.description}</strong>?
+            <strong>{usuarioAEliminar?.id}</strong>?
           </p>
 
           <div className="flex gap-2">

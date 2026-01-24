@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import ButtonBase from "../ui/ButtonBase";
+import React, { useState, useMemo, useEffect } from "react";
 
 type Column<T> = {
   key: keyof T | string;
@@ -10,115 +9,197 @@ type Column<T> = {
 };
 
 type TablaBaseProps<T> = {
-  title?: string;
   columns: Column<T>[];
   data: T[];
   leftActions?: React.ReactNode;
   rightActions?: React.ReactNode;
   mensajeDefaul?: string;
-  alturaCuerpo?: string;
   filasPorPagina?: number;
 };
 
 export default function TablaBase<T>({
-  title,
   columns,
   data,
   leftActions,
   rightActions,
-  mensajeDefaul,
-  alturaCuerpo = "400px",
+  mensajeDefaul = "Seleccione un servidor",
   filasPorPagina = 50,
 }: TablaBaseProps<T>) {
   const [paginaActual, setPaginaActual] = useState(1);
+  const [registrosPorPagina, setRegistrosPorPagina] =
+    useState(filasPorPagina);
 
-  const totalPaginas = Math.ceil(data.length / filasPorPagina);
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [data, registrosPorPagina]);
+
+  const totalPaginas = Math.max(
+    1,
+    Math.ceil(data.length / registrosPorPagina)
+  );
 
   const dataPagina = useMemo(() => {
-    const start = (paginaActual - 1) * filasPorPagina;
-    return data.slice(start, start + filasPorPagina);
-  }, [paginaActual, data, filasPorPagina]);
-console.log(dataPagina)
-  const handleAnterior = () => setPaginaActual((p) => Math.max(p - 1, 1));
-  const handleSiguiente = () => setPaginaActual((p) => Math.min(p + 1, totalPaginas));
+    const inicio = (paginaActual - 1) * registrosPorPagina;
+    return data.slice(inicio, inicio + registrosPorPagina);
+  }, [paginaActual, data, registrosPorPagina]);
+
+  /* ========= PAGINACIÓN SIN DUPLICADOS ========= */
+  const paginasVisibles = useMemo(() => {
+    if (totalPaginas <= 7) {
+      return Array.from({ length: totalPaginas }, (_, i) => i + 1);
+    }
+
+    const r: (number | "...")[] = [];
+    const add = (n: number) => !r.includes(n) && r.push(n);
+
+    add(1);
+    if (paginaActual > 3) r.push("...");
+
+    for (
+      let i = Math.max(2, paginaActual - 1);
+      i <= Math.min(totalPaginas - 1, paginaActual + 1);
+      i++
+    ) add(i);
+
+    if (paginaActual < totalPaginas - 2) r.push("...");
+    add(totalPaginas);
+
+    return r;
+  }, [paginaActual, totalPaginas]);
+  /* =========================================== */
 
   return (
-    <div className="space-y-4 max-w-full">
-      {/* TÍTULO */}
-      {title && <h2 className="text-2xl font-bold">{title}</h2>}
+    <div className="flex h-full min-h-0 flex-col gap-3">
 
-      {/* ACCIONES */}
       {(leftActions || rightActions) && (
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2 md:gap-0">
+        <div className="flex items-center justify-between">
           <div>{leftActions}</div>
           <div>{rightActions}</div>
         </div>
       )}
 
-      {/* TABLA */}
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-800 max-w-full">
-        <div className="overflow-y-auto" style={{ maxHeight: "400px" }}>
-          <table className="min-w-full table-fixed border-collapse text-xs">
-            <thead className="bg-zinc-100 dark:bg-zinc-900 sticky top-0 z-10">
-              <tr>
-                <th className="w-12 px-4 py-3 text-left font-semibold border-r border-zinc-300 dark:border-zinc-700">
-                  #
+      {/* ===== TABLA ===== */}
+      <div className="flex-1 min-h-0 rounded-lg border border-zinc-200/70 bg-white flex flex-col">
+
+        {/* ===== CABECERA FIJA ===== */}
+        <table className="w-full table-fixed text-xs border-collapse flex-none">
+          <thead className="bg-slate-300/80">
+            <tr className="text-slate-800">
+              <th className="w-12 px-4 py-2 text-left font-semibold border-b border-zinc-200/70">
+                N°
+              </th>
+              {columns.map((col) => (
+                <th
+                  key={String(col.key)}
+                  className="px-4 py-2 text-left font-semibold border-b border-zinc-200/70"
+                >
+                  {col.label}
                 </th>
-                {columns.map((col, idx) => (
-                  <th
-                    key={String(col.key)}
-                    className="px-4 py-3 text-left font-semibold border-r border-zinc-300 dark:border-zinc-700 break-words"
-                    style={{ maxWidth: "150px" }} // ancho máximo de columna
-                  >
-                    {col.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-700">
-              {dataPagina.map((row, i) => (
-                <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-900">
-                  <td className="w-12 px-4 py-2 border-r border-zinc-200 dark:border-zinc-700">
-                    {i + 1 + (paginaActual - 1) * filasPorPagina}
-                  </td>
-                  {columns.map((col, idx) => (
-                    <td
-                      key={String(col.key)}
-                      className="px-4 py-2 border-r border-zinc-200 dark:border-zinc-700 break-words"
-                      style={{ maxWidth: "150px" }}
-                    >
-                      {col.render ? col.render(row, i) : (row as any)[col.key]}
-                    </td>
-                  ))}
-                </tr>
               ))}
+            </tr>
+          </thead>
+        </table>
+
+        {/* ===== BODY SCROLLABLE ===== */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <table className="w-full table-fixed text-xs border-collapse">
+            <tbody>
+              {data.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={columns.length + 1}
+                    className="py-10 text-center text-zinc-400"
+                  >
+                    {mensajeDefaul}
+                  </td>
+                </tr>
+              ) : (
+                dataPagina.map((row, i) => (
+                  <tr
+                    key={i}
+                    className="transition-colors hover:bg-emerald-100/40"
+                  >
+                    <td className="w-12 px-4 py-2 border-b border-zinc-100 text-zinc-700">
+                      {i + 1 + (paginaActual - 1) * registrosPorPagina}
+                    </td>
+                    {columns.map((col) => (
+                      <td
+                        key={String(col.key)}
+                        className="px-4 py-2 border-b border-zinc-100 text-zinc-700 whitespace-normal wrap-break-word"
+                      >
+                        {col.render
+                          ? col.render(row, i)
+                          : (row as any)[col.key]}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* ===== PAGINACIÓN FIJA ABAJO ===== */}
+      {data.length > 0 && (
+        <div className="flex items-center justify-between text-[14px] text-zinc-500 px-2 py-1  border-zinc-200">
 
-      {/* PAGINACIÓN SIMPLE */}
-      <div className="flex items-center justify-between mt-2 flex-wrap gap-2">
-        {/* Total de filas a la izquierda */}
-        <div className="text-zinc-500">Total de filas: {data.length}</div>
+          <span>Total: {data.length}</span>
 
-        {/* Botones anterior/siguiente a la derecha */}
-        <div className="flex items-center gap-2 flex-wrap justify-end">
-          <ButtonBase variant="secondary" onClick={handleAnterior} disabled={paginaActual === 1}>
-            Anterior
-          </ButtonBase>
+          <div className="flex items-center gap-1">
+            <button
+              disabled={paginaActual === 1}
+              onClick={() => setPaginaActual(1)}
+              className="px-2 py-1 rounded border border-zinc-200 hover:bg-zinc-100 disabled:opacity-30"
+            >
+              «
+            </button>
 
-          <ButtonBase
-            variant="secondary"
-            onClick={handleSiguiente}
-            disabled={paginaActual === totalPaginas || totalPaginas === 0}
+            {paginasVisibles.map((p, i) =>
+              p === "..." ? (
+                <span key={i} className="px-2 text-zinc-400">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={`${p}-${i}`}
+                  onClick={() => setPaginaActual(p)}
+                  className={`px-2 py-1 rounded border border-zinc-200 transition-colors ${
+                    p === paginaActual
+                      ? "bg-sky-600 text-white border-sky-600"
+                      : "hover:bg-zinc-100"
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            <button
+              disabled={paginaActual === totalPaginas}
+              onClick={() => setPaginaActual(totalPaginas)}
+              className="px-2 py-1 rounded border border-zinc-200 hover:bg-zinc-100 disabled:opacity-30"
+            >
+              »
+            </button>
+          </div>
+
+          <select
+            value={registrosPorPagina}
+            onChange={(e) =>
+              setRegistrosPorPagina(Number(e.target.value))
+            }
+            className="rounded border border-zinc-200 bg-white px-1 py-0.5 outline-none"
           >
-            Siguiente
-          </ButtonBase>
-          
+            {[10, 25, 50, 100].map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-type ModalBaseProps = {
+type ModalEliminarProps = {
   open: boolean;
   title: string;
   onClose: () => void;
@@ -8,27 +8,20 @@ type ModalBaseProps = {
   tamaño?: string
 };
 
-export default function ModalBase({
+export default function ModalEliminar({
   open,
   title,
   onClose,
   children,
   tamaño,
-}: ModalBaseProps) {
+}: ModalEliminarProps) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className={`bg-white rounded-md p-8 ${tamaño ?? "w-full max-w-3xl"}`}>
-        <div className="flex justify-between items-center mb-6">
+      <div className={`bg-white rounded-md py-4 ${tamaño ?? "w-full max-w-3xl"}`}>
+        <div className="flex justify-center items-center">
           <h2 className="text-xl font-semibold text-sky-950">{title}</h2>
-
-          <button
-            onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-800 text-2xl font-bold"
-          >
-            ✕
-          </button>
         </div>
 
         {children}

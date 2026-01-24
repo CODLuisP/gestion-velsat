@@ -5,6 +5,14 @@ export interface Usuario {
   password: string;
   contactEmail: string;
   contactPhone: string;
-  creationTime: Date;
+  creationTime: number;
   isActive: boolean;
+}
+
+export interface SubUsuario {
+  id: number;
+  userId: string;
+  deviceName: string;
+  status: string;
+  deviceID: string;
 }

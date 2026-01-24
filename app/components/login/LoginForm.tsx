@@ -138,7 +138,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         type="submit"
         disabled={loading}
         className="relative w-full py-3.5 px-6
-          bg-gradient-to-r from-emerald-600 to-emerald-500
+          bg-linear-to-r from-emerald-600 to-emerald-500
           hover:from-emerald-500 hover:to-emerald-400
           text-white font-semibold rounded-xl
           shadow-lg shadow-emerald-900/20

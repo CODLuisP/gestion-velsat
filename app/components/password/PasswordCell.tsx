@@ -17,7 +17,7 @@ export default function PasswordCell({ password }: PasswordCellProps) {
       <button
         type="button"
         onClick={() => setMostrar(!mostrar)}
-        className="p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700"
+        className="p-1 rounded hover:bg-zinc-200 "
       >
         {mostrar ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
