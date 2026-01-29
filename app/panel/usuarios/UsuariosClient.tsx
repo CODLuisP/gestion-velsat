@@ -96,8 +96,6 @@ export default function UsuariosClient({ role }: Props) {
     setOpenModal(false);
     setSubmitAttempt(false);
   };
-
-  // Guardar usuario
   const guardarUsuario = async (usuario: Usuario) => {
     const payload = {
       accountID: usuario.accountID,
