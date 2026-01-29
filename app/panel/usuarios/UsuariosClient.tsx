@@ -253,8 +253,6 @@ export default function UsuariosClient({ role }: Props) {
           />
         </div>
       </div>
-
-      {/* Modal Agregar / Editar */}
       <ModalBase
         open={openModal}
         title={modo === "editar" ? "Editar Usuario" : "Agregar Usuario"}
