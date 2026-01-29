@@ -126,8 +126,6 @@ export default function UsuariosClient({ role }: Props) {
       toast.error("No es posible guardar los cambios");
     }
   };
-
-  // Eliminar usuario
   const eliminarUsuario = async () => {
     if (!usuarioAEliminar) return;
 
