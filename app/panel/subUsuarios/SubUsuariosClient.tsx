@@ -208,8 +208,6 @@ const {data: usuarios = [], isLoading, error} = useSWR(
                 
             </p>
         </section>
-
-        {/* Tabla */}
         <div className="flex-1 min-h-0 overflow-hidden">
           <TablaBase
             leftActions={
