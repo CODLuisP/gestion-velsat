@@ -89,7 +89,7 @@ export default function Sidebar() {
         <SidebarLink
           href="/panel/unidades"
           icon={<Car size={18} />}
-          label="Vehículos"
+          label="Unidades"
           open={open}
           active={pathname === "/panel/unidades"}
         />

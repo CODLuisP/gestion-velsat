@@ -305,7 +305,7 @@ export default function UsuariosClient({ role }: Props) {
           <InputBase1
             label="PASSWORD"
             type="password"
-            placeholder="*******"
+            placeholder="******"
             required
             submitAttempt={submitAttempt}
             defaultValue={seleccionado?.password || ""}
