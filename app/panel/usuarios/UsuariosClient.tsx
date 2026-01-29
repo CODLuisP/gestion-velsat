@@ -20,7 +20,6 @@ import ImputBuscar from "@/app/components/ui/ImputBuscar";
 type Props = {
   role: Role;
 };
-
 export default function UsuariosClient({ role }: Props) {
   const [busqueda, setBusqueda] = useState("");
 
