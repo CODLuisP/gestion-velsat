@@ -11,28 +11,33 @@ import { Illustration } from "./Illustration";
 export default function LoginPage() {
   // 🔐 credenciales simuladas
   const ADMIN_USER = "admin";
-  const ADMIN_PASS = "123";
+  const ADMIN_PASS = "125";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const router = useRouter();
 
-  const handleSubmit = (usuario: string, password: string) => {
+  const handleSubmit = async (usuario: string, password: string) => {
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
-      if (usuario === ADMIN_USER && password === ADMIN_PASS) {
-        toast.success("¡Ingreso Autorizado!");
-        router.push("/panel/dashboard");
-      } else {
-        setError("Usuario o contraseña incorrectos");
-        setLoading(false);
-      }
-    }, 600);
-  };
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario, password }),
+      });
 
+      if (!res.ok) throw new Error("Credenciales incorrectas");
+
+      toast.success("¡Ingreso Autorizado!");
+      router.push("/panel/dashboard");
+    } catch (err) {
+      setError("Usuario o contraseña incorrectos");
+      setLoading(false);
+    }
+  };
   return (
     <main className="relative min-h-screen flex flex-col lg:flex-row items-stretch text-slate-200 overflow-hidden">
       <BackgroundEffects />
