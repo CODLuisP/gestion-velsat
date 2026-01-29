@@ -47,7 +47,7 @@ export default function UsuariosClient({ role }: Props) {
   role ? ["usuarios", role] : null,
   fetchUsuarios,
   {
-    revalidateOnFocus: true,
+    revalidateOnFocus: false,
     keepPreviousData: true,
   }
 );
@@ -63,12 +63,17 @@ export default function UsuariosClient({ role }: Props) {
     );
   }, [busqueda, usuarios]);
 
-  // Orden por fecha
-  const usuariosOrdenados = useMemo(() => {
-    return [...usuariosFiltrados].sort(
-      (a, b) => b.creationTime - a.creationTime
-    );
-  }, [usuariosFiltrados]);
+const usuariosOrdenados = useMemo(() => {
+  return [...usuariosFiltrados].sort((a, b) => {
+    // Primero por activos
+    if (a.isActive !== b.isActive) {
+      return a.isActive ? -1 : 1; // Activo primero
+    }
+    // Luego por fecha descendente
+    return b.creationTime - a.creationTime;
+  });
+}, [usuariosFiltrados]);
+
 
   // Abrir editar
   const abrirEditar = (usuario: Usuario) => {
@@ -119,7 +124,6 @@ export default function UsuariosClient({ role }: Props) {
       setOpenModal(false);
       setSeleccionado(null);
       mutate(["usuarios", role]);
-      mutate(["dashboard", role]);
     } catch (error) {
       toast.error("No es posible guardar los cambios");
     }
@@ -137,7 +141,6 @@ export default function UsuariosClient({ role }: Props) {
       setOpenEliminarModal(false);
       setUsuarioAEliminar(null);
       mutate(["usuarios", role]);
-      mutate(["dashboard", role]);
     } catch (error) {
       toast.error("Error al eliminar usuario");
     }

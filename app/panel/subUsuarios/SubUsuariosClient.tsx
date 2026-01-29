@@ -46,7 +46,7 @@ const {data: usuarios = [], isLoading, error} = useSWR(
   role ? ["subusuarios", role] : null,
   fetchSubUsuarios,
   {
-    revalidateOnFocus: true,
+    revalidateOnFocus: false,
     keepPreviousData: true,
   }
 );
@@ -63,8 +63,16 @@ const {data: usuarios = [], isLoading, error} = useSWR(
   }, [busqueda, usuarios]);
 
   const usuariosOrdenados = useMemo(() => {
-    return [...usuariosFiltrados].sort((a, b) => b.id - a.id);
+    return [...usuariosFiltrados].sort((a, b) => {
+      // Primero ordenar por status: "1" (activo) antes que "0" (inactivo)
+      if (a.status !== b.status) {
+        return a.status === "1" ? -1 : 1;
+      }
+      // Luego ordenar por id descendente
+      return b.id - a.id;
+    });
   }, [usuariosFiltrados]);
+
 
   // Modal abrir editar
   const abrirEditar = (usuario: SubUsuario) => {
@@ -117,7 +125,6 @@ const {data: usuarios = [], isLoading, error} = useSWR(
       setOpenModal(false);
       setSeleccionado(null);
       mutate(["subusuarios", role]);
-      mutate(["dashboard", role]);
 
     } catch (error) {
       // console.error("Error al guardar usuario:", error);
@@ -137,8 +144,6 @@ const {data: usuarios = [], isLoading, error} = useSWR(
       setOpenEliminarModal(false);
       setUsuarioAEliminar(null);
       mutate(["subusuarios", role]);
-      mutate(["dashboard", role]);
-
     } catch (error) {
       //console.error("Error al eliminar usuario:", error);
       toast.error("Error al eliminar usuario");

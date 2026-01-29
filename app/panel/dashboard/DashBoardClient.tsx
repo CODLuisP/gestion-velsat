@@ -1,11 +1,12 @@
 "use client";
 
 import { Card, CardContent } from "@/app/components/ui/Card";
-import { Server, Users, Car, Activity, BarChart3, User } from "lucide-react";
+import { Server, Users, Car, Activity, BarChart3, User, RefreshCw } from "lucide-react";
 
 import { Role } from "@/app/constants/roles";
 import { getDashBoardApi } from "@/app/services/dashBoardApi";
 import { useDashboard } from "./useDashboard";
+import { mutate } from "swr";
 
 type Props = {
   role: Role;
@@ -64,35 +65,40 @@ export default function DashBoardClient({role}: Props) {
             <CardContent className="p-6">
                 {/* contenededor general */}
                 <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-xl bg-sky-100 text-sky-800">
-                    <Server className="w-5 h-5" />
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-xl bg-sky-100 text-sky-800">
+                        <Server className="w-5 h-5" />
+                        </div>
+                        <div>
+                        <h3 className="font-semibold text-sky-900">
+                            {role}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                            Análisis de datos
+                        </p>
+                        </div>
                     </div>
-                    <div>
-                    <h3 className="font-semibold text-sky-900">
-                        {role}
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                         Análisis de datos
-                    </p>
+
+                    <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-400">
+                        <Activity className="w-3 h-3" />
+                        Online
+                    </span>
+
+                    <button
+                    onClick={() => mutate(["dashboard", role], undefined, { revalidate: true })}
+                    disabled={isLoading}
+                    className="flex items-center gap-1 px-3 py-1 rounded-md bg-sky-600 text-white text-xs hover:bg-sky-700 disabled:opacity-50"
+                    >
+                    <RefreshCw
+                        className={`w-4 h-4 transition-transform ${
+                        isLoading ? "animate-spin" : ""
+                        }`}
+                    />
+                    {isLoading ? "Actualizando..." : "Actualizar"}
+                    </button>
                     </div>
                 </div>
-
-                <span
-                    className={"flex items-center gap-1 text-xs font-medium px-3 py-1 rounded-full border bg-emerald-100 text-emerald-700 border-emerald-400"}
-                >
-                    <Activity className="w-3 h-3" />
-                    Online
-                </span>
-                </div>
-
-                {/* Stats 
-                <div className="grid grid-cols-3 gap-4 text-center mb-8">
-                <Stat label="Usuarios" value={totalUsuarios} />
-                <Stat label="Sub" value={totalSubUsuarios} />
-                <Stat label="Vehículos" value={totalVehiculos} />
-                </div>
-                */}
 
                 {/* Gráfico grande */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

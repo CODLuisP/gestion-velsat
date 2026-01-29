@@ -50,7 +50,7 @@ export default function UnidadesClient({role}: Props) {
   role ? ["unidades", role] : null,
   fetchUnidades,
   {
-    revalidateOnFocus: true,
+    revalidateOnFocus: false,
     keepPreviousData: true,
   }
 );
@@ -66,12 +66,21 @@ export default function UnidadesClient({role}: Props) {
     );
   }, [busqueda, vehiculos]);
 
-const vehiculosOrdenados = useMemo(() => {
-  return [...vehiculosFiltrados].sort((a, b) =>
-    a.deviceID.localeCompare(b.deviceID, undefined, { numeric: true })
-  );
-}, [vehiculosFiltrados]);
+  const vehiculosOrdenados = useMemo(() => {
+    return [...vehiculosFiltrados].sort((a, b) => {
+      // Determinar si están activos
+      const aActivo = a.isActive === "1" || a.habilitada === "1";
+      const bActivo = b.isActive === "1" || b.habilitada === "1";
 
+      // Primero por activo
+      if (aActivo !== bActivo) {
+        return aActivo ? -1 : 1; // Activos primero
+      }
+
+      // Luego por deviceID de forma numérica
+      return a.deviceID.localeCompare(b.deviceID, undefined, { numeric: true });
+    });
+  }, [vehiculosFiltrados]);
 
   // Modal abrir editar
   const abrirEditar = (vehiculo: Vehiculo) => {
@@ -134,7 +143,6 @@ const vehiculosOrdenados = useMemo(() => {
       setOpenModal(false);
       setSeleccionado(null);
       mutate(["unidades", role]);
-      mutate(["dashboard", role]);
 
     } catch (error) {
       // console.error("Error al guardar usuario:", error);
@@ -154,7 +162,6 @@ const vehiculosOrdenados = useMemo(() => {
       setOpenEliminarModal(false);
       setVehiculoAEliminar(null);
       mutate(["unidades", role]);
-      mutate(["dashboard", role]);
 
     } catch (error) {
       //console.error("Error al eliminar usuario:", error);

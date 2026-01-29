@@ -28,7 +28,6 @@ export function useDashboard(role: Role) {
       ]),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 1000 * 60 * 5, // 5 min cache
       keepPreviousData: true,
     }
   );
