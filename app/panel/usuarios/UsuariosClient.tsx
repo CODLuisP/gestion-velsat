@@ -153,7 +153,7 @@ const usuariosOrdenados = useMemo(() => {
       label: "PASSWORD",
       render: (row: Usuario) => <PasswordCell password={row.password} />,
     },
-    { key: "description", label: "NOMBRE" },
+    { key: "description", label: "NOMBRE / RASON SOCIAL" },
     { key: "ruc", label: "DNI/RUC" },
     { key: "contactEmail", label: "CORREO" },
     { key: "contactPhone", label: "TELÉFONO" },
@@ -260,8 +260,8 @@ const usuariosOrdenados = useMemo(() => {
           <InputBase1 label="Servidor" value={role} desabilitar />
 
           <InputBase1
-            label="NOMBRE"
-            placeholder="Nombre"
+            label="NOMBRE / RAZÓN SOCIAL"
+            placeholder="Nombre / Razón Social"
             required
             submitAttempt={submitAttempt}
             defaultValue={seleccionado?.description || ""}
@@ -275,8 +275,8 @@ const usuariosOrdenados = useMemo(() => {
           />
 
           <InputBase1
-            label="DOCUMENTO"
-            placeholder="dni / ruc"
+            label="DNI / RUC"
+            placeholder="DNI / RUC"
             required
             submitAttempt={submitAttempt}
             defaultValue={seleccionado?.ruc || ""}

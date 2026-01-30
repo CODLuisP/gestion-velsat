@@ -151,10 +151,9 @@ const {data: usuarios = [], isLoading, error} = useSWR(
   };
 
   const columns = [
-    { key: "id", label: "ID" },
-    { key: "deviceName", label: "ACCOUNT" },
-    { key: "deviceID", label: "DIVICE ID" },
-    { key: "userId", label: "NOMBRE" },
+    { key: "userId", label: "USER ID" },
+    { key: "deviceName", label: "DEVICE NAME" },
+    { key: "deviceID", label: "DEVICE ID" },
     { key: "status", label: "Activo", render: (row: SubUsuario) => (
       <span className={`inline-block w-3 h-3 rounded-full ${row.status === "1" ? "bg-green-500" : "bg-red-500"}`} />
     )},
@@ -218,7 +217,7 @@ const {data: usuarios = [], isLoading, error} = useSWR(
             leftActions={
               <div className="w-96">
                 <ImputBuscar
-                  placeholder="Buscar por Account, DeviceID o Nombre"
+                  placeholder="Buscar por UserId, DeviceName o DeviceId"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                 />
@@ -245,7 +244,7 @@ const {data: usuarios = [], isLoading, error} = useSWR(
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputBase1 label="Servidor" value={role} desabilitar />
             <InputBase1
-              label="NOMBRE"
+              label="USER ID"
               placeholder="User id"
               required
               submitAttempt={submitAttempt}
@@ -260,7 +259,7 @@ const {data: usuarios = [], isLoading, error} = useSWR(
             />
 
             <InputBase1
-              label="ACCOUNT"
+              label="DEVICE NAME"
               placeholder="DeviceName"
               required
               submitAttempt={submitAttempt}

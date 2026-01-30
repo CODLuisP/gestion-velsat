@@ -175,7 +175,7 @@ export default function UnidadesClient({role}: Props) {
     { key: "equipmentType", label: "TIPO EQUIPO" },
     { key: "uniqueID", label: "UNIQUE ID" },
     { key: "deviceCode", label: "DEVICE CODE" },
-    { key: "simPhoneNumber", label: "TELÉFONO" },
+    { key: "simPhoneNumber", label: "NÚMERO CHIP" },
     { key: "imeiNumber", label: "IMEI" },
     { key: "isActive", label: "ACTIVO", render: (row: Vehiculo) => (
       <span className={`inline-block w-3 h-3 rounded-full ${row.isActive === "1" || row.habilitada === "1" ? "bg-green-500" : "bg-red-500"}`} />
@@ -348,7 +348,7 @@ export default function UnidadesClient({role}: Props) {
             }
           />
           <InputBase1
-            label="TELÉFONO"
+            label="NÚMERO CHIP"
             placeholder="simPhoneNumber"
             type="text"
             required
