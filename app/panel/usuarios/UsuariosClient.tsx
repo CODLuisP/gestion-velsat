@@ -335,7 +335,6 @@ const usuariosOrdenados = useMemo(() => {
               )
             }
           />
-
           <InputBase1
             label="TELÉFONO"
             placeholder="987654321"
