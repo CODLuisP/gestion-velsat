@@ -14,15 +14,15 @@ export default function Sidebar() {
     <aside
       className={`
         h-screen flex flex-col
-        bg-slate-950/95 backdrop-blur
+        bg-linear-to-br from-blue-800  to-blue-800
         text-slate-200
         transition-all duration-300
-        border-r border-slate-800/60
+        border-r border-blue-900/60
         ${open ? "w-64" : "w-16"}
       `}
     >
       {/* ---------- HEADER ---------- */}
-      <div className="relative flex items-center h-16 px-4 border-b border-slate-800/60">
+      <div className="relative flex items-center h-16 px-4 border-b border-blue-900/60">
         {/* Logo + título */}
         <div
           className={`
@@ -31,15 +31,15 @@ export default function Sidebar() {
             ${open ? "opacity-100" : "opacity-0 pointer-events-none"}
           `}
         >
-          <div className="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <div className="w-9 h-9 bg-orange-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/20">
             <Activity className="w-5 h-5 text-white" />
           </div>
 
           <div className="whitespace-nowrap">
             <h1 className="text-lg font-bold text-white leading-none">
-              Gestión <span className="text-emerald-400">Velsat</span>
+              Gestión <span className="text-orange-400">Velsat</span>
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">
+            <p className="text-[10px] uppercase tracking-widest text-slate-300 font-semibold">
               Panel de Control
             </p>
           </div>
@@ -50,9 +50,9 @@ export default function Sidebar() {
           onClick={() => setOpen(!open)}
           className={`
             absolute top-1/2 -translate-y-1/2
-            p-1.5 rounded-md
-            text-slate-400
-            hover:text-white hover:bg-slate-800/60
+            py-2 px-3 rounded-md
+            text-orange-400
+            hover:text-orange-400 hover:bg-blue-700/80
             transition
             ${open ? "right-3" : "left-1/2 -translate-x-1/2"}
           `}
@@ -60,6 +60,7 @@ export default function Sidebar() {
           ☰
         </button>
       </div>
+
       {/* ---------- MENÚ ---------- */}
       <nav className="mt-2 flex flex-col gap-1 px-2 font-medium">
         <SidebarLink
@@ -97,7 +98,7 @@ export default function Sidebar() {
 
       {/* ---------- FOOTER ---------- */}
       <div className="mt-auto px-2 pb-4">
-        <div className="mb-4 h-px bg-linear-to-r from-transparent via-slate-700/60 to-transparent" />
+        <div className="mb-4 h-px bg-linear-to-r from-transparent via-blue-700/60 to-transparent" />
 
         <LogoutItem
           icon={<LogOut size={18} />}
@@ -134,21 +135,21 @@ function SidebarLink({
         ${
           active
             ? `
-              bg-slate-800/60
+              bg-blue-700/80
               text-white
               before:absolute before:left-0 before:top-1/2
               before:-translate-y-1/2 before:h-6 before:w-1
-              before:rounded-r before:bg-emerald-400
-              shadow-[inset_0_0_0_1px_rgba(16,185,129,0.15)]
+              before:rounded-r before:bg-orange-400
+              shadow-[inset_0_0_0_1px_rgba(251,146,60,0.25)]
             `
-            : "text-slate-400 hover:bg-slate-800/40 hover:text-slate-100"
+            : "text-slate-300/80 hover:bg-blue-900/40 hover:text-slate-100"
         }
       `}
     >
       <span
         className={`
           shrink-0 transition-colors
-          ${active ? "text-emerald-400" : "text-slate-500 group-hover:text-slate-200"}
+          ${active ? "text-orange-400" : "text-slate-200 group-hover:text-slate-200"}
         `}
       >
         {icon}

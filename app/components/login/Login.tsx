@@ -43,7 +43,7 @@ export default function LoginPage() {
       {/* Left Section: Form - Fondo Blanco */}
       <section className="w-full lg:w-[45%] xl:w-[40%] p-8 md:p-12 lg:p-16 flex flex-col justify-between relative z-10 bg-white">
         <header className="flex items-center gap-3 mb-12">
-          <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/30">
+          <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/30">
             <Activity className="text-white w-6 h-6" />
           </div>
           <div>
@@ -90,7 +90,7 @@ export default function LoginPage() {
       </section>
 
       {/* Right Section: Illustration - Gradiente Azul */}
-      <section className="hidden lg:flex w-full lg:w-[55%] xl:w-[60%] items-center justify-center relative p-12 overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-blue-950">
+      <section className="hidden lg:flex w-full lg:w-[55%] xl:w-[60%] items-center justify-center relative p-12 overflow-hidden bg-linear-to-br from-blue-900 via-blue-800 to-blue-950">
         {/* Decorative Grid */}
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
@@ -106,41 +106,37 @@ export default function LoginPage() {
 
         <div className="relative z-10 w-full max-w-2xl transform transition-transform duration-700 ease-out">
           <Illustration />
+          <div className="mt-8 backdrop-blur-md bg-linear-to-br from-white/10 to-white/5 p-5 rounded-xl text-center max-w-md mx-auto border border-white/30 shadow-2xl relative overflow-hidden">
+            {/* Efecto de brillo decorativo */}
+            <div className="absolute top-0 left-0 w-full h-0.5 bg-linear-to-r from-transparent via-orange-400 to-transparent opacity-50"></div>
+            
+            {/* Círculo decorativo de fondo */}
+            <div className="absolute -top-8 -right-8 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl"></div>
+            <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
 
+            <div className="relative z-10">
+              <div className="flex justify-center mb-2">
+                <div className="p-2 bg-linear-to-br from-orange-500/20 to-orange-600/20 rounded-lg border border-orange-400/30">
+                  <ShieldCheck className="h-5 w-5 text-orange-400" />
+                </div>
+              </div>
 
-<div className="mt-8 backdrop-blur-md bg-gradient-to-br from-white/10 to-white/5 p-5 rounded-xl text-center max-w-md mx-auto border border-white/30 shadow-2xl relative overflow-hidden">
-  {/* Efecto de brillo decorativo */}
-  <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent opacity-50"></div>
-  
-  {/* Círculo decorativo de fondo */}
-  <div className="absolute -top-8 -right-8 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl"></div>
-  <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
+              <p className="text-sm font-bold text-orange-400 mb-2">
+                Uso exclusivo para personal autorizado
+              </p>
 
-  <div className="relative z-10">
-    <div className="flex justify-center mb-2">
-      <div className="p-2 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-lg border border-orange-400/30">
-        <ShieldCheck className="h-5 w-5 text-orange-400" />
-      </div>
-    </div>
+              <p className="text-xs text-white/80 leading-relaxed">
+                Este sistema forma parte de la plataforma interna de
+                <span className="text-white font-semibold"> Gestión de Recursos Empresariales</span> de Velsat.
+              </p>
 
-    <p className="text-sm font-bold text-orange-400 mb-2">
-      Uso exclusivo para personal autorizado
-    </p>
-
-    <p className="text-xs text-white/80 leading-relaxed">
-      Este sistema forma parte de la plataforma interna de
-      <span className="text-white font-semibold"> Gestión de Recursos Empresariales</span> de Velsat.
-    </p>
-
-    <div className="mt-3 pt-3 border-t border-white/10">
-      <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-orange-400/80 font-semibold">
-        <span>Acceso Corporativo Seguro</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-
+              <div className="mt-3 pt-3 border-t border-white/10">
+                <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest text-orange-400/80 font-semibold">
+                  <span>Acceso Corporativo Seguro</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>

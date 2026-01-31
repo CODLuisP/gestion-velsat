@@ -21,7 +21,7 @@ export default function ButtonBase({
     primary: "bg-blue-600 font-semibold text-white hover:bg-blue-700",
     secondary: "bg-gray-200 font-semibold text-gray-900 hover:bg-gray-300",
     danger: "bg-red-600 text-white font-semibold hover:bg-red-700",
-    personalizado: "bg-emerald-400 font-medium text-white text-[15px] px-8 hover:bg-emerald-500",
+    personalizado: "bg-orange-500 font-medium text-white text-[15px] px-8 hover:bg-orange-600",
   };
 
   const disabledStyles =

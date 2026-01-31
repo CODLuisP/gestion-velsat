@@ -191,17 +191,17 @@ const {data: usuarios = [], isLoading, error} = useSWR(
     <>
       <div className="flex h-full min-h-0 flex-col">
 
-        <section className="mb-4 text-sky-950">
+        <section className="mb-4 text-blue-700">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">
                 Gestión de SubUsuarios
                 </h1>
 
                 <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Server size={14} className="text-emerald-600" />
+                  <Server size={14} className="text-orange-500" />
                   <span className="font-medium">
                     Conectado a
-                    <span className="ml-1 font-semibold text-slate-800">
+                    <span className="ml-1 font-semibold text-orange-500">
                       {role}
                     </span>
                   </span>

@@ -40,7 +40,6 @@ export default function TablaBase<T>({
     return data.slice(inicio, inicio + registrosPorPagina);
   }, [paginaActual, data, registrosPorPagina]);
 
-  /* ========= PAGINACIÓN SIN DUPLICADOS ========= */
   const paginasVisibles = useMemo(() => {
     if (totalPaginas <= 7) {
       return Array.from({ length: totalPaginas }, (_, i) => i + 1);
@@ -76,18 +75,18 @@ export default function TablaBase<T>({
       )}
 
       {/* Tabla */}
-      <div className="flex-1 min-h-0 rounded-lg border border-zinc-200/70 bg-white flex flex-col">
+      <div className="flex-1 min-h-0 rounded-lg border border-zinc-200/70 bg-white flex flex-col overflow-hidden">
         {/* CABECERA FIJA */}
         <table className="w-full table-fixed text-xs border-collapse">
-          <thead className="bg-slate-300/80">
-            <tr className="text-slate-800">
-              <th className="w-12 px-4 py-2 text-left font-semibold border-b border-zinc-200/70">
+          <thead className="bg-linear-to-r from-orange-500 to-orange-500">
+            <tr className="text-white">
+              <th className="w-12 px-4 py-2 text-left font-semibold border-b border-orange-400/40">
                 N°
               </th>
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="px-4 py-2 text-left font-semibold border-b border-zinc-200/70"
+                  className="px-4 py-2 text-left font-semibold border-b border-orange-400/40"
                 >
                   {col.label}
                 </th>
@@ -104,10 +103,10 @@ export default function TablaBase<T>({
                 <tr>
                   <td
                     colSpan={columns.length + 1}
-                    className="py-10 text-center text-zinc-400"
+                    className="py-10 text-center"
                   >
-                    <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-zinc-500">
-                      <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                    <div className="flex flex-col items-center justify-center gap-2 text-zinc-500">
+                      <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
                       <span className="text-sm">Cargando datos...</span>
                     </div>
                   </td>
@@ -125,7 +124,7 @@ export default function TablaBase<T>({
                 dataPagina.map((row, i) => (
                   <tr
                     key={i}
-                    className="transition-colors hover:bg-emerald-100/40"
+                    className="transition-colors hover:bg-orange-50"
                   >
                     <td className="w-12 px-4 py-2 border-b border-zinc-100 text-zinc-700">
                       {i + 1 + (paginaActual - 1) * registrosPorPagina}
@@ -135,7 +134,9 @@ export default function TablaBase<T>({
                         key={String(col.key)}
                         className="px-4 py-2 border-b border-zinc-100 text-zinc-700 whitespace-normal wrap-break-word"
                       >
-                        {col.render ? col.render(row, i) : (row as any)[col.key]}
+                        {col.render
+                          ? col.render(row, i)
+                          : (row as any)[col.key]}
                       </td>
                     ))}
                   </tr>
@@ -169,10 +170,10 @@ export default function TablaBase<T>({
                 <button
                   key={`${p}-${i}`}
                   onClick={() => setPaginaActual(p)}
-                  className={`px-2 py-1 rounded border border-zinc-200 transition-colors ${
+                  className={`px-2 py-1 rounded border transition-colors ${
                     p === paginaActual
-                      ? "bg-sky-600 text-white border-sky-600"
-                      : "hover:bg-zinc-100"
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "border-zinc-200 hover:bg-zinc-100"
                   }`}
                 >
                   {p}
@@ -197,7 +198,7 @@ export default function TablaBase<T>({
             <select
               value={registrosPorPagina}
               onChange={(e) => setRegistrosPorPagina(Number(e.target.value))}
-              className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30"
+              className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
             >
               {[10, 25, 50, 100].map((n) => (
                 <option key={n} value={n}>

@@ -49,7 +49,7 @@ export default function InputBase({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label className="text-sm font-semibold text-gray-800">
+        <label className="text-sm font-semibold text-blue-600">
           {label}
         </label>
       )}
@@ -75,8 +75,8 @@ export default function InputBase({
               showError
                 ? "border-red-400 focus:border-red-400"
                 : showSuccess
-                ? "border-emerald-400 focus:border-emerald-400"
-                : "border-slate-300 focus:border-emerald-400"
+                ? "border-blue-500 focus:border-blue-500"
+                : "border-slate-200 focus:border-blue-500"
             }
             text-gray-900
             placeholder-gray-400
@@ -92,7 +92,7 @@ export default function InputBase({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-400 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-border-blue-500 transition-colors"
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
