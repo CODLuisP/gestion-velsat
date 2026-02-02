@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gestión Velsat | Dashboard",
+  title: "Gestión Velsat",
 };
 
 export default function RootLayout({
