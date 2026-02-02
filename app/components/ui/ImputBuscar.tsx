@@ -40,7 +40,7 @@ export default function ImputBuscar({
           value={value}
           defaultValue={defaultValue}
           onChange={onChange}
-          className="block w-full text-sm pl-9 py-2 bg-slate-800/10 border border-slate-700/40 rounded-sm text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-orange-500 transition-all"
+          className="block w-full text-sm pl-9 py-2 bg-slate-800/10 border border-slate-700/40 rounded-sm text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-blue-600 transition-all"
         />
       </div>
     </div>

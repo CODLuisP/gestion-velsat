@@ -78,7 +78,7 @@ export default function TablaBase<T>({
       <div className="flex-1 min-h-0 rounded-lg border border-zinc-200/70 bg-white flex flex-col overflow-hidden">
         {/* CABECERA FIJA */}
         <table className="w-full table-fixed text-xs border-collapse">
-          <thead className="bg-linear-to-r from-orange-500 to-orange-500">
+          <thead className="bg-orange-500/80">
             <tr className="text-white">
               <th className="w-12 px-4 py-2 text-left font-semibold border-b border-orange-400/40">
                 N°

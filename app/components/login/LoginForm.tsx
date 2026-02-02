@@ -137,13 +137,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 <button
   type="submit"
   disabled={loading}
-  className="relative w-full py-3.5 px-6 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed group overflow-hidden"
+  className="relative w-full py-3.5 px-6 bg-linear-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 active:scale-[0.98] transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed group overflow-hidden"
 >
   {/* Efecto de brillo animado */}
-  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out pointer-events-none" />
+  <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-out pointer-events-none" />
   
   {/* Efecto de resplandor sutil */}
-  <div className="absolute inset-0 bg-gradient-to-t from-orange-700/0 via-orange-600/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+  <div className="absolute inset-0 bg-linear-to-t from-orange-700/0 via-orange-600/0 to-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
   
   {/* Contenido del botón */}
   <span className="relative z-10 flex items-center gap-2">

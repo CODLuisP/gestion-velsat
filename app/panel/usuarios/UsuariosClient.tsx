@@ -157,10 +157,7 @@ const usuariosOrdenados = useMemo(() => {
     { key: "ruc", label: "DNI/RUC" },
     { key: "contactEmail", label: "CORREO" },
     { key: "contactPhone", label: "TELÉFONO" },
-    {
-      key: "creationTime",
-      label: "FECHA CREACIÓN",
-      render: (row: Usuario) => (
+    {key: "creationTime", label: "FECHA CREACIÓN", render: (row: Usuario) => (
         <UnixNormal creationTime={row.creationTime} />
       ),
     },

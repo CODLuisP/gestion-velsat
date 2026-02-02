@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, User, Car, Users, LogOut, Activity } from "lucide-react";
+import { Home, User, Car, Users, LogOut, Activity, RefreshCwOff } from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
 
 export default function Sidebar() {
@@ -93,6 +93,14 @@ export default function Sidebar() {
           label="Unidades"
           open={open}
           active={pathname === "/panel/unidades"}
+        />
+
+        <SidebarLink
+          href="/panel/unidadesConex"
+          icon={<RefreshCwOff size={18} />}
+          label="Conexión / Desconexión"
+          open={open}
+          active={pathname === "/panel/unidadesConex"}
         />
       </nav>
 

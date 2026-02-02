@@ -3,15 +3,11 @@
 import toast from "react-hot-toast";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BackgroundEffects } from "./BackgroundEffects";
 import { Activity, MapPin, ShieldCheck, Lock } from "lucide-react";
 import { LoginForm } from "./LoginForm";
 import { Illustration } from "./Illustration";
 
 export default function LoginPage() {
-  // 🔐 credenciales simuladas
-  const ADMIN_USER = "admin";
-  const ADMIN_PASS = "125";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
