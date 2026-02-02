@@ -48,6 +48,12 @@ export default function UnidadesConexClient({role}: Props) {
     );
   }, [busqueda, vehiculosConex]);
 
+  const gpsModelMap: Record<string, string> = {
+  gt06n: 'GT',
+  gps103a: 'TK',
+  gps103b: 'TK',
+};
+
   const columns = [
     { key: "deviceID", label: "PLACA" },
     { key: "accountID", label: "USUARIO" },
@@ -71,7 +77,14 @@ export default function UnidadesConexClient({role}: Props) {
         />
       ),
     },
-    { key: "deviceCode", label: "TIPO GPS" },
+    {
+      key: "deviceCode",
+      label: "MODELO GPS",
+      render: (row: VehiculoConDescon) => {
+        const model = row.deviceCode?.toLowerCase();
+        return gpsModelMap[model] ?? row.deviceCode;
+      },
+    },
     { key: "imeiNumber", label: "IMEI" },
     {
       key: "lastValidLatitude",

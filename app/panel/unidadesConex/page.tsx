@@ -1,3 +1,9 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Gestión Velsat | Conex',
+};
+
 import { cookies } from "next/headers";
 import { Role } from "@/app/constants/roles";
 import ConexionDesconexionClient from "./UnidadesConexClient";

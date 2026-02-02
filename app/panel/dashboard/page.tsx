@@ -1,3 +1,8 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Gestión Velsat | Dashboard',
+};
 import { cookies } from "next/headers";
 import { Role } from "@/app/constants/roles";
 import DashBoardClient from "./DashBoardClient";

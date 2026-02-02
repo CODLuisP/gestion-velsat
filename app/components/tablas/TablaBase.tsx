@@ -79,7 +79,7 @@ export default function TablaBase<T>({
         {/* CABECERA FIJA */}
         <table className="w-full table-fixed text-xs border-collapse">
           <thead className="bg-orange-500/80">
-            <tr className="text-white">
+            <tr className="text-gray-800">
               <th className="w-12 px-4 py-2 text-left font-semibold border-b border-orange-400/40">
                 N°
               </th>

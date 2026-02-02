@@ -1,3 +1,8 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Gestión Velsat | Usuarios',
+};
 import { cookies } from "next/headers";
 import UsuariosClient from "./UsuariosClient";
 import { Role } from "@/app/constants/roles";
