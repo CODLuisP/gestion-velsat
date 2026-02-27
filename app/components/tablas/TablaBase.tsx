@@ -29,9 +29,18 @@ export default function TablaBase<T>({
   const [paginaActual, setPaginaActual] = useState(1);
   const [registrosPorPagina, setRegistrosPorPagina] = useState(filasPorPagina);
 
+  // Solo reinicia cuando cambia la cantidad por página
   useEffect(() => {
     setPaginaActual(1);
-  }, [data, registrosPorPagina]);
+  }, [registrosPorPagina]);
+
+  // Ajusta si la página actual queda fuera de rango
+  useEffect(() => {
+    const total = Math.max(1, Math.ceil(data.length / registrosPorPagina));
+    if (paginaActual > total) {
+      setPaginaActual(total);
+    }
+  }, [data, registrosPorPagina, paginaActual]);
 
   const totalPaginas = Math.max(1, Math.ceil(data.length / registrosPorPagina));
 
