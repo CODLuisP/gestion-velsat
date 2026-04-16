@@ -22,6 +22,7 @@ type Props = {
 };
 export default function UsuariosClient({ role }: Props) {
   const [busqueda, setBusqueda] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Modal agregar/editar
   const [openModal, setOpenModal] = useState(false);
@@ -101,7 +102,10 @@ const usuariosOrdenados = useMemo(() => {
     setOpenModal(false);
     setSubmitAttempt(false);
   };
+  
   const guardarUsuario = async (usuario: Usuario) => {
+    setLoading(true);
+
     const payload = {
       accountID: usuario.accountID,
       password: usuario.password,
@@ -113,23 +117,28 @@ const usuariosOrdenados = useMemo(() => {
 
     try {
       if (modo === "editar" && seleccionado) {
-        await axios.put(
-        api.update, payload );
+        await axios.put(api.update, payload);
         toast.success("Usuario actualizado correctamente");
       } else {
-        await axios.post(
-        api.insert, payload );
+        await axios.post(api.insert, payload);
         toast.success("Usuario guardado correctamente");
       }
+
       setOpenModal(false);
       setSeleccionado(null);
       mutate(["usuarios", role]);
+
     } catch (error) {
       toast.error("No es posible guardar los cambios");
+    } finally {
+      setLoading(false);
     }
   };
+
   const eliminarUsuario = async () => {
     if (!usuarioAEliminar) return;
+
+    setLoading(true);
 
     try {
       await axios.delete(
@@ -141,8 +150,11 @@ const usuariosOrdenados = useMemo(() => {
       setOpenEliminarModal(false);
       setUsuarioAEliminar(null);
       mutate(["usuarios", role]);
+
     } catch (error) {
       toast.error("Error al eliminar usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -215,7 +227,7 @@ const usuariosOrdenados = useMemo(() => {
                   <span className="font-medium">
                     Conectado a
                     <span className="ml-1 font-semibold text-orange-500">
-                      {role}
+                      {role === "Servidor_125_2" ? "Urbano_125" : role}
                     </span>
                   </span>
                 </div>
@@ -254,7 +266,7 @@ const usuariosOrdenados = useMemo(() => {
         onClose={cerrarModal}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputBase1 label="Servidor" value={role} desabilitar />
+          <InputBase1 label="Servidor" value={role} displayValue={role === "Servidor_125_2" ? "Urbano_125" : role} desabilitar />
 
           <InputBase1
             label="NOMBRE / RAZÓN SOCIAL"
@@ -373,8 +385,9 @@ const usuariosOrdenados = useMemo(() => {
               }
             }
               variant="personalizado"
+              disabled={loading}
             >
-              Guardar
+              {loading ? "Guardando..." : "Guardar"}
             </ButtonBase>
           </div>
         </div>
@@ -402,8 +415,8 @@ const usuariosOrdenados = useMemo(() => {
               Cancelar
             </ButtonBase>
 
-            <ButtonBase variant="danger" onClick={eliminarUsuario}>
-              Eliminar
+            <ButtonBase variant="danger" disabled={loading} onClick={eliminarUsuario}>
+              {loading ? "Eliminando..." : "Eliminar"}
             </ButtonBase>
           </div>
         </div>

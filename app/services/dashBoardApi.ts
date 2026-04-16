@@ -20,7 +20,7 @@ const API_MAP: Record<Role, DashBoardApi> = {
     listUnidades: "https://sub.velsat.pe:2096/api/Admin/GetDevices", //isActive
   },
 
-  Servidor_133: {
+  Servidor_125_2: {
     listUsuarios: "https://villa.velsat.pe:8443/api/Admin/Usuarios", //isActive bool
     listSubUsuarios: "https://villa.velsat.pe:8443/api/Admin/SubUsuarios", //status
     listUnidades: "https://villa.velsat.pe:8443/api/Admin/GetDevices", //isActive

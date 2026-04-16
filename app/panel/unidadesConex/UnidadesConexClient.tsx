@@ -116,7 +116,7 @@ export default function UnidadesConexClient({role}: Props) {
                   <span className="font-medium">
                     Conectado a
                     <span className="ml-1 font-semibold text-orange-500">
-                      {role}
+                      {role === "Servidor_125_2" ? "Urbano_125" : role}
                     </span>
                   </span>
                 </div>

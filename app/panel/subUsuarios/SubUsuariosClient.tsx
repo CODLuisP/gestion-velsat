@@ -20,6 +20,7 @@ type Props = {
 
 export default function SubUsuariosClient({role}: Props) {
   const [busqueda, setBusqueda] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Modal agregar/editar
   const [openModal, setOpenModal] = useState(false);
@@ -103,17 +104,21 @@ const {data: usuarios = [], isLoading, error} = useSWR(
 
   // Guardar usuario
   const guardarUsuario = async (usuario: SubUsuario) => {
+    setLoading(true);
+
     const payloadG = {
       userId: usuario.userId,
       deviceName: usuario.deviceName,
       deviceID: usuario.deviceID,
     };
+
     const payloadU = {
       id: usuario.id,
       userId: usuario.userId,
       devicename: usuario.deviceName,
       deviceID: usuario.deviceID,
     };
+
     try {
       if (modo === "editar" && seleccionado) {
         await axios.put(api.update, payloadU);
@@ -122,13 +127,15 @@ const {data: usuarios = [], isLoading, error} = useSWR(
         await axios.post(api.insert, payloadG);
         toast.success("Usuario guardado correctamente");
       }
+
       setOpenModal(false);
       setSeleccionado(null);
       mutate(["subusuarios", role]);
 
     } catch (error) {
-      // console.error("Error al guardar usuario:", error);
       toast.error("No es posible guardad cambios");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,17 +143,22 @@ const {data: usuarios = [], isLoading, error} = useSWR(
   const eliminarUsuario = async () => {
     if (!usuarioAEliminar) return;
 
+    setLoading(true);
+
     try {
       await axios.delete(api.delete((usuarioAEliminar.id).toString()), {
         data: { id: usuarioAEliminar.id }
       });
+
       toast.success("Usuario eliminado");
       setOpenEliminarModal(false);
       setUsuarioAEliminar(null);
       mutate(["subusuarios", role]);
+
     } catch (error) {
-      //console.error("Error al eliminar usuario:", error);
       toast.error("Error al eliminar usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -202,7 +214,7 @@ const {data: usuarios = [], isLoading, error} = useSWR(
                   <span className="font-medium">
                     Conectado a
                     <span className="ml-1 font-semibold text-orange-500">
-                      {role}
+                      {role === "Servidor_125_2" ? "Urbano_125" : role}
                     </span>
                   </span>
                 </div>
@@ -242,7 +254,7 @@ const {data: usuarios = [], isLoading, error} = useSWR(
         onClose={cerrarModal}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputBase1 label="Servidor" value={role} desabilitar />
+          <InputBase1 label="Servidor" value={role} displayValue={role === "Servidor_125_2" ? "Urbano_125" : role} desabilitar />
             <InputBase1
               label="USER ID"
               placeholder="User id"
@@ -315,8 +327,9 @@ const {data: usuarios = [], isLoading, error} = useSWR(
 
                 guardarUsuario(seleccionado);
               }}
+              disabled={loading}
             >
-              Guardar
+              {loading ? "Guardando..." : "Guardar"}
             </ButtonBase>
 
           </div>
@@ -348,8 +361,9 @@ const {data: usuarios = [], isLoading, error} = useSWR(
             <ButtonBase
               onClick={eliminarUsuario}
               variant="danger"
+              disabled={loading}
             >
-              Eliminar
+              {loading ? "Eliminando..." : "Eliminar"}
             </ButtonBase>
           </div>
         </div>

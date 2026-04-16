@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 const USERS = [
   { user: "admin", pass: "125", role: "Servidor_125" },
   { user: "admin", pass: "107", role: "Servidor_107" },
-  { user: "admin", pass: "133", role: "Servidor_133" },
+  { user: "urbano", pass: "urbano", role: "Servidor_125_2" },
 ];
 
 export async function POST(req: Request) {

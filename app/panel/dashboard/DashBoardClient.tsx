@@ -84,7 +84,7 @@ export default function DashBoardClient({ role }: Props) {
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-800">
-                    {role}
+                    {role === "Servidor_125_2" ? "Urbano_125" : role}
                   </h3>
                   <p className="text-xs text-slate-500">
                     Estado del sistema

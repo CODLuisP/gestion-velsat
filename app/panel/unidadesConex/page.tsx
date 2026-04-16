@@ -21,8 +21,8 @@ export default async function UnidadesConexPage() {
     case "Servidor_107":
       role = "Servidor_107";
       break;
-    case "Servidor_133":
-      role = "Servidor_133";
+    case "Servidor_125_2":
+      role = "Servidor_125_2";
       break;
     default:
       role = "Servidor_125"; // fallback seguro

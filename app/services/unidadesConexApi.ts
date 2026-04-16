@@ -14,7 +14,7 @@ const API_MAP: Record<Role, UnidadesConexApi> = {
     listUnidadesConex: "https://sub.velsat.pe:2096/api/Admin/GetDevicesConex",
   },
 
-  Servidor_133: {
+  Servidor_125_2: {
     listUnidadesConex: "https://villa.velsat.pe:8443/api/Admin/GetDevicesConex",
 
   },

@@ -12,6 +12,7 @@ type InputBaseProps = {
   desabilitar?: boolean;
   required?: boolean;
   submitAttempt?: boolean;
+  displayValue?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -21,6 +22,7 @@ export default function InputBase({
   placeholder,
   value,
   defaultValue,
+  displayValue,
   desabilitar = false,
   required = false,
   submitAttempt = false,
@@ -60,7 +62,7 @@ export default function InputBase({
           required={required}
           type={isPassword && showPassword ? "text" : type}
           placeholder={placeholder}
-          value={internalValue}
+          value={displayValue ?? internalValue}
           onChange={(e) => {
             setInternalValue(e.target.value);
             onChange?.(e);

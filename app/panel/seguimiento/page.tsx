@@ -17,7 +17,7 @@ export default async function SeguimientoPage() {
   switch (roleCookie) {
     case "Servidor_125":
     case "Servidor_107":
-    case "Servidor_133":
+    case "Servidor_125_2":
       role = roleCookie;
       break;
     default:

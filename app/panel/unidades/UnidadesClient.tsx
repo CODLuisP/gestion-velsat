@@ -21,6 +21,7 @@ type Props = {
 
 export default function UnidadesClient({role}: Props) {
   const [busqueda, setBusqueda] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // Modal agregar/editar
   const [openModal, setOpenModal] = useState(false);
@@ -110,62 +111,82 @@ export default function UnidadesClient({role}: Props) {
     setSubmitAttempt(false);
   };
 
-  // Guardar usuario
+  // Guardar y editar vehiculo
   const guardarVehiculo = async (vehiculo: Vehiculo) => {
-    const payloadG = {
-        deviceID: vehiculo.deviceID,
-        accountID: vehiculo.accountID,
-        equipmentType: vehiculo.equipmentType,
-        uniqueID: vehiculo.uniqueID,
-        deviceCode: vehiculo.deviceCode,
-        simPhoneNumber: vehiculo.simPhoneNumber,
-        imeiNumber: vehiculo.imeiNumber,
-    };
+  setLoading(true); // 🔥 loading start
 
-    const payloadU = {
-      deviceID: vehiculo.deviceID,
-      accountID: vehiculo.accountID,
-      equipmentType: vehiculo.equipmentType,
-      uniqueID: vehiculo.uniqueID,
-      deviceCode: vehiculo.deviceCode,
-      simPhoneNumber: vehiculo.simPhoneNumber,
-      imeiNumber: vehiculo.imeiNumber,
-    };
-    console.log("vehiculo post: ", payloadU)
-    try {
-      if (modo === "editar" && seleccionado) {
-        await axios.put(api.update(vehiculoOriginal?.deviceID,vehiculoOriginal?.accountID), payloadU);
-        toast.success("Vehiculo actulizado correctamente");
-      } else if (modo === "agregar") {
-        await axios.post(api.insert, payloadG);
-        toast.success("Vehiculo guardado correctamente");
-      }
-      setOpenModal(false);
-      setSeleccionado(null);
-      mutate(["unidades", role]);
-
-    } catch (error) {
-      // console.error("Error al guardar usuario:", error);
-      toast.error("No es posible guardad cambios");
-    }
+  const payloadG = {
+    deviceID: vehiculo.deviceID,
+    accountID: vehiculo.accountID,
+    equipmentType: vehiculo.equipmentType,
+    uniqueID: vehiculo.uniqueID,
+    deviceCode: vehiculo.deviceCode,
+    simPhoneNumber: vehiculo.simPhoneNumber,
+    imeiNumber: vehiculo.imeiNumber,
   };
+
+  const payloadU = {
+    deviceID: vehiculo.deviceID,
+    accountID: vehiculo.accountID,
+    equipmentType: vehiculo.equipmentType,
+    uniqueID: vehiculo.uniqueID,
+    deviceCode: vehiculo.deviceCode,
+    simPhoneNumber: vehiculo.simPhoneNumber,
+    imeiNumber: vehiculo.imeiNumber,
+  };
+
+  console.log("vehiculo post: ", payloadU);
+
+  try {
+    if (modo === "editar" && seleccionado) {
+      await axios.put(
+        api.update(
+          vehiculoOriginal?.deviceID,
+          vehiculoOriginal?.accountID
+        ),
+        payloadU
+      );
+      toast.success("Vehiculo actulizado correctamente");
+    } else if (modo === "agregar") {
+      await axios.post(api.insert, payloadG);
+      toast.success("Vehiculo guardado correctamente");
+    }
+
+    setOpenModal(false);
+    setSeleccionado(null);
+    mutate(["unidades", role]);
+
+  } catch (error) {
+    toast.error("No es posible guardad cambios");
+  } finally {
+    setLoading(false); // 🔥 loading end
+  }
+};
 
   // Eliminar usuario
   const eliminarVehiculo = async () => {
     if (!vehiculoAEliminar) return;
 
+    setLoading(true);
+
     try {
-      await axios.delete(`https:/api/Admin/DeleteDeviceUser/${vehiculoAEliminar.deviceID}`, {
-        data: { id: vehiculoAEliminar.deviceID }
-      });
-      toast.success("Usuario eliminado");
+      await axios.delete(
+        api.delete(
+          vehiculoAEliminar.deviceID,
+          vehiculoAEliminar.accountID
+        )
+      );
+
+      toast.success("Vehiculo eliminado");
+
       setOpenEliminarModal(false);
       setVehiculoAEliminar(null);
       mutate(["unidades", role]);
 
     } catch (error) {
-      //console.error("Error al eliminar usuario:", error);
       toast.error("Error al eliminar Vehiculo");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -226,7 +247,7 @@ export default function UnidadesClient({role}: Props) {
                   <span className="font-medium">
                     Conectado a
                     <span className="ml-1 font-semibold text-orange-500">
-                      {role}
+                      {role === "Servidor_125_2" ? "Urbano_125" : role}
                     </span>
                   </span>
                 </div>
@@ -268,7 +289,7 @@ export default function UnidadesClient({role}: Props) {
         onClose={cerrarModal}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputBase1 label="Servidor" value={role} desabilitar />
+            <InputBase1 label="Servidor" value={role} displayValue={role === "Servidor_125_2" ? "Urbano_125" : role}  desabilitar />
 
           <InputBase1
             label="PLACA"
@@ -381,6 +402,7 @@ export default function UnidadesClient({role}: Props) {
 
             <ButtonBase
               type="button"
+              disabled={loading}
               onClick={() => {
                 setSubmitAttempt(true);
 
@@ -401,7 +423,7 @@ export default function UnidadesClient({role}: Props) {
               }
               variant="personalizado"
             >
-              Guardar
+              {loading ? "Guardando..." : "Guardar"}
             </ButtonBase>
           </div>
         </div>
@@ -416,7 +438,7 @@ export default function UnidadesClient({role}: Props) {
       >
         <div className="flex flex-col items-center justify-center text-center gap-4 min-h-40">
           <p className="text-shadow-md">
-            ¿Está seguro de eliminar el usuario{" "}
+            ¿Está seguro de eliminar la unidad{" "}
             <br />
             <strong>{vehiculoAEliminar?.deviceID}</strong>?
           </p>
@@ -431,9 +453,10 @@ export default function UnidadesClient({role}: Props) {
 
             <ButtonBase
               onClick={eliminarVehiculo}
+              disabled={loading}
               variant="danger"
             >
-              Eliminar
+              {loading ? "Eliminando..." : "Eliminar"}
             </ButtonBase>
           </div>
         </div>

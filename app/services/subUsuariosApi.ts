@@ -24,7 +24,7 @@ const API_MAP: Record<Role, SubUsuariosApi> = {
       `https://sub.velsat.pe:2096/api/Admin/DeleteDeviceUser/${id}`,
   },
 
-  Servidor_133: {
+  Servidor_125_2: {
     list: "https://villa.velsat.pe:8443/api/Admin/SubUsuarios",
     insert: "https://villa.velsat.pe:8443/api/Admin/InsertDeviceUser",
     update: "https://villa.velsat.pe:8443/api/Admin/UpdateDeviceUser",
