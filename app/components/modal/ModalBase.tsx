@@ -5,7 +5,7 @@ type ModalBaseProps = {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
-  tamaño?: string
+  tamaño?: string;
 };
 
 export default function ModalBase({
@@ -18,13 +18,78 @@ export default function ModalBase({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className={`bg-white rounded-md p-8 ${tamaño ?? "w-full max-w-3xl"}`}>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold text-blue-600">{title} </h2>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.65)",
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      }}
+    >
+      <div
+        className={tamaño ?? "w-full max-w-3xl"}
+        style={{
+          background: "#1C1F26",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 12,
+          padding: 28,
+          margin: "0 16px",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: 17,
+              fontWeight: 700,
+              color: "#F4F5F7",
+              margin: 0,
+            }}
+          >
+            <span style={{ color: "#E85D2F" }}>|</span>{" "}
+            {title}
+          </h2>
+
           <button
             onClick={onClose}
-            className="text-zinc-500 hover:text-orange-500 text-2xl font-bold"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: 7,
+              width: 30,
+              height: 30,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "#8A9099",
+              fontSize: 16,
+              fontWeight: 700,
+              transition: "background 0.15s, color 0.15s",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.12)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#E85D2F";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(232,93,47,0.25)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#8A9099";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.08)";
+            }}
           >
             ✕
           </button>
@@ -35,4 +100,3 @@ export default function ModalBase({
     </div>
   );
 }
-

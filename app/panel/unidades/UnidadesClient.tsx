@@ -10,7 +10,6 @@ import InputBase1 from "@/app/components/ui/InputBase1";
 import ModalEliminar from "@/app/components/modal/ModalEliminar";
 import toast from "react-hot-toast";
 import { Vehiculo } from "@/app/interfaces/vehiculo.interface";
-
 import { Role } from "@/app/constants/roles";
 import { getUnidadesApi } from "@/app/services/unidadesApi";
 import ImputBuscar from "@/app/components/ui/ImputBuscar";
@@ -19,44 +18,32 @@ type Props = {
   role: Role;
 };
 
-export default function UnidadesClient({role}: Props) {
+export default function UnidadesClient({ role }: Props) {
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Modal agregar/editar
   const [openModal, setOpenModal] = useState(false);
   const [modo, setModo] = useState<"editar" | "agregar">("agregar");
   const [seleccionado, setSeleccionado] = useState<Vehiculo | null>(null);
 
-  // Modal eliminar
   const [openEliminarModal, setOpenEliminarModal] = useState(false);
   const [vehiculoAEliminar, setVehiculoAEliminar] = useState<Vehiculo | null>(null);
-
-  //Guardar datos vehiculo antes de editar
   const [vehiculoOriginal, setVehiculoOriginal] = useState<Vehiculo | null>(null);
-
-    //validar al dar en guardar
   const [submitAttempt, setSubmitAttempt] = useState(false);
 
-  // 🔹 Traer usuarios por servidor de la API
   const api = getUnidadesApi(role);
 
-  // 🔹 Traer vehiculos
   const fetchUnidades = async () => {
     const res = await axios.get<Vehiculo[]>(api.list);
-  return res.data;
+    return res.data;
   };
 
   const { data: vehiculos = [], isLoading } = useSWR(
-  role ? ["unidades", role] : null,
-  fetchUnidades,
-  {
-    revalidateOnFocus: false,
-    keepPreviousData: true,
-  }
-);
+    role ? ["unidades", role] : null,
+    fetchUnidades,
+    { revalidateOnFocus: false, keepPreviousData: true }
+  );
 
-  // Filtrado de búsqueda
   const vehiculosFiltrados = useMemo(() => {
     if (!busqueda) return vehiculos;
     return vehiculos.filter((u) =>
@@ -69,21 +56,13 @@ export default function UnidadesClient({role}: Props) {
 
   const vehiculosOrdenados = useMemo(() => {
     return [...vehiculosFiltrados].sort((a, b) => {
-      // Determinar si están activos
       const aActivo = a.isActive === "1" || a.habilitada === "1";
       const bActivo = b.isActive === "1" || b.habilitada === "1";
-
-      // Primero por activo
-      if (aActivo !== bActivo) {
-        return aActivo ? -1 : 1; // Activos primero
-      }
-
-      // Luego por deviceID de forma numérica
+      if (aActivo !== bActivo) return aActivo ? -1 : 1;
       return a.deviceID.localeCompare(b.deviceID, undefined, { numeric: true });
     });
   }, [vehiculosFiltrados]);
 
-  // Modal abrir editar
   const abrirEditar = (vehiculo: Vehiculo) => {
     setSeleccionado(vehiculo);
     setVehiculoOriginal({ ...vehiculo });
@@ -92,7 +71,6 @@ export default function UnidadesClient({role}: Props) {
     setSubmitAttempt(false);
   };
 
-  // Modal abrir agregar
   const abrirAgregar = () => {
     setSeleccionado(null);
     setModo("agregar");
@@ -100,7 +78,6 @@ export default function UnidadesClient({role}: Props) {
     setSubmitAttempt(false);
   };
 
-  // Modal abrir eliminar
   const abrirEliminar = (vehiculo: Vehiculo) => {
     setVehiculoAEliminar(vehiculo);
     setOpenEliminarModal(true);
@@ -111,84 +88,52 @@ export default function UnidadesClient({role}: Props) {
     setSubmitAttempt(false);
   };
 
-  // Guardar y editar vehiculo
   const guardarVehiculo = async (vehiculo: Vehiculo) => {
-  setLoading(true); // 🔥 loading start
-
-  const payloadG = {
-    deviceID: vehiculo.deviceID,
-    accountID: vehiculo.accountID,
-    equipmentType: vehiculo.equipmentType,
-    uniqueID: vehiculo.uniqueID,
-    deviceCode: vehiculo.deviceCode,
-    simPhoneNumber: vehiculo.simPhoneNumber,
-    imeiNumber: vehiculo.imeiNumber,
-  };
-
-  const payloadU = {
-    deviceID: vehiculo.deviceID,
-    accountID: vehiculo.accountID,
-    equipmentType: vehiculo.equipmentType,
-    uniqueID: vehiculo.uniqueID,
-    deviceCode: vehiculo.deviceCode,
-    simPhoneNumber: vehiculo.simPhoneNumber,
-    imeiNumber: vehiculo.imeiNumber,
-  };
-
-  console.log("vehiculo post: ", payloadU);
-
-  try {
-    if (modo === "editar" && seleccionado) {
-      await axios.put(
-        api.update(
-          vehiculoOriginal?.deviceID,
-          vehiculoOriginal?.accountID
-        ),
-        payloadU
-      );
-      toast.success("Vehiculo actulizado correctamente");
-    } else if (modo === "agregar") {
-      await axios.post(api.insert, payloadG);
-      toast.success("Vehiculo guardado correctamente");
-    }
-
-    setOpenModal(false);
-    setSeleccionado(null);
-    mutate(["unidades", role]);
-
-  } catch (error) {
-    toast.error("No es posible guardad cambios");
-  } finally {
-    setLoading(false); // 🔥 loading end
-  }
-};
-
-  // Eliminar usuario
-  const eliminarVehiculo = async () => {
-    if (!vehiculoAEliminar) return;
-
     setLoading(true);
-
+    const payload = {
+      deviceID: vehiculo.deviceID,
+      accountID: vehiculo.accountID,
+      equipmentType: vehiculo.equipmentType,
+      uniqueID: vehiculo.uniqueID,
+      deviceCode: vehiculo.deviceCode,
+      simPhoneNumber: vehiculo.simPhoneNumber,
+      imeiNumber: vehiculo.imeiNumber,
+    };
     try {
-      await axios.delete(
-        api.delete(
-          vehiculoAEliminar.deviceID,
-          vehiculoAEliminar.accountID
-        )
-      );
-
-      toast.success("Vehiculo eliminado");
-
-      setOpenEliminarModal(false);
-      setVehiculoAEliminar(null);
+      if (modo === "editar" && seleccionado) {
+        await axios.put(api.update(vehiculoOriginal?.deviceID, vehiculoOriginal?.accountID), payload);
+        toast.success("Vehículo actualizado correctamente");
+      } else {
+        await axios.post(api.insert, payload);
+        toast.success("Vehículo guardado correctamente");
+      }
+      setOpenModal(false);
+      setSeleccionado(null);
       mutate(["unidades", role]);
-
-    } catch (error) {
-      toast.error("Error al eliminar Vehiculo");
+    } catch {
+      toast.error("No es posible guardar cambios");
     } finally {
       setLoading(false);
     }
   };
+
+  const eliminarVehiculo = async () => {
+    if (!vehiculoAEliminar) return;
+    setLoading(true);
+    try {
+      await axios.delete(api.delete(vehiculoAEliminar.deviceID, vehiculoAEliminar.accountID));
+      toast.success("Vehículo eliminado");
+      setOpenEliminarModal(false);
+      setVehiculoAEliminar(null);
+      mutate(["unidades", role]);
+    } catch {
+      toast.error("Error al eliminar vehículo");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isActivo = (row: Vehiculo) => row.isActive === "1" || row.habilitada === "1";
 
   const columns = [
     { key: "accountID", label: "ACCOUNT" },
@@ -198,33 +143,70 @@ export default function UnidadesClient({role}: Props) {
     { key: "deviceCode", label: "DEVICE CODE" },
     { key: "simPhoneNumber", label: "NÚMERO CHIP" },
     { key: "imeiNumber", label: "IMEI" },
-    { key: "isActive", label: "ACTIVO", render: (row: Vehiculo) => (
-      <span className={`inline-block w-3 h-3 rounded-full ${row.isActive === "1" || row.habilitada === "1" ? "bg-green-500" : "bg-red-500"}`} />
-    )},
+    {
+      key: "isActive",
+      label: "ACTIVO",
+      render: (row: Vehiculo) => (
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontSize: 9,
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+            color: isActivo(row) ? "#2ECC71" : "#E85D2F",
+          }}
+        >
+          <span
+            style={{
+              width: 6, height: 6, borderRadius: "50%",
+              background: isActivo(row) ? "#2ECC71" : "#E85D2F",
+              flexShrink: 0,
+            }}
+          />
+          {isActivo(row) ? "Activo" : "Inactivo"}
+        </span>
+      ),
+    },
     {
       key: "acciones",
       label: "ACCIONES",
       render: (row: Vehiculo) => (
-        <div className="flex gap-2">
+        <div style={{ display: "flex", gap: 6 }}>
           <button
-            className="p-2 rounded hover:bg-blue-100 text-blue-600"
             onClick={() => abrirEditar(row)}
+            style={{
+              padding: "6px 8px", borderRadius: 7,
+              border: "1px solid rgba(232,93,47,0.2)",
+              background: "rgba(232,93,47,0.06)",
+              color: "#E85D2F", cursor: "pointer",
+              display: "flex", alignItems: "center",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.15)")}
+            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.06)")}
           >
-            <Pencil size={16} />
+            <Pencil size={14} />
           </button>
+
           <button
-            disabled={row.isActive ==="1" || row.habilitada === "1" ? false : true}
+            disabled={!isActivo(row)}
             onClick={() => abrirEliminar(row)}
-            className="
-              p-2 rounded text-red-600
-              hover:bg-red-100
-              disabled:opacity-40
-              disabled:text-gray-400
-              disabled:hover:bg-transparent
-              disabled:cursor-not-allowed
-            "
+            style={{
+              padding: "6px 8px", borderRadius: 7,
+              border: isActivo(row) ? "1px solid rgba(232,93,47,0.3)" : "1px solid rgba(255,255,255,0.06)",
+              background: isActivo(row) ? "rgba(232,93,47,0.08)" : "rgba(255,255,255,0.03)",
+              color: isActivo(row) ? "#E85D2F" : "#5F5E5A",
+              cursor: isActivo(row) ? "pointer" : "not-allowed",
+              display: "flex", alignItems: "center",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => { if (isActivo(row)) (e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.18)"; }}
+            onMouseLeave={e => { if (isActivo(row)) (e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.08)"; }}
           >
-            <Trash2 size={16} />
+            <Trash2 size={14} />
           </button>
         </div>
       ),
@@ -233,36 +215,54 @@ export default function UnidadesClient({role}: Props) {
 
   return (
     <>
-      {/* Header con selección de servidor */}
-      <div className="flex h-full min-h-0 flex-col">
-
-        <section className="mb-4 text-blue-700">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">
-                    Gestión de Unidades
-                </h1>
-
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Server size={14} className="text-orange-500" />
-                  <span className="font-medium">
-                    Conectado a
-                    <span className="ml-1 font-semibold text-orange-500">
-                      {role === "Servidor_125_2" ? "Urbano_125" : role}
-                    </span>
-                  </span>
-                </div>
-            </div>
-
-            <p className="mt-2 text-sm font-semibold text-center text-sky-700">
-                
+      <div
+        style={{
+          display: "flex", flexDirection: "column",
+          height: "100%", minHeight: 0,
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}
+      >
+        {/* ---------- HEADER ---------- */}
+        <section
+          style={{
+            marginBottom: 20, paddingBottom: 16,
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between", flexWrap: "wrap", gap: 12,
+          }}
+        >
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#F4F5F7", margin: 0, lineHeight: 1.2 }}>
+              Gestión de <span style={{ color: "#E85D2F" }}>Unidades</span>
+            </h1>
+            <p style={{ fontSize: 12, color: "#8A9099", margin: "4px 0 0" }}>
+              Administra las unidades del sistema
             </p>
+          </div>
+
+          <div
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", borderRadius: 8,
+              background: "#1C1F26", border: "1px solid rgba(255,255,255,0.06)",
+              fontSize: 12, color: "#ADB5BD",
+            }}
+          >
+            <Server size={13} style={{ color: "#E85D2F" }} />
+            <span>
+              Conectado a{" "}
+              <strong style={{ color: "#E85D2F" }}>
+                {role === "Servidor_125_2" ? "Urbano_125" : role}
+              </strong>
+            </span>
+          </div>
         </section>
 
-        {/* Tabla */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* ---------- TABLA ---------- */}
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
           <TablaBase
             leftActions={
-              <div className="w-96">
+              <div style={{ width: 384 }}>
                 <ImputBuscar
                   placeholder="Buscar por Account, Placa, Tipo Equipo o UniqueID"
                   value={busqueda}
@@ -271,9 +271,7 @@ export default function UnidadesClient({role}: Props) {
               </div>
             }
             rightActions={
-              <ButtonBase onClick={abrirAgregar}>
-                Agregar Nuevo +
-              </ButtonBase>
+              <ButtonBase onClick={abrirAgregar}>Agregar Nuevo +</ButtonBase>
             }
             columns={columns}
             data={vehiculosOrdenados}
@@ -282,146 +280,59 @@ export default function UnidadesClient({role}: Props) {
         </div>
       </div>
 
-      {/* Modal Agregar/Editar */}
+      {/* ---------- MODAL AGREGAR / EDITAR ---------- */}
       <ModalBase
         open={openModal}
         title={modo === "editar" ? "Editar Unidad" : "Agregar Nueva Unidad"}
         onClose={cerrarModal}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputBase1 label="Servidor" value={role} displayValue={role === "Servidor_125_2" ? "Urbano_125" : role}  desabilitar />
+          <InputBase1 label="Servidor" value={role} displayValue={role === "Servidor_125_2" ? "Urbano_125" : role} desabilitar />
 
-          <InputBase1
-            label="PLACA"
-            placeholder="Placa"
-            type="text"
-            required
-            submitAttempt={submitAttempt}
+          <InputBase1 label="PLACA" placeholder="Placa" type="text" required submitAttempt={submitAttempt}
             defaultValue={seleccionado?.deviceID || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, deviceID: e.target.value }
-                  : ({ deviceID: e.target.value } as Vehiculo)
-              )
-            }
+            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, deviceID: e.target.value } : ({ deviceID: e.target.value } as Vehiculo))}
           />
-          <InputBase1
-            label="ACCOUNT"
-            placeholder="AccountID"
-            type="text"
-            required
-            submitAttempt={submitAttempt}
+          <InputBase1 label="ACCOUNT" placeholder="AccountID" type="text" required submitAttempt={submitAttempt}
             defaultValue={seleccionado?.accountID || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, accountID: e.target.value }
-                  : ({ accountID: e.target.value } as Vehiculo)
-              )
-            }
+            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, accountID: e.target.value } : ({ accountID: e.target.value } as Vehiculo))}
           />
-          <InputBase1
-            label="TIPO EQUIPO"
-            placeholder="equipmentType"
-            type="text"
-            required
-            submitAttempt={submitAttempt}
+          <InputBase1 label="TIPO EQUIPO" placeholder="equipmentType" type="text" required submitAttempt={submitAttempt}
             defaultValue={seleccionado?.equipmentType || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, equipmentType: e.target.value }
-                  : ({ equipmentType: e.target.value } as Vehiculo)
-              )
-            }
+            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, equipmentType: e.target.value } : ({ equipmentType: e.target.value } as Vehiculo))}
           />
-          <InputBase1
-            label="UNIQUE ID"
-            placeholder="uniqueID"
-            type="text"
-            required
-            submitAttempt={submitAttempt}
+          <InputBase1 label="UNIQUE ID" placeholder="uniqueID" type="text" required submitAttempt={submitAttempt}
             value={seleccionado?.uniqueID || ""}
             onChange={(e) => {
               const value = e.target.value;
-
-              setSeleccionado((prev) => ({
-                ...(prev ?? {} as Vehiculo),
-                uniqueID: value,
-                imeiNumber: value, // 👈 copia directa
-              }));
+              setSeleccionado((prev) => ({ ...(prev ?? {} as Vehiculo), uniqueID: value, imeiNumber: value }));
             }}
           />
-          <InputBase1
-            label="DEVICE CODE"
-            placeholder="deviceCode"
-            type="text"
-            required
-            submitAttempt={submitAttempt}
+          <InputBase1 label="DEVICE CODE" placeholder="deviceCode" type="text" required submitAttempt={submitAttempt}
             defaultValue={seleccionado?.deviceCode || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, deviceCode: e.target.value }
-                  : ({ deviceCode: e.target.value } as Vehiculo)
-              )
-            }
+            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, deviceCode: e.target.value } : ({ deviceCode: e.target.value } as Vehiculo))}
           />
-          <InputBase1
-            label="NÚMERO CHIP"
-            placeholder="simPhoneNumber"
-            type="text"
-            required
-            submitAttempt={submitAttempt}
+          <InputBase1 label="NÚMERO CHIP" placeholder="simPhoneNumber" type="text" required submitAttempt={submitAttempt}
             defaultValue={seleccionado?.simPhoneNumber || ""}
-            onChange={(e) =>
-              setSeleccionado((prev) =>
-                prev
-                  ? { ...prev, simPhoneNumber: e.target.value }
-                  : ({ simPhoneNumber: e.target.value } as Vehiculo)
-              )
-            }
+            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, simPhoneNumber: e.target.value } : ({ simPhoneNumber: e.target.value } as Vehiculo))}
           />
-          <InputBase1
-            label="IMEI"
-            placeholder="imeiNumber"
-            type="text"
-            value={seleccionado?.imeiNumber || ""}
-            desabilitar
-          />
-          {/* Botones */}
-          <div className="col-span-2 flex justify-between gap-4 mt-4">
-            <ButtonBase
-              type="button"
-              variant="secondary"
-              onClick={() => setOpenModal(false)}
-            >
-              Cancelar
-            </ButtonBase>
+          <InputBase1 label="IMEI" placeholder="imeiNumber" type="text" value={seleccionado?.imeiNumber || ""} desabilitar />
 
+          <div className="col-span-2 flex justify-between gap-4 mt-4">
+            <ButtonBase variant="secondary" onClick={() => setOpenModal(false)}>Cancelar</ButtonBase>
             <ButtonBase
-              type="button"
+              variant="personalizado"
               disabled={loading}
               onClick={() => {
                 setSubmitAttempt(true);
-
                 if (
-                  !seleccionado?.deviceID ||
-                  !seleccionado?.accountID ||
-                  !seleccionado?.equipmentType ||
-                  !seleccionado?.uniqueID ||
-                  !seleccionado?.deviceCode ||
-                  !seleccionado?.simPhoneNumber ||
-                  !seleccionado?.imeiNumber 
-                ) {
-                  return;
-                }
-              
-                guardarVehiculo(seleccionado)
-                }
-              }
-              variant="personalizado"
+                  !seleccionado?.deviceID || !seleccionado?.accountID ||
+                  !seleccionado?.equipmentType || !seleccionado?.uniqueID ||
+                  !seleccionado?.deviceCode || !seleccionado?.simPhoneNumber ||
+                  !seleccionado?.imeiNumber
+                ) return;
+                guardarVehiculo(seleccionado);
+              }}
             >
               {loading ? "Guardando..." : "Guardar"}
             </ButtonBase>
@@ -429,38 +340,44 @@ export default function UnidadesClient({role}: Props) {
         </div>
       </ModalBase>
 
-      {/* Modal Confirmación Eliminación */}
+      {/* ---------- MODAL ELIMINAR ---------- */}
       <ModalEliminar
         open={openEliminarModal}
         title="Eliminar"
         onClose={() => setOpenEliminarModal(false)}
         tamaño="w-full max-w-sm"
       >
-        <div className="flex flex-col items-center justify-center text-center gap-4 min-h-40">
-          <p className="text-shadow-md">
-            ¿Está seguro de eliminar la unidad{" "}
+        <div
+          style={{
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            textAlign: "center", gap: 16, minHeight: 160,
+          }}
+        >
+          <div
+            style={{
+              width: 48, height: 48, borderRadius: "50%",
+              background: "rgba(232,93,47,0.1)",
+              border: "1px solid rgba(232,93,47,0.25)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            <Trash2 size={20} style={{ color: "#E85D2F" }} />
+          </div>
+
+          <p style={{ fontSize: 14, color: "#ADB5BD", margin: 0 }}>
+            ¿Está seguro de eliminar la unidad
             <br />
-            <strong>{vehiculoAEliminar?.deviceID}</strong>?
+            <strong style={{ color: "#F4F5F7" }}>{vehiculoAEliminar?.deviceID}</strong>?
           </p>
 
-          <div className="flex gap-2">
-            <ButtonBase
-              variant="secondary"
-              onClick={() => setOpenEliminarModal(false)}
-            >
-              Cancelar
-            </ButtonBase>
-
-            <ButtonBase
-              onClick={eliminarVehiculo}
-              disabled={loading}
-              variant="danger"
-            >
+          <div style={{ display: "flex", gap: 8 }}>
+            <ButtonBase variant="secondary" onClick={() => setOpenEliminarModal(false)}>Cancelar</ButtonBase>
+            <ButtonBase variant="danger" disabled={loading} onClick={eliminarVehiculo}>
               {loading ? "Eliminando..." : "Eliminar"}
             </ButtonBase>
           </div>
         </div>
-
       </ModalEliminar>
     </>
   );

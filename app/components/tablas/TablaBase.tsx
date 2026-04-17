@@ -29,17 +29,13 @@ export default function TablaBase<T>({
   const [paginaActual, setPaginaActual] = useState(1);
   const [registrosPorPagina, setRegistrosPorPagina] = useState(filasPorPagina);
 
-  // Solo reinicia cuando cambia la cantidad por página
   useEffect(() => {
     setPaginaActual(1);
   }, [registrosPorPagina]);
 
-  // Ajusta si la página actual queda fuera de rango
   useEffect(() => {
     const total = Math.max(1, Math.ceil(data.length / registrosPorPagina));
-    if (paginaActual > total) {
-      setPaginaActual(total);
-    }
+    if (paginaActual > total) setPaginaActual(total);
   }, [data, registrosPorPagina, paginaActual]);
 
   const totalPaginas = Math.max(1, Math.ceil(data.length / registrosPorPagina));
@@ -50,23 +46,20 @@ export default function TablaBase<T>({
   }, [paginaActual, data, registrosPorPagina]);
 
   const paginasVisibles = useMemo(() => {
-    if (totalPaginas <= 7) {
+    if (totalPaginas <= 7)
       return Array.from({ length: totalPaginas }, (_, i) => i + 1);
-    }
 
     const r: (number | "...")[] = [];
     const add = (n: number) => !r.includes(n) && r.push(n);
 
     add(1);
     if (paginaActual > 3) r.push("...");
-
     for (
       let i = Math.max(2, paginaActual - 1);
       i <= Math.min(totalPaginas - 1, paginaActual + 1);
       i++
     )
       add(i);
-
     if (paginaActual < totalPaginas - 2) r.push("...");
     add(totalPaginas);
 
@@ -74,28 +67,74 @@ export default function TablaBase<T>({
   }, [paginaActual, totalPaginas]);
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      {/* Acciones */}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        minHeight: 0,
+        gap: 10,
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      }}
+    >
+      {/* ---------- ACCIONES ---------- */}
       {(leftActions || rightActions) && (
-        <div className="flex items-center justify-between">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
           <div>{leftActions}</div>
           <div>{rightActions}</div>
         </div>
       )}
 
-      {/* Tabla */}
-      <div className="flex-1 min-h-0 rounded-lg border border-zinc-200/70 bg-white flex flex-col overflow-hidden">
+      {/* ---------- TABLA ---------- */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          borderRadius: 10,
+          border: "1px solid rgba(255,255,255,0.06)",
+          background: "#1C1F26",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
         {/* CABECERA FIJA */}
-        <table className="w-full table-fixed text-xs border-collapse">
-          <thead className="bg-orange-500/80">
-            <tr className="text-gray-800">
-              <th className="w-12 px-4 py-2 text-left font-semibold border-b border-orange-400/40">
+        <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: 11 }}>
+          <thead>
+            <tr
+              style={{
+                background: "#643100",
+              }}
+            >
+              <th
+                style={{
+                  width: 44,
+                  padding: "10px 14px",
+                  textAlign: "left",
+                  fontWeight: 700,
+                  color: "#f7eddb",
+                  fontSize: 11,
+                }}
+              >
                 N°
               </th>
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="px-4 py-2 text-left font-semibold border-b border-orange-400/40"
+                  style={{
+                    padding: "10px 14px",
+                    textAlign: "left",
+                    fontWeight: 700,
+                    color: "#f7eddb",
+                    fontSize: 11,
+                  }}
                 >
                   {col.label}
                 </th>
@@ -105,18 +144,33 @@ export default function TablaBase<T>({
         </table>
 
         {/* BODY SCROLLABLE */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <table className="w-full table-fixed text-xs border-collapse">
+        <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+          <table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: 12 }}>
             <tbody>
               {loading ? (
                 <tr>
                   <td
                     colSpan={columns.length + 1}
-                    className="py-10 text-center"
+                    style={{ padding: "40px 0", textAlign: "center" }}
                   >
-                    <div className="flex flex-col items-center justify-center gap-2 text-zinc-500">
-                      <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
-                      <span className="text-sm">Cargando datos...</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 8,
+                        color: "#8A9099",
+                      }}
+                    >
+                      <Loader2
+                        style={{
+                          width: 22,
+                          height: 22,
+                          color: "#E85D2F",
+                          animation: "spin 1s linear infinite",
+                        }}
+                      />
+                      <span style={{ fontSize: 13 }}>Cargando datos...</span>
                     </div>
                   </td>
                 </tr>
@@ -124,7 +178,12 @@ export default function TablaBase<T>({
                 <tr>
                   <td
                     colSpan={columns.length + 1}
-                    className="py-10 text-center text-zinc-400"
+                    style={{
+                      padding: "40px 0",
+                      textAlign: "center",
+                      color: "#8A9099",
+                      fontSize: 13,
+                    }}
                   >
                     No hay registros
                   </td>
@@ -133,19 +192,39 @@ export default function TablaBase<T>({
                 dataPagina.map((row, i) => (
                   <tr
                     key={i}
-                    className="transition-colors hover:bg-orange-50"
+                    style={{ transition: "background 0.12s" }}
+                    onMouseEnter={e =>
+                      ((e.currentTarget as HTMLTableRowElement).style.background =
+                        "rgba(232,93,47,0.05)")
+                    }
+                    onMouseLeave={e =>
+                      ((e.currentTarget as HTMLTableRowElement).style.background =
+                        "transparent")
+                    }
                   >
-                    <td className="w-12 px-4 py-2 border-b border-zinc-100 text-zinc-700">
+                    <td
+                      style={{
+                        width: 44,
+                        padding: "5px 14px",
+                        borderBottom: "1px solid rgba(255,255,255,0.05)",
+                        color: "#8A9099",
+                        fontSize: 11,
+                      }}
+                    >
                       {i + 1 + (paginaActual - 1) * registrosPorPagina}
                     </td>
                     {columns.map((col) => (
                       <td
                         key={String(col.key)}
-                        className="px-4 py-2 border-b border-zinc-100 text-zinc-700 whitespace-normal wrap-break-word"
+                        style={{
+                          padding: "9px 14px",
+                          borderBottom: "1px solid rgba(255,255,255,0.05)",
+                          color: "#ADB5BD",
+                          wordBreak: "break-word",
+                          whiteSpace: "normal",
+                        }}
                       >
-                        {col.render
-                          ? col.render(row, i)
-                          : (row as any)[col.key]}
+                        {col.render ? col.render(row, i) : (row as any)[col.key]}
                       </td>
                     ))}
                   </tr>
@@ -156,58 +235,74 @@ export default function TablaBase<T>({
         </div>
       </div>
 
-      {/* PAGINACIÓN */}
+      {/* ---------- PAGINACIÓN ---------- */}
       {data.length > 0 && (
-        <div className="flex items-center justify-between text-[14px] text-zinc-500 px-2 py-1">
-          <span>Total registros: {data.length}</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "4px 2px",
+            fontSize: 12,
+            color: "#8A9099",
+            flexWrap: "wrap",
+            gap: 8,
+          }}
+        >
+          {/* Total */}
+          <span>Total registros: <strong style={{ color: "#F4F5F7" }}>{data.length}</strong></span>
 
-          <div className="flex items-center gap-1">
-            <button
-              disabled={paginaActual === 1}
+          {/* Páginas */}
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <PagBtn
               onClick={() => setPaginaActual(1)}
-              className="px-2 py-1 rounded border border-zinc-200 hover:bg-zinc-100 disabled:opacity-30"
+              disabled={paginaActual === 1}
             >
               «
-            </button>
+            </PagBtn>
 
             {paginasVisibles.map((p, i) =>
               p === "..." ? (
-                <span key={i} className="px-2 text-zinc-400">
+                <span key={i} style={{ padding: "0 6px", color: "#8A9099" }}>
                   ...
                 </span>
               ) : (
-                <button
+                <PagBtn
                   key={`${p}-${i}`}
-                  onClick={() => setPaginaActual(p)}
-                  className={`px-2 py-1 rounded border transition-colors ${
-                    p === paginaActual
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "border-zinc-200 hover:bg-zinc-100"
-                  }`}
+                  onClick={() => setPaginaActual(p as number)}
+                  active={p === paginaActual}
                 >
                   {p}
-                </button>
+                </PagBtn>
               )
             )}
 
-            <button
-              disabled={paginaActual === totalPaginas}
+            <PagBtn
               onClick={() => setPaginaActual(totalPaginas)}
-              className="px-2 py-1 rounded border border-zinc-200 hover:bg-zinc-100 disabled:opacity-30"
+              disabled={paginaActual === totalPaginas}
             >
               »
-            </button>
+            </PagBtn>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-zinc-600">
-            <span className="whitespace-nowrap">
+          {/* Registros por página */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+            <span style={{ whiteSpace: "nowrap", color: "#8A9099" }}>
               Registros por página:
             </span>
-
             <select
               value={registrosPorPagina}
               onChange={(e) => setRegistrosPorPagina(Number(e.target.value))}
-              className="rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm text-zinc-800 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              style={{
+                borderRadius: 6,
+                border: "1px solid rgba(255,255,255,0.08)",
+                background: "#1C1F26",
+                padding: "4px 8px",
+                fontSize: 12,
+                color: "#F4F5F7",
+                outline: "none",
+                cursor: "pointer",
+              }}
             >
               {[10, 25, 50, 100].map((n) => (
                 <option key={n} value={n}>
@@ -218,6 +313,53 @@ export default function TablaBase<T>({
           </div>
         </div>
       )}
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
+  );
+}
+
+/* ---------- BOTÓN PAGINACIÓN ---------- */
+function PagBtn({
+  children,
+  onClick,
+  disabled,
+  active,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  active?: boolean;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        padding: "4px 9px",
+        borderRadius: 6,
+        border: active
+          ? "1px solid #E85D2F"
+          : "1px solid rgba(255,255,255,0.08)",
+        background: active ? "#621708 " : "transparent",
+        color: active ? "#fff" : "#ADB5BD",
+        fontSize: 12,
+        fontWeight: active ? 700 : 400,
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.3 : 1,
+        transition: "background 0.12s, color 0.12s",
+      }}
+      onMouseEnter={e => {
+        if (!disabled && !active)
+          (e.currentTarget as HTMLButtonElement).style.background =
+            "rgba(232,93,47,0.1)";
+      }}
+      onMouseLeave={e => {
+        if (!disabled && !active)
+          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+      }}
+    >
+      {children}
+    </button>
   );
 }

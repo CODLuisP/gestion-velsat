@@ -7,7 +7,7 @@ export default function PanelLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#0A0C0F]">
       <Sidebar />
 
       <main className="flex-1 min-h-0 min-w-0 overflow-hidden p-4">

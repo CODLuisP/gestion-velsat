@@ -9,6 +9,8 @@ import {
   BarChart3,
   User,
   RefreshCw,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 
 import { Role } from "@/app/constants/roles";
@@ -23,12 +25,11 @@ type Props = {
 export default function DashBoardClient({ role }: Props) {
   const api = getDashBoardApi(role);
 
-  const { usuarios, subUsuarios, vehiculos, isLoading } =
-    useDashboard(role);
+  const { usuarios, subUsuarios, vehiculos, isLoading } = useDashboard(role);
 
-  const totalUsuarios = usuarios.length;
+  const totalUsuarios    = usuarios.length;
   const totalSubUsuarios = subUsuarios.length;
-  const totalVehiculos = vehiculos.length;
+  const totalVehiculos   = vehiculos.length;
 
   const { usuariosActivos, usuariosInactivos } = usuarios.reduce(
     (acc, u) => {
@@ -38,114 +39,186 @@ export default function DashBoardClient({ role }: Props) {
     { usuariosActivos: 0, usuariosInactivos: 0 }
   );
 
-  const { SubsuariosActivos, SubsuariosInactivos } =
-    subUsuarios.reduce(
-      (acc, u) => {
-        u.status === "1"
-          ? acc.SubsuariosActivos++
-          : acc.SubsuariosInactivos++;
-        return acc;
-      },
-      { SubsuariosActivos: 0, SubsuariosInactivos: 0 }
-    );
+  const { SubsuariosActivos, SubsuariosInactivos } = subUsuarios.reduce(
+    (acc, u) => {
+      u.status === "1" ? acc.SubsuariosActivos++ : acc.SubsuariosInactivos++;
+      return acc;
+    },
+    { SubsuariosActivos: 0, SubsuariosInactivos: 0 }
+  );
 
-  const { vehiculosActivos, vehiculosInactivos } =
-    vehiculos.reduce(
-      (acc, u) => {
-        u.isActive === "1" || u.habilitada === "1"
-          ? acc.vehiculosActivos++
-          : acc.vehiculosInactivos++;
-        return acc;
-      },
-      { vehiculosActivos: 0, vehiculosInactivos: 0 }
-    );
+  const { vehiculosActivos, vehiculosInactivos } = vehiculos.reduce(
+    (acc, u) => {
+      u.isActive === "1" || u.habilitada === "1"
+        ? acc.vehiculosActivos++
+        : acc.vehiculosInactivos++;
+      return acc;
+    },
+    { vehiculosActivos: 0, vehiculosInactivos: 0 }
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 rounded-4xl">
+    <div
+      style={{
+        minHeight: "100vh",
+        padding: "32px",
+       
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      }}
+    >
       {/* ---------- HEADER ---------- */}
-      <header className="mb-10 border-b border-slate-200 pb-6">
-        <h1 className="text-3xl font-bold text-slate-800">
-          Dashboard Gestión{" "}
-          <span className="text-orange-500">Velsat</span>
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Monitoreo general de usuarios, sub usuarios y unidades
-        </p>
+      <header
+        style={{
+          marginBottom: 32,
+          paddingBottom: 24,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: 26,
+              fontWeight: 700,
+              color: "#F4F5F7",
+              lineHeight: 1.2,
+              margin: 0,
+            }}
+          >
+            Dashboard{" "}
+            <span style={{ color: "#E85D2F" }}>Velsat</span>
+          </h1>
+          <p style={{ fontSize: 13, color: "#8A9099", marginTop: 4 }}>
+            Monitoreo general de usuarios, sub usuarios y unidades
+          </p>
+        </div>
+
+        {/* Badge sistema + botón actualizar */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 14px",
+              borderRadius: 8,
+              background: "#1C1F26",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 7,
+                background: "rgba(232,93,47,0.12)",
+                border: "1px solid rgba(232,93,47,0.25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Server style={{ width: 15, height: 15, color: "#E85D2F", stroke: "#E85D2F" }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: "#F4F5F7", margin: 0 }}>
+                {role === "Servidor_125_2" ? "Urbano_125" : role}
+              </p>
+              <p style={{ fontSize: 10, color: "#8A9099", margin: 0 }}>Estado del sistema</p>
+            </div>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                padding: "3px 8px",
+                borderRadius: 20,
+                background: "rgba(46,204,113,0.1)",
+                border: "1px solid rgba(46,204,113,0.25)",
+                color: "#2ECC71",
+                marginLeft: 4,
+              }}
+            >
+              <Activity style={{ width: 10, height: 10 }} />
+              Online
+            </span>
+          </div>
+
+          <button
+            onClick={() => mutate(["dashboard", role], undefined, { revalidate: true })}
+            disabled={isLoading}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "16px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: "#E85D2F",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.6 : 1,
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => !isLoading && ((e.currentTarget as HTMLButtonElement).style.background = "#cf4e24")}
+            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = "#E85D2F")}
+          >
+            <RefreshCw
+              style={{
+                width: 14,
+                height: 14,
+                animation: isLoading ? "spin 1s linear infinite" : "none",
+              }}
+            />
+            {isLoading ? "Actualizando..." : "Actualizar"}
+          </button>
+        </div>
       </header>
 
-      {/* ---------- ESTADO GENERAL ---------- */}
-      <section className="mb-10">
-        <Card className="border border-slate-200 bg-white rounded-3xl">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-orange-500 text-white shadow-sm">
-                  <Server className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-800">
-                    {role === "Servidor_125_2" ? "Urbano_125" : role}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Estado del sistema
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-600">
-                  <Activity className="w-3 h-3" />
-                  Online
-                </span>
-
-                <button
-                  onClick={() =>
-                    mutate(["dashboard", role], undefined, {
-                      revalidate: true,
-                    })
-                  }
-                  disabled={isLoading}
-                  className="flex items-center gap-1 px-3 py-1 rounded-md bg-blue-500 text-white text-xs hover:bg-blue-600 disabled:opacity-50 transition"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 ${
-                      isLoading ? "animate-spin" : ""
-                    }`}
-                  />
-                  {isLoading ? "Actualizando..." : "Actualizar"}
-                </button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
       {/* ---------- KPIs ---------- */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: 16,
+        }}
+      >
         <KpiBox
           title="Usuarios"
           value={totalUsuarios}
           activos={usuariosActivos}
           inactivos={usuariosInactivos}
-          icon={<User className="w-5 h-5 text-white" />}
+          icon={<User style={{ width: 16, height: 16, color: "#fff", stroke: "#fff" }} />}
         />
-
         <KpiBox
           title="Sub Usuarios"
           value={totalSubUsuarios}
           activos={SubsuariosActivos}
           inactivos={SubsuariosInactivos}
-          icon={<Users className="w-5 h-5 text-white" />}
+          icon={<Users style={{ width: 16, height: 16, color: "#fff", stroke: "#fff" }} />}
         />
-
         <KpiBox
           title="Unidades"
           value={totalVehiculos}
           activos={vehiculosActivos}
           inactivos={vehiculosInactivos}
-          icon={<Car className="w-5 h-5 text-white" />}
+          icon={<Car style={{ width: 16, height: 16, color: "#fff", stroke: "#fff" }} />}
         />
       </section>
+
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }
@@ -166,61 +239,109 @@ function KpiBox({
   icon: React.ReactNode;
 }) {
   const total = activos + inactivos || 1;
+  const pctActivos   = Math.round((activos   / total) * 100);
+  const pctInactivos = Math.round((inactivos / total) * 100);
 
   return (
-    <div className="rounded-2xl bg-white p-6 border border-slate-200 hover:shadow-sm transition">
-      <div className="flex items-center justify-between mb-4 border border-orange-200 p-4 rounded-2xl bg-orange-50">
+    <div
+      style={{
+        background: "#1C1F26",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderRadius: 14,
+        padding: 20,
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        transition: "border-color 0.2s",
+      }}
+      onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(232,93,47,0.25)")}
+      onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.06)")}
+    >
+      {/* Top row */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 16px",
+          borderRadius: 10,
+          background: "rgba(232,93,47,0.06)",
+          border: "1px solid rgba(232,93,47,0.14)",
+        }}
+      >
         <div>
-          <p className="text-sm text-slate-500">{title}</p>
-          <p className="text-3xl font-bold text-slate-800">
+          <p style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#8A9099", margin: 0 }}>
+            {title}
+          </p>
+          <p style={{ fontSize: 32, fontWeight: 700, color: "#F4F5F7", margin: "4px 0 0", lineHeight: 1 }}>
             {value}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-orange-500 shadow-sm">
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            background: "#E85D2F",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           {icon}
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-3">
-        <BarChart3 className="w-4 h-4 text-blue-500" />
-        <p className="text-sm font-semibold text-slate-700">
+      {/* Distribución label */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <BarChart3 style={{ width: 14, height: 14, color: "#8A9099" }} />
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8A9099", margin: 0 }}>
           Distribución
         </p>
       </div>
 
-      <div className="space-y-3">
+      {/* Barras */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {/* Activos */}
         <div>
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-slate-600">
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+            <span style={{ fontSize: 12, color: "#ADB5BD", display: "flex", alignItems: "center", gap: 4 }}>
+              <TrendingUp style={{ width: 12, height: 12, color: "#2ECC71" }} />
               Activos ({activos})
             </span>
-            <span className="text-slate-400">
-              {((activos / total) * 100).toFixed(0)}%
-            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#2ECC71" }}>{pctActivos}%</span>
           </div>
-          <div className="h-2 rounded-full bg-slate-200">
+          <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,0.06)" }}>
             <div
-              className="h-full bg-blue-500 rounded-full transition-all"
-              style={{ width: `${(activos / total) * 100}%` }}
+              style={{
+                height: "100%",
+                borderRadius: 99,
+                background: "#2ECC71",
+                width: `${pctActivos}%`,
+                transition: "width 0.6s ease",
+              }}
             />
           </div>
         </div>
 
         {/* Inactivos */}
         <div>
-          <div className="flex justify-between text-xs mb-1">
-            <span className="text-slate-600">
+          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+            <span style={{ fontSize: 12, color: "#ADB5BD", display: "flex", alignItems: "center", gap: 4 }}>
+              <TrendingDown style={{ width: 12, height: 12, color: "#E85D2F" }} />
               Inactivos ({inactivos})
             </span>
-            <span className="text-slate-400">
-              {((inactivos / total) * 100).toFixed(0)}%
-            </span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#E85D2F" }}>{pctInactivos}%</span>
           </div>
-          <div className="h-2 rounded-full bg-slate-200">
+          <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,0.06)" }}>
             <div
-              className="h-full bg-orange-400 rounded-full transition-all"
-              style={{ width: `${(inactivos / total) * 100}%` }}
+              style={{
+                height: "100%",
+                borderRadius: 99,
+                background: "#E85D2F",
+                width: `${pctInactivos}%`,
+                transition: "width 0.6s ease",
+              }}
             />
           </div>
         </div>

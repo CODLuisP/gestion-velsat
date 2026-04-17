@@ -20,40 +20,33 @@ import ImputBuscar from "@/app/components/ui/ImputBuscar";
 type Props = {
   role: Role;
 };
+
 export default function UsuariosClient({ role }: Props) {
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Modal agregar/editar
   const [openModal, setOpenModal] = useState(false);
   const [modo, setModo] = useState<"editar" | "agregar">("agregar");
   const [seleccionado, setSeleccionado] = useState<Usuario | null>(null);
 
-  // Modal eliminar
   const [openEliminarModal, setOpenEliminarModal] = useState(false);
   const [usuarioAEliminar, setUsuarioAEliminar] = useState<Usuario | null>(null);
 
-  //validar al dar en guardar
   const [submitAttempt, setSubmitAttempt] = useState(false);
 
-    const api = getUsuariosApi(role);
+  const api = getUsuariosApi(role);
 
-  // 🔹 Traer usuarios
   const fetchUsuarios = async () => {
     const res = await axios.get<Usuario[]>(api.list);
-  return res.data;
+    return res.data;
   };
 
   const { data: usuarios = [], isLoading } = useSWR(
-  role ? ["usuarios", role] : null,
-  fetchUsuarios,
-  {
-    revalidateOnFocus: false,
-    keepPreviousData: true,
-  }
-);
+    role ? ["usuarios", role] : null,
+    fetchUsuarios,
+    { revalidateOnFocus: false, keepPreviousData: true }
+  );
 
-  // Filtrado
   const usuariosFiltrados = useMemo(() => {
     if (!busqueda) return usuarios;
     return usuarios.filter((u) =>
@@ -64,19 +57,13 @@ export default function UsuariosClient({ role }: Props) {
     );
   }, [busqueda, usuarios]);
 
-const usuariosOrdenados = useMemo(() => {
-  return [...usuariosFiltrados].sort((a, b) => {
-    // Primero por activos
-    if (a.isActive !== b.isActive) {
-      return a.isActive ? -1 : 1; // Activo primero
-    }
-    // Luego por fecha descendente
-    return b.creationTime - a.creationTime;
-  });
-}, [usuariosFiltrados]);
+  const usuariosOrdenados = useMemo(() => {
+    return [...usuariosFiltrados].sort((a, b) => {
+      if (a.isActive !== b.isActive) return a.isActive ? -1 : 1;
+      return b.creationTime - a.creationTime;
+    });
+  }, [usuariosFiltrados]);
 
-
-  // Abrir editar
   const abrirEditar = (usuario: Usuario) => {
     setSeleccionado(usuario);
     setModo("editar");
@@ -84,7 +71,6 @@ const usuariosOrdenados = useMemo(() => {
     setSubmitAttempt(false);
   };
 
-  // Abrir agregar
   const abrirAgregar = () => {
     setSeleccionado(null);
     setModo("agregar");
@@ -92,7 +78,6 @@ const usuariosOrdenados = useMemo(() => {
     setSubmitAttempt(false);
   };
 
-  // Abrir eliminar
   const abrirEliminar = (usuario: Usuario) => {
     setUsuarioAEliminar(usuario);
     setOpenEliminarModal(true);
@@ -102,10 +87,9 @@ const usuariosOrdenados = useMemo(() => {
     setOpenModal(false);
     setSubmitAttempt(false);
   };
-  
+
   const guardarUsuario = async (usuario: Usuario) => {
     setLoading(true);
-
     const payload = {
       accountID: usuario.accountID,
       password: usuario.password,
@@ -114,7 +98,6 @@ const usuariosOrdenados = useMemo(() => {
       description: usuario.description,
       ruc: usuario.ruc,
     };
-
     try {
       if (modo === "editar" && seleccionado) {
         await axios.put(api.update, payload);
@@ -123,12 +106,10 @@ const usuariosOrdenados = useMemo(() => {
         await axios.post(api.insert, payload);
         toast.success("Usuario guardado correctamente");
       }
-
       setOpenModal(false);
       setSeleccionado(null);
       mutate(["usuarios", role]);
-
-    } catch (error) {
+    } catch {
       toast.error("No es posible guardar los cambios");
     } finally {
       setLoading(false);
@@ -137,21 +118,16 @@ const usuariosOrdenados = useMemo(() => {
 
   const eliminarUsuario = async () => {
     if (!usuarioAEliminar) return;
-
     setLoading(true);
-
     try {
-      await axios.delete(
-        api.delete(usuarioAEliminar.accountID),
-        { data: { accountID: usuarioAEliminar.accountID } }
-      );
-
+      await axios.delete(api.delete(usuarioAEliminar.accountID), {
+        data: { accountID: usuarioAEliminar.accountID },
+      });
       toast.success("Usuario eliminado");
       setOpenEliminarModal(false);
       setUsuarioAEliminar(null);
       mutate(["usuarios", role]);
-
-    } catch (error) {
+    } catch {
       toast.error("Error al eliminar usuario");
     } finally {
       setLoading(false);
@@ -165,83 +141,187 @@ const usuariosOrdenados = useMemo(() => {
       label: "PASSWORD",
       render: (row: Usuario) => <PasswordCell password={row.password} />,
     },
-    { key: "description", label: "NOMBRE / RAZÓN SOCIAL" },
+    { key: "description", label: "NOMBRE" },
     { key: "ruc", label: "DNI/RUC" },
     { key: "contactEmail", label: "CORREO" },
     { key: "contactPhone", label: "TELÉFONO" },
-    {key: "creationTime", label: "FECHA CREACIÓN", render: (row: Usuario) => (
-        <UnixNormal creationTime={row.creationTime} />
-      ),
+    {
+      key: "creationTime",
+      label: "FEC CREACIÓN",
+      render: (row: Usuario) => <UnixNormal creationTime={row.creationTime} />,
     },
     {
       key: "isActive",
       label: "ACTIVO",
       render: (row: Usuario) => (
         <span
-          className={`inline-block w-3 h-3 rounded-full ${
-            row.isActive ? "bg-green-500" : "bg-red-500"
-          }`}
-        />
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+            fontSize: 9,
+            fontWeight: 600,
+            letterSpacing: "0.06em",
+            textTransform: "uppercase",
+   
+            ...(row.isActive
+              ? {
+                  color: "#2ECC71",
+                }
+              : {
+                  color: "#E85D2F",
+                }),
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: row.isActive ? "#2ECC71" : "#E85D2F",
+              flexShrink: 0,
+            }}
+          />
+          {row.isActive ? "Activo" : "Inactivo"}
+        </span>
       ),
     },
     {
       key: "acciones",
       label: "ACCIONES",
-      render: (row: Usuario) =>
-          <div className="flex gap-2">
-            <button
-              className="p-2 rounded hover:bg-blue-100 text-blue-600"
-              onClick={() => abrirEditar(row)}
-            >
-              <Pencil size={16} />
-            </button>
-            <button
-              disabled={!row.isActive}
-              onClick={() => abrirEliminar(row)}
-              className="
-                p-2 rounded text-red-600
-                hover:bg-red-100
-                disabled:text-gray-500
-                disabled:hover:bg-transparent
-                disabled:cursor-not-allowed
-              "
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
+      render: (row: Usuario) => (
+        <div style={{ display: "flex", gap: 6 }}>
+          {/* Editar */}
+          <button
+            onClick={() => abrirEditar(row)}
+            style={{
+              padding: "6px 8px",
+              borderRadius: 7,
+              border: "1px solid rgba(232,93,47,0.2)",
+              background: "rgba(232,93,47,0.06)",
+              color: "#E85D2F",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e =>
+              ((e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.15)")
+            }
+            onMouseLeave={e =>
+              ((e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.06)")
+            }
+          >
+            <Pencil size={14} />
+          </button>
+
+          {/* Eliminar */}
+          <button
+            disabled={!row.isActive}
+            onClick={() => abrirEliminar(row)}
+            style={{
+              padding: "6px 8px",
+              borderRadius: 7,
+              border: row.isActive
+                ? "1px solid rgba(232,93,47,0.3)"
+                : "1px solid rgba(255,255,255,0.06)",
+              background: row.isActive
+                ? "rgba(232,93,47,0.08)"
+                : "rgba(255,255,255,0.03)",
+              color: row.isActive ? "#E85D2F" : "#5F5E5A",
+              cursor: row.isActive ? "pointer" : "not-allowed",
+              display: "flex",
+              alignItems: "center",
+              transition: "background 0.15s",
+            }}
+            onMouseEnter={e => {
+              if (row.isActive)
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "rgba(232,93,47,0.18)";
+            }}
+            onMouseLeave={e => {
+              if (row.isActive)
+                (e.currentTarget as HTMLButtonElement).style.background =
+                  "rgba(232,93,47,0.08)";
+            }}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      ),
     },
   ];
 
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col">
-
-        <section className="mb-4 text-blue-700">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">
-                Gestión de usuarios
-                </h1>
-
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Server size={14} className="text-orange-500" />
-                  <span className="font-medium">
-                    Conectado a
-                    <span className="ml-1 font-semibold text-orange-500">
-                      {role === "Servidor_125_2" ? "Urbano_125" : role}
-                    </span>
-                  </span>
-                </div>
-            </div>
-
-            <p className="mt-2 text-sm font-semibold text-center text-sky-700">
-                
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          minHeight: 0,
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}
+      >
+        {/* ---------- HEADER ---------- */}
+        <section
+          style={{
+            marginBottom: 20,
+            paddingBottom: 16,
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                fontSize: 22,
+                fontWeight: 700,
+                color: "#F4F5F7",
+                margin: 0,
+                lineHeight: 1.2,
+              }}
+            >
+              Gestión de{" "}
+              <span style={{ color: "#E85D2F" }}>Usuarios</span>
+            </h1>
+            <p style={{ fontSize: 12, color: "#8A9099", margin: "4px 0 0" }}>
+              Administra los usuarios del sistema
             </p>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: 8,
+              background: "#1C1F26",
+              border: "1px solid rgba(255,255,255,0.06)",
+              fontSize: 12,
+              color: "#ADB5BD",
+            }}
+          >
+            <Server size={13} style={{ color: "#E85D2F" }} />
+            <span>
+              Conectado a{" "}
+              <strong style={{ color: "#E85D2F" }}>
+                {role === "Servidor_125_2" ? "Urbano_125" : role}
+              </strong>
+            </span>
+          </div>
         </section>
 
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* ---------- TABLA ---------- */}
+        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
           <TablaBase
             leftActions={
-              <div className="w-96">
+              <div style={{ width: 384 }}>
                 <ImputBuscar
                   placeholder="Buscar por AccountID, Nombre, RUC o Correo"
                   value={busqueda}
@@ -250,9 +330,7 @@ const usuariosOrdenados = useMemo(() => {
               </div>
             }
             rightActions={
-                <ButtonBase onClick={abrirAgregar}>
-                  Agregar Nuevo +
-                </ButtonBase>
+              <ButtonBase onClick={abrirAgregar}>Agregar Nuevo +</ButtonBase>
             }
             columns={columns}
             data={usuariosOrdenados}
@@ -260,13 +338,20 @@ const usuariosOrdenados = useMemo(() => {
           />
         </div>
       </div>
+
+      {/* ---------- MODAL AGREGAR / EDITAR ---------- */}
       <ModalBase
         open={openModal}
         title={modo === "editar" ? "Editar Usuario" : "Agregar Usuario"}
         onClose={cerrarModal}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputBase1 label="Servidor" value={role} displayValue={role === "Servidor_125_2" ? "Urbano_125" : role} desabilitar />
+          <InputBase1
+            label="Servidor"
+            value={role}
+            displayValue={role === "Servidor_125_2" ? "Urbano_125" : role}
+            desabilitar
+          />
 
           <InputBase1
             label="NOMBRE / RAZÓN SOCIAL"
@@ -344,6 +429,7 @@ const usuariosOrdenados = useMemo(() => {
               )
             }
           />
+
           <InputBase1
             label="TELÉFONO"
             placeholder="987654321"
@@ -360,30 +446,25 @@ const usuariosOrdenados = useMemo(() => {
           />
 
           <div className="col-span-2 flex justify-between gap-4 mt-4">
-            <ButtonBase
-              variant="secondary"
-              onClick={() => setOpenModal(false)}
-            >
+            <ButtonBase variant="secondary" onClick={() => setOpenModal(false)}>
               Cancelar
             </ButtonBase>
 
             <ButtonBase
-              onClick={() =>{
+              onClick={() => {
                 setSubmitAttempt(true);
-
                 if (
                   !seleccionado?.description ||
                   !seleccionado?.ruc ||
                   !seleccionado?.accountID ||
                   !seleccionado?.password ||
                   !seleccionado?.contactEmail ||
-                  !seleccionado?.contactPhone 
+                  !seleccionado?.contactPhone
                 ) {
                   return;
                 }
-                guardarUsuario(seleccionado)
-              }
-            }
+                guardarUsuario(seleccionado);
+              }}
               variant="personalizado"
               disabled={loading}
             >
@@ -393,21 +474,50 @@ const usuariosOrdenados = useMemo(() => {
         </div>
       </ModalBase>
 
-      {/* Modal Eliminar */}
+      {/* ---------- MODAL ELIMINAR ---------- */}
       <ModalEliminar
         open={openEliminarModal}
         title="Eliminar"
         onClose={() => setOpenEliminarModal(false)}
         tamaño="w-full max-w-sm"
       >
-        <div className="flex flex-col items-center justify-center text-center gap-4 min-h-40">
-          <p>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            gap: 16,
+            minHeight: 160,
+          }}
+        >
+          {/* Ícono advertencia */}
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              background: "rgba(232,93,47,0.1)",
+              border: "1px solid rgba(232,93,47,0.25)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Trash2 size={20} style={{ color: "#E85D2F" }} />
+          </div>
+
+          <p style={{ fontSize: 14, color: "#ADB5BD", margin: 0 }}>
             ¿Está seguro de eliminar el usuario
             <br />
-            <strong>{usuarioAEliminar?.description}</strong>?
+            <strong style={{ color: "#F4F5F7" }}>
+              {usuarioAEliminar?.description}
+            </strong>
+            ?
           </p>
 
-          <div className="flex gap-2">
+          <div style={{ display: "flex", gap: 8 }}>
             <ButtonBase
               variant="secondary"
               onClick={() => setOpenEliminarModal(false)}
@@ -415,7 +525,11 @@ const usuariosOrdenados = useMemo(() => {
               Cancelar
             </ButtonBase>
 
-            <ButtonBase variant="danger" disabled={loading} onClick={eliminarUsuario}>
+            <ButtonBase
+              variant="danger"
+              disabled={loading}
+              onClick={eliminarUsuario}
+            >
               {loading ? "Eliminando..." : "Eliminar"}
             </ButtonBase>
           </div>
@@ -424,4 +538,3 @@ const usuariosOrdenados = useMemo(() => {
     </>
   );
 }
- 
