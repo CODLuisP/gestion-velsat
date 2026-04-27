@@ -35,3 +35,5 @@ const API_MAP: Record<Role, UnidadesApi> = {
 export function getUnidadesApi(role: Role): UnidadesApi {
   return API_MAP[role];
 }
+
+//cambios luis
