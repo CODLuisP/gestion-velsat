@@ -1,0 +1,757 @@
+"use client";
+
+import React, { useState, useRef } from 'react';
+import { 
+  Plus, 
+  Cpu, 
+  ShieldCheck, 
+  Zap, 
+  FileUp, 
+  CheckCircle2, 
+  XCircle, 
+  Loader2, 
+  LogIn,
+  Table as TableIcon,
+  Download,
+  Keyboard,
+  Trash2,
+  FileSpreadsheet,
+  Users,
+  Link,
+  Hash,
+  List
+} from 'lucide-react';
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import * as XLSX from 'xlsx';
+
+interface DeviceResult {
+  name: string;
+  uniqueId: string;
+  phone: string;
+  model: string;
+  deviceID: string;
+  accountID: string;
+  status: 'pending' | 'loading' | 'success' | 'error';
+  message?: string;
+}
+
+interface PermissionResult {
+  deviceId: string;
+  status: 'pending' | 'loading' | 'success' | 'error';
+  message?: string;
+}
+
+export default function AgregarGPSTraccarClient() {
+  // Login State
+  const [email, setEmail] = useState('velsat@velsat.pe');
+  const [password, setPassword] = useState('velsat2026');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Manual Entry State
+  const [manualDevice, setManualDevice] = useState({
+    name: '',
+    uniqueId: '',
+    phone: '',
+    model: '',
+    deviceID: '',
+    accountID: ''
+  });
+
+  // CSV/Process State
+  const [results, setResults] = useState<DeviceResult[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Permission Assignment State
+  const [assignUserId, setAssignUserId] = useState('');
+  const [assignmentMode, setAssignmentMode] = useState<'range' | 'manual'>('range');
+  const [rangeFrom, setRangeFrom] = useState('');
+  const [rangeTo, setRangeTo] = useState('');
+  const [manualDeviceIds, setManualDeviceIds] = useState('');
+  const [permissionResults, setPermissionResults] = useState<PermissionResult[]>([]);
+  const [isAssigning, setIsAssigning] = useState(false);
+
+  // Stats
+  const total = results.length;
+  const successes = results.filter(r => r.status === 'success').length;
+  const failures = results.filter(r => r.status === 'error').length;
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    try {
+      const params = new URLSearchParams();
+      params.append('email', email);
+      params.append('password', password);
+
+      await axios.post('https://do.velsat.pe:2087/api/session', params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        withCredentials: true
+      });
+
+      setIsLoggedIn(true);
+      toast.success('Sesión iniciada en Traccar');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast.error('Error al iniciar sesión: ' + (error.response?.data || error.message));
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+    const isCsv = fileName.endsWith('.csv');
+
+    if (!isExcel && !isCsv) {
+      toast.error('Formato de archivo no soportado. Use .csv o .xlsx');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = event.target?.result;
+        let jsonData: any[] = [];
+
+        if (isExcel) {
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          jsonData = XLSX.utils.sheet_to_json(sheet);
+        } else {
+          // CSV parsing using XLSX to handle different delimiters automatically
+          const workbook = XLSX.read(data, { type: 'string' });
+          const sheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[sheetName];
+          jsonData = XLSX.utils.sheet_to_json(sheet);
+        }
+
+        const parsedResults: DeviceResult[] = jsonData.map((device: any) => ({
+          name: String(device.name || ''),
+          uniqueId: String(device.uniqueId || ''),
+          phone: String(device.phone || ''),
+          model: String(device.model || ''),
+          deviceID: String(device.deviceID || device.name || ''),
+          accountID: String(device.accountID || device.name || ''),
+          status: 'pending' as const
+        })).filter(d => d.name || d.uniqueId);
+
+        setResults(prev => [...prev, ...parsedResults]);
+        toast.success(`${parsedResults.length} dispositivos cargados desde ${isExcel ? 'Excel' : 'CSV'}`);
+      } catch (error) {
+        console.error('Error parsing file:', error);
+        toast.error('Error al leer el archivo. Verifique el formato.');
+      }
+      
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
+    if (isExcel) {
+      reader.readAsBinaryString(file);
+    } else {
+      reader.readAsText(file);
+    }
+  };
+
+  const addManualDevice = () => {
+    if (!manualDevice.name || !manualDevice.uniqueId) {
+      toast.error('Nombre e IMEI son obligatorios');
+      return;
+    }
+
+    const newDevice: DeviceResult = {
+      ...manualDevice,
+      deviceID: manualDevice.deviceID || manualDevice.name,
+      accountID: manualDevice.accountID || manualDevice.name,
+      status: 'pending' as const
+    };
+
+    setResults(prev => [...prev, newDevice]);
+    setManualDevice({
+      name: '',
+      uniqueId: '',
+      phone: '',
+      model: '',
+      deviceID: '',
+      accountID: ''
+    });
+    toast.success('Dispositivo añadido a la lista');
+  };
+
+  const removeDevice = (idx: number) => {
+    setResults(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const processDevices = async () => {
+    if (results.length === 0) {
+      toast.error('No hay dispositivos para procesar');
+      return;
+    }
+
+    setIsProcessing(true);
+    const updatedResults = [...results];
+
+    for (let i = 0; i < updatedResults.length; i++) {
+      if (updatedResults[i].status === 'success') continue;
+
+      const device = updatedResults[i];
+      
+      updatedResults[i] = { ...updatedResults[i], status: 'loading' };
+      setResults([...updatedResults]);
+
+      try {
+        const payload = {
+          name: device.name,
+          uniqueId: device.uniqueId,
+          phone: device.phone,
+          model: device.model,
+          category: "car",
+          groupId: 0,
+          attributes: {
+            deviceID: device.deviceID,
+            accountID: device.accountID
+          }
+        };
+
+        await axios.post('https://do.velsat.pe:2087/api/devices', payload, {
+          withCredentials: true
+        });
+
+        updatedResults[i] = { ...updatedResults[i], status: 'success', message: 'Registrado correctamente' };
+      } catch (error: any) {
+        console.error(`Error registering ${device.name}:`, error);
+        const errorMsg = error.response?.data || error.message;
+        updatedResults[i] = { ...updatedResults[i], status: 'error', message: errorMsg };
+      }
+      
+      setResults([...updatedResults]);
+    }
+
+    setIsProcessing(false);
+    toast.success('Proceso finalizado');
+  };
+
+  const handleAssignPermissions = async () => {
+    if (!assignUserId) {
+      toast.error('Ingrese el ID del usuario');
+      return;
+    }
+
+    let deviceIdsToAssign: string[] = [];
+
+    if (assignmentMode === 'range') {
+      const from = parseInt(rangeFrom);
+      const to = parseInt(rangeTo);
+      if (isNaN(from) || isNaN(to) || from > to) {
+        toast.error('Rango inválido');
+        return;
+      }
+      for (let i = from; i <= to; i++) {
+        deviceIdsToAssign.push(String(i));
+      }
+    } else {
+      if (!manualDeviceIds.trim()) {
+        toast.error('Ingrese al menos un ID de dispositivo');
+        return;
+      }
+      deviceIdsToAssign = manualDeviceIds.split(',').map(id => id.trim()).filter(id => id !== '');
+    }
+
+    if (deviceIdsToAssign.length === 0) {
+      toast.error('No hay dispositivos para asignar');
+      return;
+    }
+
+    setIsAssigning(true);
+    const initialResults: PermissionResult[] = deviceIdsToAssign.map(id => ({
+      deviceId: id,
+      status: 'pending'
+    }));
+    setPermissionResults(initialResults);
+
+    const updatedResults = [...initialResults];
+
+    for (let i = 0; i < updatedResults.length; i++) {
+      const deviceId = updatedResults[i].deviceId;
+      updatedResults[i].status = 'loading';
+      setPermissionResults([...updatedResults]);
+
+      try {
+        await axios.post('https://do.velsat.pe:2087/api/permissions', {
+          userId: Number(assignUserId),
+          deviceId: Number(deviceId)
+        }, {
+          withCredentials: true
+        });
+
+        updatedResults[i].status = 'success';
+        updatedResults[i].message = 'Asignado correctamente';
+      } catch (error: any) {
+        console.error(`Error assigning ${deviceId}:`, error);
+        updatedResults[i].status = 'error';
+        updatedResults[i].message = error.response?.data || error.message;
+      }
+      setPermissionResults([...updatedResults]);
+    }
+
+    setIsAssigning(false);
+    const successCount = updatedResults.filter(r => r.status === 'success').length;
+    const failCount = updatedResults.filter(r => r.status === 'error').length;
+    toast.success(`Proceso terminado: ${successCount} éxitos, ${failCount} fallos`);
+  };
+
+  const downloadSampleCSV = () => {
+    const csvContent = "name,uniqueId,phone,model,deviceID,accountID\nGPS_Unit_01,123456789012345,987654321,Coban 303,GPS_Unit_01,GPS_Unit_01";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'formato_gps_traccar.csv';
+    a.click();
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        minHeight: 0,
+        fontFamily: "'DM Sans', system-ui, sans-serif",
+      }}
+    >
+      {/* ---------- HEADER ---------- */}
+      <section
+        style={{
+          marginBottom: 20,
+          paddingBottom: 16,
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: "#F4F5F7",
+              margin: 0,
+              lineHeight: 1.2,
+            }}
+          >
+            Registro de <span style={{ color: "#E85D2F" }}>GPS Traccar</span>
+          </h1>
+          <p style={{ fontSize: 12, color: "#8A9099", margin: "4px 0 0" }}>
+            Agrega dispositivos mediante carga de archivos Excel/CSV o ingreso manual
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "6px 12px",
+            borderRadius: 8,
+            background: "#1C1F26",
+            border: "1px solid rgba(255,255,255,0.06)",
+            fontSize: 12,
+            color: "#ADB5BD",
+          }}
+        >
+          <Plus size={13} style={{ color: "#E85D2F" }} />
+          <span>
+            Nuevo <strong style={{ color: "#E85D2F" }}>Dispositivo</strong>
+          </span>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0 mt-2">
+        
+        {/* LEFT COLUMN: CONNECTION & INPUTS */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          
+          {/* STEP 1: LOGIN */}
+          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${isLoggedIn ? 'border-emerald-500/30' : 'border-white/5 shadow-xl'}`}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <LogIn className={isLoggedIn ? "text-emerald-500" : "text-[#E85D2F]"} size={24} />
+                1. Conexión
+              </h2>
+              {isLoggedIn && <CheckCircle2 className="text-emerald-500" size={20} />}
+            </div>
+
+            <form onSubmit={handleLogin} className="flex flex-col gap-4">
+              <input 
+                type="email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoggedIn}
+                className="bg-[#0A0C0F] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-sm"
+                placeholder="email@velsat.pe"
+              />
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoggedIn}
+                className="bg-[#0A0C0F] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-sm"
+                placeholder="********"
+              />
+              <button 
+                type="submit"
+                disabled={isLoggingIn || isLoggedIn}
+                className={`font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all ${
+                  isLoggedIn 
+                  ? 'bg-emerald-500/20 text-emerald-500 cursor-default' 
+                  : 'bg-[#E85D2F] hover:bg-[#ff6b3d] text-white shadow-lg active:scale-95'
+                }`}
+              >
+                {isLoggingIn ? <Loader2 className="animate-spin" size={20} /> : isLoggedIn ? "Conectado" : "Conectar"}
+              </button>
+            </form>
+          </div>
+
+          {/* STEP 2: MANUAL INPUT */}
+          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Keyboard className="text-[#E85D2F]" size={24} />
+              2. Ingreso Manual
+            </h2>
+            
+            <div className="grid grid-cols-1 gap-3">
+              <input 
+                placeholder="Nombre del GPS"
+                value={manualDevice.name}
+                onChange={e => setManualDevice({...manualDevice, name: e.target.value})}
+                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+              />
+              <input 
+                placeholder="IMEI (Unique ID)"
+                value={manualDevice.uniqueId}
+                onChange={e => setManualDevice({...manualDevice, uniqueId: e.target.value})}
+                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <input 
+                  placeholder="Teléfono"
+                  value={manualDevice.phone}
+                  onChange={e => setManualDevice({...manualDevice, phone: e.target.value})}
+                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                />
+                <input 
+                  placeholder="Modelo"
+                  value={manualDevice.model}
+                  onChange={e => setManualDevice({...manualDevice, model: e.target.value})}
+                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3 border-t border-white/5 pt-3 mt-1">
+                <input 
+                  placeholder="DeviceID (Attr)"
+                  value={manualDevice.deviceID}
+                  onChange={e => setManualDevice({...manualDevice, deviceID: e.target.value})}
+                  className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-2 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
+                />
+                <input 
+                  placeholder="AccountID (Attr)"
+                  value={manualDevice.accountID}
+                  onChange={e => setManualDevice({...manualDevice, accountID: e.target.value})}
+                  className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-2 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={addManualDevice}
+              className="bg-white/5 hover:bg-white/10 text-white font-bold py-2 rounded-lg border border-white/10 transition-all flex items-center justify-center gap-2"
+            >
+              <Plus size={16} /> Añadir a la lista
+            </button>
+          </div>
+
+          {/* STEP 3: FILE UPLOAD */}
+          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <FileSpreadsheet className="text-[#E85D2F]" size={24} />
+              3. Cargar Archivo
+            </h2>
+            
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center gap-3 hover:border-[#E85D2F]/50 hover:bg-[#E85D2F]/5 cursor-pointer transition-all group"
+            >
+              <FileSpreadsheet className="text-slate-400 group-hover:text-[#E85D2F]" size={20} />
+              <p className="text-white text-xs font-medium text-center">Subir Excel (.xlsx) o CSV</p>
+              <input 
+                type="file" 
+                accept=".csv, .xlsx, .xls" 
+                className="hidden" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+              />
+            </div>
+
+            <button 
+              onClick={downloadSampleCSV}
+              className="flex items-center justify-center gap-2 text-[10px] text-slate-500 hover:text-white transition-colors"
+            >
+              <Download size={12} /> Descargar formato CSV
+            </button>
+          </div>
+
+          {/* STEP 4: ASSIGN PERMISSIONS */}
+          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Link className="text-[#E85D2F]" size={24} />
+              4. Asignar GPS a Usuario
+            </h2>
+
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-slate-500 uppercase font-bold px-1">ID de Usuario</label>
+                <div className="relative">
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input 
+                    type="number"
+                    placeholder="Ej: 42"
+                    value={assignUserId}
+                    onChange={e => setAssignUserId(e.target.value)}
+                    className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg pl-10 pr-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 p-1 bg-[#0A0C0F] rounded-lg border border-white/5">
+                <button 
+                  onClick={() => setAssignmentMode('range')}
+                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold transition-all ${assignmentMode === 'range' ? 'bg-[#E85D2F] text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  RANGO
+                </button>
+                <button 
+                  onClick={() => setAssignmentMode('manual')}
+                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold transition-all ${assignmentMode === 'manual' ? 'bg-[#E85D2F] text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  MANUAL
+                </button>
+              </div>
+
+              {assignmentMode === 'range' ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-slate-500 uppercase font-bold px-1">Desde</label>
+                    <input 
+                      type="number"
+                      placeholder="4"
+                      value={rangeFrom}
+                      onChange={e => setRangeFrom(e.target.value)}
+                      className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-[10px] text-slate-500 uppercase font-bold px-1">Hasta</label>
+                    <input 
+                      type="number"
+                      placeholder="10"
+                      value={rangeTo}
+                      onChange={e => setRangeTo(e.target.value)}
+                      className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-slate-500 uppercase font-bold px-1">IDs (separados por coma)</label>
+                  <textarea 
+                    placeholder="4, 9, 10, 15..."
+                    value={manualDeviceIds}
+                    onChange={e => setManualDeviceIds(e.target.value)}
+                    rows={2}
+                    className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F] resize-none"
+                  />
+                </div>
+              )}
+
+              <button 
+                onClick={handleAssignPermissions}
+                disabled={isAssigning}
+                className="bg-[#E85D2F] hover:bg-[#ff6b3d] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isAssigning ? <Loader2 className="animate-spin" size={20} /> : <Zap size={20} />}
+                Asignar
+              </button>
+            </div>
+
+            {permissionResults.length > 0 && (
+              <div className="mt-2 flex flex-col gap-3">
+                <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold">Progreso</span>
+                  <div className="flex gap-2">
+                    <span className="text-[10px] text-emerald-500 font-bold">{permissionResults.filter(r => r.status === 'success').length} OK</span>
+                    <span className="text-[10px] text-red-500 font-bold">{permissionResults.filter(r => r.status === 'error').length} FAIL</span>
+                  </div>
+                </div>
+                
+                <div className="max-h-40 overflow-y-auto flex flex-col gap-1.5 pr-2 custom-scrollbar">
+                  {permissionResults.map((res, i) => (
+                    <div key={i} className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
+                      <div className="flex items-center gap-2">
+                        <Hash className="text-slate-600" size={12} />
+                        <span className="text-xs text-white font-mono">ID: {res.deviceId}</span>
+                      </div>
+                      <div>
+                        {res.status === 'loading' && <Loader2 className="animate-spin text-[#E85D2F]" size={14} />}
+                        {res.status === 'success' && <CheckCircle2 className="text-emerald-500" size={14} />}
+                        {res.status === 'error' && (
+                          <div className="group relative">
+                            <XCircle className="text-red-500" size={14} />
+                            <div className="absolute right-0 bottom-full mb-2 w-32 p-2 bg-red-900 text-white text-[9px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
+                              {res.message}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: PROGRESS & SUMMARY */}
+        <div className="lg:col-span-8 flex flex-col gap-8">
+          
+          {/* SUMMARY & ACTION */}
+          <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 transition-all ${results.length === 0 ? 'opacity-50' : ''}`}>
+            <div className="bg-[#1C1F26] p-5 rounded-2xl border border-white/5 flex flex-col">
+              <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Total</span>
+              <span className="text-3xl font-black text-white mt-1">{total}</span>
+            </div>
+            <div className="bg-[#1C1F26] p-5 rounded-2xl border border-white/5 flex flex-col">
+              <span className="text-xs text-emerald-500/50 uppercase font-bold tracking-widest">Éxitos</span>
+              <span className="text-3xl font-black text-emerald-500 mt-1">{successes}</span>
+            </div>
+            <div className="bg-[#1C1F26] p-5 rounded-2xl border border-white/5 flex flex-col">
+              <span className="text-xs text-red-500/50 uppercase font-bold tracking-widest">Fallos</span>
+              <span className="text-3xl font-black text-red-500 mt-1">{failures}</span>
+            </div>
+            <button 
+              onClick={processDevices}
+              disabled={isProcessing || results.length === 0}
+              className="bg-white text-black hover:bg-slate-200 font-black rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {isProcessing ? <Loader2 className="animate-spin" size={24} /> : <Zap size={24} />}
+              {isProcessing ? "PROCESANDO..." : "INICIAR"}
+            </button>
+          </div>
+
+          {/* TABLE */}
+          <div className="bg-[#1C1F26] border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex-1 flex flex-col">
+            <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/2">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <TableIcon className="text-slate-400" size={18} />
+                Lista de Dispositivos
+              </h3>
+              {results.length > 0 && !isProcessing && (
+                <button 
+                  onClick={() => setResults([])}
+                  className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
+                >
+                  <Trash2 size={12} /> Limpiar lista
+                </button>
+              )}
+            </div>
+            
+            <div className="overflow-y-auto max-h-150">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 z-10 bg-[#1C1F26]">
+                  <tr className="bg-[#0A0C0F]/50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
+                    <th className="px-5 py-3">Nombre / IMEI</th>
+                    <th className="px-5 py-3">Phone / Model</th>
+                    <th className="px-5 py-3">Attributes</th>
+                    <th className="px-5 py-3 text-center">Estado</th>
+                    {!isProcessing && <th className="px-5 py-3 w-10"></th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {results.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-20 text-center text-slate-600 italic">
+                        No hay dispositivos en la lista. Carga un Excel/CSV o ingresa uno manualmente.
+                      </td>
+                    </tr>
+                  ) : (
+                    results.map((res, idx) => (
+                      <tr key={idx} className="hover:bg-white/2 transition-colors">
+                        <td className="px-5 py-4">
+                          <div className="text-white font-medium text-sm">{res.name}</div>
+                          <div className="text-slate-500 font-mono text-[11px]">{res.uniqueId}</div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="text-slate-300 text-xs">{res.phone || '-'}</div>
+                          <div className="text-slate-500 text-[11px]">{res.model || '-'}</div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] text-slate-500">ID: {res.deviceID}</span>
+                            <span className="text-[9px] text-slate-500">ACC: {res.accountID}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-center">
+                          {res.status === 'pending' && <span className="inline-block w-2 h-2 rounded-full bg-slate-700" />}
+                          {res.status === 'loading' && <Loader2 className="animate-spin text-[#E85D2F] mx-auto" size={16} />}
+                          {res.status === 'success' && <CheckCircle2 className="text-emerald-500 mx-auto" size={18} />}
+                          {res.status === 'error' && (
+                            <div className="group relative inline-block">
+                              <XCircle className="text-red-500 mx-auto cursor-help" size={18} />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-red-900 text-white text-[10px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                {res.message}
+                              </div>
+                            </div>
+                          )}
+                        </td>
+                        {!isProcessing && (
+                          <td className="px-5 py-4">
+                            <button onClick={() => removeDevice(idx)} className="text-slate-600 hover:text-red-400 transition-colors">
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Footer Info */}
+      <div className="bg-[#E85D2F]/5 border border-[#E85D2F]/10 rounded-xl p-4 flex items-start gap-3">
+        <ShieldCheck className="text-[#E85D2F] shrink-0" size={20} />
+        <div>
+          <p className="text-[#E85D2F] text-sm font-bold">Resumen de Atributos</p>
+          <p className="text-slate-400 text-[11px]">
+            El sistema enviará `category: "car"` y `groupId: 0` por defecto. Soporta archivos **.csv**, **.xlsx** y **.xls**. Asegúrate de que los encabezados coincidan con los nombres esperados.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, User, Car, Users, LogOut, Activity, RefreshCwOff, MapPinned } from "lucide-react";
+import { Home, User, Car, Users, LogOut, Activity, RefreshCwOff, MapPinned, Plus, Globe } from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
 
 export default function Sidebar() {
@@ -90,6 +90,8 @@ export default function Sidebar() {
         <SidebarLink href="/panel/unidades"      icon={<Car size={17} />}           label="Unidades"               open={open} active={pathname === "/panel/unidades"} />
         <SidebarLink href="/panel/unidadesConex" icon={<RefreshCwOff size={17} />}  label="Conexión / Desconexión" open={open} active={pathname === "/panel/unidadesConex"} />
         <SidebarLink href="/panel/seguimiento"   icon={<MapPinned size={17} />}     label="Seguimiento"            open={open} active={pathname === "/panel/seguimiento"} />
+        <SidebarLink href="/panel/webs-velsat"   icon={<Globe size={17} />}          label="Webs Velsat"           open={open} active={pathname === "/panel/webs-velsat"} />
+        <SidebarLink href="/panel/agregargpstraccar" icon={<Plus size={17} />}      label="Agregar GPS Traccar"    open={open} active={pathname === "/panel/agregargpstraccar"} />
       </nav>
 
       {/* ---------- FOOTER ---------- */}

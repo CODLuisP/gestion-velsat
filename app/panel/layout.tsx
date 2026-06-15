@@ -10,7 +10,7 @@ export default function PanelLayout({
     <div className="flex h-screen overflow-hidden bg-[#0A0C0F]">
       <Sidebar />
 
-      <main className="flex-1 min-h-0 min-w-0 overflow-hidden p-4">
+      <main className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
         {children}
         
         <Toaster
