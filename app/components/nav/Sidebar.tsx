@@ -3,7 +3,19 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, User, Car, Users, LogOut, Activity, RefreshCwOff, MapPinned, Plus, Globe } from "lucide-react";
+import {
+  Home,
+  User,
+  Car,
+  Users,
+  LogOut,
+  Activity,
+  RefreshCwOff,
+  MapPinned,
+  Plus,
+  Globe,
+  ShieldCheck,
+} from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
 
 export default function Sidebar() {
@@ -49,12 +61,14 @@ export default function Sidebar() {
               flexShrink: 0,
             }}
           >
-                            <img src="/logoVelsat.jpg" alt="" className="rounded-lg p-0.2" />
-
+            <img src="/logoVelsat.jpg" alt="" className="rounded-lg p-0.2" />
           </div>
 
           <div className="whitespace-nowrap">
-            <h1 className="text-[16px] font-bold leading-none" style={{ color: "#F4F5F7" }}>
+            <h1
+              className="text-[16px] font-bold leading-none"
+              style={{ color: "#F4F5F7" }}
+            >
               Gestión <span style={{ color: "#E85D2F" }}>Velsat</span>
             </h1>
             <p
@@ -84,14 +98,70 @@ export default function Sidebar() {
 
       {/* ---------- MENÚ ---------- */}
       <nav className="mt-2 flex flex-col gap-0.5 px-2 font-medium">
-        <SidebarLink href="/panel/dashboard"     icon={<Home size={17} />}          label="Dashboard"              open={open} active={pathname === "/panel/dashboard"} />
-        <SidebarLink href="/panel/usuarios"      icon={<User size={17} />}          label="Usuarios"               open={open} active={pathname === "/panel/usuarios"} />
-        <SidebarLink href="/panel/subUsuarios"   icon={<Users size={17} />}         label="Sub Usuarios"           open={open} active={pathname === "/panel/subUsuarios"} />
-        <SidebarLink href="/panel/unidades"      icon={<Car size={17} />}           label="Unidades"               open={open} active={pathname === "/panel/unidades"} />
-        <SidebarLink href="/panel/unidadesConex" icon={<RefreshCwOff size={17} />}  label="Conexión / Desconexión" open={open} active={pathname === "/panel/unidadesConex"} />
-        <SidebarLink href="/panel/seguimiento"   icon={<MapPinned size={17} />}     label="Seguimiento"            open={open} active={pathname === "/panel/seguimiento"} />
-        <SidebarLink href="/panel/webs-velsat"   icon={<Globe size={17} />}          label="Webs Velsat"           open={open} active={pathname === "/panel/webs-velsat"} />
-        <SidebarLink href="/panel/agregargpstraccar" icon={<Plus size={17} />}      label="Agregar GPS Traccar"    open={open} active={pathname === "/panel/agregargpstraccar"} />
+        <SidebarLink
+          href="/panel/dashboard"
+          icon={<Home size={17} />}
+          label="Dashboard"
+          open={open}
+          active={pathname === "/panel/dashboard"}
+        />
+        <SidebarLink
+          href="/panel/usuarios"
+          icon={<User size={17} />}
+          label="Usuarios"
+          open={open}
+          active={pathname === "/panel/usuarios"}
+        />
+        <SidebarLink
+          href="/panel/subUsuarios"
+          icon={<Users size={17} />}
+          label="Sub Usuarios"
+          open={open}
+          active={pathname === "/panel/subUsuarios"}
+        />
+        <SidebarLink
+          href="/panel/unidades"
+          icon={<Car size={17} />}
+          label="Unidades"
+          open={open}
+          active={pathname === "/panel/unidades"}
+        />
+        <SidebarLink
+          href="/panel/unidadesConex"
+          icon={<RefreshCwOff size={17} />}
+          label="Conexión / Desconexión"
+          open={open}
+          active={pathname === "/panel/unidadesConex"}
+        />
+        <SidebarLink
+          href="/panel/sutran"
+          icon={<ShieldCheck size={17} />}
+          label="Sutran"
+          open={open}
+          active={pathname === "/panel/sutran"}
+        />
+
+        <SidebarLink
+          href="/panel/seguimiento"
+          icon={<MapPinned size={17} />}
+          label="Seguimiento"
+          open={open}
+          active={pathname === "/panel/seguimiento"}
+        />
+        <SidebarLink
+          href="/panel/webs-velsat"
+          icon={<Globe size={17} />}
+          label="Webs Velsat"
+          open={open}
+          active={pathname === "/panel/webs-velsat"}
+        />
+        <SidebarLink
+          href="/panel/agregargpstraccar"
+          icon={<Plus size={17} />}
+          label="Agregar GPS Traccar"
+          open={open}
+          active={pathname === "/panel/agregargpstraccar"}
+        />
       </nav>
 
       {/* ---------- FOOTER ---------- */}
