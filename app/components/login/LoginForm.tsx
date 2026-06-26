@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 interface LoginFormProps {
-  onSubmit: (username: string, password: string) => void;
+  onSubmit: (username: string, password: string, remember: boolean) => void;
   loading: boolean;
   error: string;
 }
@@ -24,6 +24,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [remember, setRemember] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +33,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       setValidationError('Ingrese su usuario y contraseña.');
       return;
     }
-    onSubmit(username, password);
+    onSubmit(username, password, remember);
   };
 
   return (
@@ -424,8 +425,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
                 id="remember"
                 type="checkbox"
                 className="lf-checkbox-native"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
               />
-              <CheckboxCustom />
+              <CheckboxCustom
+                checked={remember}
+                onToggle={() => setRemember((v) => !v)}
+              />
               Mantener sesión iniciada
             </label>
           </div>
@@ -469,17 +475,30 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   );
 };
 
-/* Checkbox con estado controlado visualmente */
-function CheckboxCustom() {
-  const [checked, setChecked] = useState(false);
+/* Checkbox controlado por el formulario */
+function CheckboxCustom({
+  checked,
+  onToggle,
+}: {
+  checked: boolean;
+  onToggle: () => void;
+}) {
   return (
     <span
       className={`lf-checkbox-box${checked ? ' checked' : ''}`}
-      onClick={() => setChecked(!checked)}
+      onClick={(e) => {
+        e.preventDefault();
+        onToggle();
+      }}
       role="checkbox"
       aria-checked={checked}
       tabIndex={0}
-      onKeyDown={(e) => e.key === ' ' && setChecked(!checked)}
+      onKeyDown={(e) => {
+        if (e.key === ' ') {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
     >
       {checked && (
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">

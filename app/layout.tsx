@@ -13,6 +13,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Gestión Velsat",
+  icons: {
+    icon: "/logoVelsat.ico",
+    shortcut: "/logoVelsat.ico",
+    apple: "/logoVelsat.ico",
+  },
 };
 
 export default function RootLayout({

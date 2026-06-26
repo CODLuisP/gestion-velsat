@@ -42,10 +42,16 @@ interface PermissionResult {
   message?: string;
 }
 
+const SERVERS = [
+  { id: 'do', label: 'Servidor DO', host: 'do.velsat.pe', url: 'https://do.velsat.pe:2087' },
+  { id: 'sr', label: 'Servidor SR', host: 'sr.velsat.pe', url: 'https://sr.velsat.pe:2087' },
+];
+
 export default function AgregarGPSTraccarClient() {
   // Login State
   const [email, setEmail] = useState('velsat@velsat.pe');
   const [password, setPassword] = useState('velsat2026');
+  const [serverUrl, setServerUrl] = useState(SERVERS[0].url);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -78,6 +84,10 @@ export default function AgregarGPSTraccarClient() {
   const successes = results.filter(r => r.status === 'success').length;
   const failures = results.filter(r => r.status === 'error').length;
 
+  // Autenticación básica: cada petición se autentica por sí sola,
+  // así no dependemos de la cookie de sesión (que puede bloquearse entre dominios).
+  const authHeader = () => 'Basic ' + btoa(`${email}:${password}`);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoggingIn(true);
@@ -86,13 +96,14 @@ export default function AgregarGPSTraccarClient() {
       params.append('email', email);
       params.append('password', password);
 
-      await axios.post('https://do.velsat.pe:2087/api/session', params, {
+      await axios.post(`${serverUrl}/api/session`, params, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         withCredentials: true
       });
 
       setIsLoggedIn(true);
-      toast.success('Sesión iniciada en Traccar');
+      const serverLabel = SERVERS.find(s => s.url === serverUrl)?.label ?? '';
+      toast.success(`Sesión iniciada en Traccar (${serverLabel})`);
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error('Error al iniciar sesión: ' + (error.response?.data || error.message));
@@ -220,7 +231,8 @@ export default function AgregarGPSTraccarClient() {
           }
         };
 
-        await axios.post('https://do.velsat.pe:2087/api/devices', payload, {
+        await axios.post(`${serverUrl}/api/devices`, payload, {
+          headers: { Authorization: authHeader() },
           withCredentials: true
         });
 
@@ -284,10 +296,11 @@ export default function AgregarGPSTraccarClient() {
       setPermissionResults([...updatedResults]);
 
       try {
-        await axios.post('https://do.velsat.pe:2087/api/permissions', {
+        await axios.post(`${serverUrl}/api/permissions`, {
           userId: Number(assignUserId),
           deviceId: Number(deviceId)
         }, {
+          headers: { Authorization: authHeader() },
           withCredentials: true
         });
 
@@ -330,20 +343,20 @@ export default function AgregarGPSTraccarClient() {
       {/* ---------- HEADER ---------- */}
       <section
         style={{
-          marginBottom: 20,
-          paddingBottom: 16,
+          marginBottom: 12,
+          paddingBottom: 10,
           borderBottom: "1px solid rgba(255,255,255,0.06)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: 12,
+          gap: 8,
         }}
       >
         <div>
           <h1
             style={{
-              fontSize: 22,
+              fontSize: 16,
               fontWeight: 700,
               color: "#F4F5F7",
               margin: 0,
@@ -352,158 +365,165 @@ export default function AgregarGPSTraccarClient() {
           >
             Registro de <span style={{ color: "#E85D2F" }}>GPS Traccar</span>
           </h1>
-          <p style={{ fontSize: 12, color: "#8A9099", margin: "4px 0 0" }}>
+          <p style={{ fontSize: 11, color: "#8A9099", margin: "2px 0 0" }}>
             Agrega dispositivos mediante carga de archivos Excel/CSV o ingreso manual
           </p>
         </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 12px",
-            borderRadius: 8,
-            background: "#1C1F26",
-            border: "1px solid rgba(255,255,255,0.06)",
-            fontSize: 12,
-            color: "#ADB5BD",
-          }}
-        >
-          <Plus size={13} style={{ color: "#E85D2F" }} />
-          <span>
-            Nuevo <strong style={{ color: "#E85D2F" }}>Dispositivo</strong>
-          </span>
-        </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0 mt-2">
+      <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0 mt-1">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
         {/* LEFT COLUMN: CONNECTION & INPUTS */}
-        <div className="lg:col-span-4 flex flex-col gap-8">
-          
+        <div className="lg:col-span-4 flex flex-col gap-4">
+
           {/* STEP 1: LOGIN */}
-          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${isLoggedIn ? 'border-emerald-500/30' : 'border-white/5 shadow-xl'}`}>
+          <div className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${isLoggedIn ? 'border-emerald-500/30' : 'border-white/5 shadow-xl'}`}>
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <LogIn className={isLoggedIn ? "text-emerald-500" : "text-[#E85D2F]"} size={24} />
+              <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                <LogIn className={isLoggedIn ? "text-emerald-500" : "text-[#E85D2F]"} size={16} />
                 1. Conexión
               </h2>
-              {isLoggedIn && <CheckCircle2 className="text-emerald-500" size={20} />}
+              {isLoggedIn && <CheckCircle2 className="text-emerald-500" size={16} />}
             </div>
 
-            <form onSubmit={handleLogin} className="flex flex-col gap-4">
-              <input 
-                type="email" 
+            <form onSubmit={handleLogin} className="flex flex-col gap-2.5">
+              {/* Selector de servidor */}
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-slate-500 uppercase font-bold px-1">Servidor</label>
+                <div className={`flex gap-1 p-1 bg-[#0A0C0F] rounded-lg border border-white/5 ${isLoggedIn ? 'opacity-60 pointer-events-none' : ''}`}>
+                  {SERVERS.map((s) => {
+                    const active = serverUrl === s.url;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setServerUrl(s.url)}
+                        disabled={isLoggedIn}
+                        title={s.url}
+                        className={`flex-1 flex flex-col items-center py-1.5 rounded-md transition-all ${
+                          active ? 'bg-[#E85D2F] text-white shadow' : 'text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        <span className="text-[11px] font-bold leading-tight">{s.label}</span>
+                        <span className={`text-[9px] leading-tight ${active ? 'text-white/70' : 'text-slate-600'}`}>{s.host}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <input
+                type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoggedIn}
-                className="bg-[#0A0C0F] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-sm"
+                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-xs"
                 placeholder="email@velsat.pe"
               />
-              <input 
-                type="password" 
+              <input
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoggedIn}
-                className="bg-[#0A0C0F] border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-sm"
+                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-xs"
                 placeholder="********"
               />
-              <button 
+              <button
                 type="submit"
                 disabled={isLoggingIn || isLoggedIn}
-                className={`font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all ${
-                  isLoggedIn 
-                  ? 'bg-emerald-500/20 text-emerald-500 cursor-default' 
+                className={`font-bold py-2 text-xs rounded-lg flex items-center justify-center gap-2 transition-all ${
+                  isLoggedIn
+                  ? 'bg-emerald-500/20 text-emerald-500 cursor-default'
                   : 'bg-[#E85D2F] hover:bg-[#ff6b3d] text-white shadow-lg active:scale-95'
                 }`}
               >
-                {isLoggingIn ? <Loader2 className="animate-spin" size={20} /> : isLoggedIn ? "Conectado" : "Conectar"}
+                {isLoggingIn ? <Loader2 className="animate-spin" size={16} /> : isLoggedIn ? "Conectado" : "Conectar"}
               </button>
             </form>
           </div>
 
           {/* STEP 2: MANUAL INPUT */}
-          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Keyboard className="text-[#E85D2F]" size={24} />
+          <div className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Keyboard className="text-[#E85D2F]" size={16} />
               2. Ingreso Manual
             </h2>
-            
-            <div className="grid grid-cols-1 gap-3">
-              <input 
+
+            <div className="grid grid-cols-1 gap-2">
+              <input
                 placeholder="Nombre del GPS"
                 value={manualDevice.name}
                 onChange={e => setManualDevice({...manualDevice, name: e.target.value})}
-                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
               />
-              <input 
+              <input
                 placeholder="IMEI (Unique ID)"
                 value={manualDevice.uniqueId}
                 onChange={e => setManualDevice({...manualDevice, uniqueId: e.target.value})}
-                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
               />
-              <div className="grid grid-cols-2 gap-3">
-                <input 
+              <div className="grid grid-cols-2 gap-2">
+                <input
                   placeholder="Teléfono"
                   value={manualDevice.phone}
                   onChange={e => setManualDevice({...manualDevice, phone: e.target.value})}
-                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
                 />
-                <input 
+                <input
                   placeholder="Modelo"
                   value={manualDevice.model}
                   onChange={e => setManualDevice({...manualDevice, model: e.target.value})}
-                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3 border-t border-white/5 pt-3 mt-1">
-                <input 
+              <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2 mt-0.5">
+                <input
                   placeholder="DeviceID (Attr)"
                   value={manualDevice.deviceID}
                   onChange={e => setManualDevice({...manualDevice, deviceID: e.target.value})}
-                  className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-2 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
+                  className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-1.5 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
                 />
-                <input 
+                <input
                   placeholder="AccountID (Attr)"
                   value={manualDevice.accountID}
                   onChange={e => setManualDevice({...manualDevice, accountID: e.target.value})}
-                  className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-2 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
+                  className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-1.5 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
                 />
               </div>
             </div>
 
-            <button 
+            <button
               onClick={addManualDevice}
-              className="bg-white/5 hover:bg-white/10 text-white font-bold py-2 rounded-lg border border-white/10 transition-all flex items-center justify-center gap-2"
+              className="bg-white/5 hover:bg-white/10 text-white text-xs font-bold py-1.5 rounded-lg border border-white/10 transition-all flex items-center justify-center gap-2"
             >
-              <Plus size={16} /> Añadir a la lista
+              <Plus size={14} /> Añadir a la lista
             </button>
           </div>
 
           {/* STEP 3: FILE UPLOAD */}
-          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <FileSpreadsheet className="text-[#E85D2F]" size={24} />
+          <div className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <FileSpreadsheet className="text-[#E85D2F]" size={16} />
               3. Cargar Archivo
             </h2>
-            
-            <div 
+
+            <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-white/10 rounded-xl p-6 flex flex-col items-center justify-center gap-3 hover:border-[#E85D2F]/50 hover:bg-[#E85D2F]/5 cursor-pointer transition-all group"
+              className="border-2 border-dashed border-white/10 rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:border-[#E85D2F]/50 hover:bg-[#E85D2F]/5 cursor-pointer transition-all group"
             >
-              <FileSpreadsheet className="text-slate-400 group-hover:text-[#E85D2F]" size={20} />
+              <FileSpreadsheet className="text-slate-400 group-hover:text-[#E85D2F]" size={18} />
               <p className="text-white text-xs font-medium text-center">Subir Excel (.xlsx) o CSV</p>
-              <input 
-                type="file" 
-                accept=".csv, .xlsx, .xls" 
-                className="hidden" 
-                ref={fileInputRef} 
-                onChange={handleFileUpload} 
+              <input
+                type="file"
+                accept=".csv, .xlsx, .xls"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
               />
             </div>
 
-            <button 
+            <button
               onClick={downloadSampleCSV}
               className="flex items-center justify-center gap-2 text-[10px] text-slate-500 hover:text-white transition-colors"
             >
@@ -512,101 +532,101 @@ export default function AgregarGPSTraccarClient() {
           </div>
 
           {/* STEP 4: ASSIGN PERMISSIONS */}
-          <div className={`flex flex-col gap-6 p-6 rounded-2xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Link className="text-[#E85D2F]" size={24} />
+          <div className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? 'opacity-50 pointer-events-none' : 'border-white/5 shadow-xl'}`}>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Link className="text-[#E85D2F]" size={16} />
               4. Asignar GPS a Usuario
             </h2>
 
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2.5">
               <div className="flex flex-col gap-1">
                 <label className="text-[10px] text-slate-500 uppercase font-bold px-1">ID de Usuario</label>
                 <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                  <input 
+                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+                  <input
                     type="number"
                     placeholder="Ej: 42"
                     value={assignUserId}
                     onChange={e => setAssignUserId(e.target.value)}
-                    className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg pl-10 pr-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                    className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
                   />
                 </div>
               </div>
 
               <div className="flex gap-2 p-1 bg-[#0A0C0F] rounded-lg border border-white/5">
-                <button 
+                <button
                   onClick={() => setAssignmentMode('range')}
-                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold transition-all ${assignmentMode === 'range' ? 'bg-[#E85D2F] text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${assignmentMode === 'range' ? 'bg-[#E85D2F] text-white' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                   RANGO
                 </button>
-                <button 
+                <button
                   onClick={() => setAssignmentMode('manual')}
-                  className={`flex-1 py-1.5 rounded-md text-[10px] font-bold transition-all ${assignmentMode === 'manual' ? 'bg-[#E85D2F] text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                  className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${assignmentMode === 'manual' ? 'bg-[#E85D2F] text-white' : 'text-slate-500 hover:text-slate-300'}`}
                 >
                   MANUAL
                 </button>
               </div>
 
               {assignmentMode === 'range' ? (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] text-slate-500 uppercase font-bold px-1">Desde</label>
-                    <input 
+                    <input
                       type="number"
                       placeholder="4"
                       value={rangeFrom}
                       onChange={e => setRangeFrom(e.target.value)}
-                      className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                      className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
                     />
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-[10px] text-slate-500 uppercase font-bold px-1">Hasta</label>
-                    <input 
+                    <input
                       type="number"
                       placeholder="10"
                       value={rangeTo}
                       onChange={e => setRangeTo(e.target.value)}
-                      className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F]"
+                      className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
                     />
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] text-slate-500 uppercase font-bold px-1">IDs (separados por coma)</label>
-                  <textarea 
+                  <textarea
                     placeholder="4, 9, 10, 15..."
                     value={manualDeviceIds}
                     onChange={e => setManualDeviceIds(e.target.value)}
                     rows={2}
-                    className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:ring-1 focus:ring-[#E85D2F] resize-none"
+                    className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F] resize-none"
                   />
                 </div>
               )}
 
-              <button 
+              <button
                 onClick={handleAssignPermissions}
                 disabled={isAssigning}
-                className="bg-[#E85D2F] hover:bg-[#ff6b3d] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="bg-[#E85D2F] hover:bg-[#ff6b3d] text-white text-xs font-bold py-2 rounded-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {isAssigning ? <Loader2 className="animate-spin" size={20} /> : <Zap size={20} />}
+                {isAssigning ? <Loader2 className="animate-spin" size={16} /> : <Zap size={16} />}
                 Asignar
               </button>
             </div>
 
             {permissionResults.length > 0 && (
-              <div className="mt-2 flex flex-col gap-3">
-                <div className="flex items-center justify-between border-t border-white/5 pt-4">
+              <div className="mt-1 flex flex-col gap-2">
+                <div className="flex items-center justify-between border-t border-white/5 pt-3">
                   <span className="text-[10px] text-slate-500 uppercase font-bold">Progreso</span>
                   <div className="flex gap-2">
                     <span className="text-[10px] text-emerald-500 font-bold">{permissionResults.filter(r => r.status === 'success').length} OK</span>
                     <span className="text-[10px] text-red-500 font-bold">{permissionResults.filter(r => r.status === 'error').length} FAIL</span>
                   </div>
                 </div>
-                
-                <div className="max-h-40 overflow-y-auto flex flex-col gap-1.5 pr-2 custom-scrollbar">
+
+                <div className="max-h-36 overflow-y-auto flex flex-col gap-1.5 pr-2 custom-scrollbar">
                   {permissionResults.map((res, i) => (
-                    <div key={i} className="flex items-center justify-between bg-black/20 p-2 rounded-lg border border-white/5">
+                    <div key={i} className="flex items-center justify-between bg-black/20 p-1.5 rounded-lg border border-white/5">
                       <div className="flex items-center gap-2">
                         <Hash className="text-slate-600" size={12} />
                         <span className="text-xs text-white font-mono">ID: {res.deviceId}</span>
@@ -633,91 +653,95 @@ export default function AgregarGPSTraccarClient() {
         </div>
 
         {/* RIGHT COLUMN: PROGRESS & SUMMARY */}
-        <div className="lg:col-span-8 flex flex-col gap-8">
-          
+        <div className="lg:col-span-8 flex flex-col gap-4">
+
           {/* SUMMARY & ACTION */}
-          <div className={`grid grid-cols-1 md:grid-cols-4 gap-4 transition-all ${results.length === 0 ? 'opacity-50' : ''}`}>
-            <div className="bg-[#1C1F26] p-5 rounded-2xl border border-white/5 flex flex-col">
-              <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Total</span>
-              <span className="text-3xl font-black text-white mt-1">{total}</span>
+          <div className={`grid grid-cols-1 md:grid-cols-4 gap-3 transition-all ${results.length === 0 ? 'opacity-50' : ''}`}>
+            {/* Total */}
+            <div className="rounded-xl p-3 flex flex-col backdrop-blur-xl bg-white/[0.04] border border-white/10 transition-all hover:bg-white/[0.06]">
+              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Total</span>
+              <span className="text-2xl font-black text-white mt-0.5">{total}</span>
             </div>
-            <div className="bg-[#1C1F26] p-5 rounded-2xl border border-white/5 flex flex-col">
-              <span className="text-xs text-emerald-500/50 uppercase font-bold tracking-widest">Éxitos</span>
-              <span className="text-3xl font-black text-emerald-500 mt-1">{successes}</span>
+            {/* Éxitos */}
+            <div className="rounded-xl p-3 flex flex-col backdrop-blur-xl bg-white/[0.04] border border-white/10 transition-all hover:bg-white/[0.06]">
+              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Éxitos</span>
+              <span className="text-2xl font-black text-white mt-0.5">{successes}</span>
             </div>
-            <div className="bg-[#1C1F26] p-5 rounded-2xl border border-white/5 flex flex-col">
-              <span className="text-xs text-red-500/50 uppercase font-bold tracking-widest">Fallos</span>
-              <span className="text-3xl font-black text-red-500 mt-1">{failures}</span>
+            {/* Fallos */}
+            <div className="rounded-xl p-3 flex flex-col backdrop-blur-xl bg-white/[0.04] border border-white/10 transition-all hover:bg-white/[0.06]">
+              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Fallos</span>
+              <span className="text-2xl font-black text-white mt-0.5">{failures}</span>
             </div>
-            <button 
+            {/* Iniciar */}
+            <button
               onClick={processDevices}
               disabled={isProcessing || results.length === 0}
-              className="bg-white text-black hover:bg-slate-200 font-black rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50"
+              className="rounded-xl py-3 px-3 flex items-center justify-center gap-2 text-sm font-black text-white backdrop-blur-xl bg-white/[0.04] border border-white/10 transition-all hover:bg-white/[0.08] active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isProcessing ? <Loader2 className="animate-spin" size={24} /> : <Zap size={24} />}
+              {isProcessing ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} />}
               {isProcessing ? "PROCESANDO..." : "INICIAR"}
             </button>
           </div>
 
           {/* TABLE */}
-          <div className="bg-[#1C1F26] border border-white/5 rounded-2xl overflow-hidden shadow-2xl flex-1 flex flex-col">
-            <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/2">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <TableIcon className="text-slate-400" size={18} />
+          <div className="bg-[#1C1F26] border border-white/5 rounded-xl overflow-hidden shadow-2xl flex-1 flex flex-col">
+            <div className="p-3 border-b border-white/5 flex items-center justify-between bg-white/2">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <TableIcon className="text-slate-400" size={15} />
                 Lista de Dispositivos
               </h3>
               {results.length > 0 && !isProcessing && (
-                <button 
+                <button
                   onClick={() => setResults([])}
-                  className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
+                  className="text-[11px] text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
                 >
                   <Trash2 size={12} /> Limpiar lista
                 </button>
               )}
             </div>
-            
+
             <div className="overflow-y-auto max-h-150">
               <table className="w-full text-left border-collapse">
                 <thead className="sticky top-0 z-10 bg-[#1C1F26]">
                   <tr className="bg-[#0A0C0F]/50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-                    <th className="px-5 py-3">Nombre / IMEI</th>
-                    <th className="px-5 py-3">Phone / Model</th>
-                    <th className="px-5 py-3">Attributes</th>
-                    <th className="px-5 py-3 text-center">Estado</th>
-                    {!isProcessing && <th className="px-5 py-3 w-10"></th>}
+                    <th className="px-3 py-2">Nombre / IMEI</th>
+                    <th className="px-3 py-2">Phone / Model</th>
+                    <th className="px-3 py-2">Attributes</th>
+                    <th className="px-3 py-2 text-center">Estado</th>
+                    {!isProcessing && <th className="px-3 py-2 w-8"></th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
                   {results.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-5 py-20 text-center text-slate-600 italic">
+                      <td colSpan={5} className="px-3 py-12 text-center text-slate-600 italic text-xs">
                         No hay dispositivos en la lista. Carga un Excel/CSV o ingresa uno manualmente.
                       </td>
                     </tr>
                   ) : (
                     results.map((res, idx) => (
                       <tr key={idx} className="hover:bg-white/2 transition-colors">
-                        <td className="px-5 py-4">
-                          <div className="text-white font-medium text-sm">{res.name}</div>
-                          <div className="text-slate-500 font-mono text-[11px]">{res.uniqueId}</div>
+                        <td className="px-3 py-2">
+                          <div className="text-white font-medium text-xs">{res.name}</div>
+                          <div className="text-slate-500 font-mono text-[10px]">{res.uniqueId}</div>
                         </td>
-                        <td className="px-5 py-4">
-                          <div className="text-slate-300 text-xs">{res.phone || '-'}</div>
-                          <div className="text-slate-500 text-[11px]">{res.model || '-'}</div>
+                        <td className="px-3 py-2">
+                          <div className="text-slate-300 text-[11px]">{res.phone || '-'}</div>
+                          <div className="text-slate-500 text-[10px]">{res.model || '-'}</div>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-3 py-2">
                           <div className="flex flex-col gap-0.5">
                             <span className="text-[9px] text-slate-500">ID: {res.deviceID}</span>
                             <span className="text-[9px] text-slate-500">ACC: {res.accountID}</span>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-center">
+                        <td className="px-3 py-2 text-center">
                           {res.status === 'pending' && <span className="inline-block w-2 h-2 rounded-full bg-slate-700" />}
-                          {res.status === 'loading' && <Loader2 className="animate-spin text-[#E85D2F] mx-auto" size={16} />}
-                          {res.status === 'success' && <CheckCircle2 className="text-emerald-500 mx-auto" size={18} />}
+                          {res.status === 'loading' && <Loader2 className="animate-spin text-[#E85D2F] mx-auto" size={15} />}
+                          {res.status === 'success' && <CheckCircle2 className="text-emerald-500 mx-auto" size={16} />}
                           {res.status === 'error' && (
                             <div className="group relative inline-block">
-                              <XCircle className="text-red-500 mx-auto cursor-help" size={18} />
+                              <XCircle className="text-red-500 mx-auto cursor-help" size={16} />
                               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-red-900 text-white text-[10px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                                 {res.message}
                               </div>
@@ -725,9 +749,9 @@ export default function AgregarGPSTraccarClient() {
                           )}
                         </td>
                         {!isProcessing && (
-                          <td className="px-5 py-4">
+                          <td className="px-3 py-2">
                             <button onClick={() => removeDevice(idx)} className="text-slate-600 hover:text-red-400 transition-colors">
-                              <Trash2 size={14} />
+                              <Trash2 size={13} />
                             </button>
                           </td>
                         )}
@@ -743,14 +767,16 @@ export default function AgregarGPSTraccarClient() {
       </div>
 
       {/* Footer Info */}
-      <div className="bg-[#E85D2F]/5 border border-[#E85D2F]/10 rounded-xl p-4 flex items-start gap-3">
-        <ShieldCheck className="text-[#E85D2F] shrink-0" size={20} />
+      <div className="bg-[#E85D2F]/5 border border-[#E85D2F]/10 rounded-lg p-2.5 mt-3 flex items-start gap-2.5">
+        <ShieldCheck className="text-[#E85D2F] shrink-0" size={16} />
         <div>
-          <p className="text-[#E85D2F] text-sm font-bold">Resumen de Atributos</p>
-          <p className="text-slate-400 text-[11px]">
+          <p className="text-[#E85D2F] text-xs font-bold">Resumen de Atributos</p>
+          <p className="text-slate-400 text-[10px]">
             El sistema enviará `category: "car"` y `groupId: 0` por defecto. Soporta archivos **.csv**, **.xlsx** y **.xls**. Asegúrate de que los encabezados coincidan con los nombres esperados.
           </p>
         </div>
+      </div>
+
       </div>
     </div>
   );
