@@ -15,6 +15,7 @@ import {
   Plus,
   Globe,
   ShieldCheck,
+  Satellite,
 } from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
 
@@ -139,6 +140,13 @@ export default function Sidebar() {
           label="Sutran"
           open={open}
           active={pathname === "/panel/sutran"}
+        />
+        <SidebarLink
+          href="/panel/goldcar"
+          icon={<Satellite size={17} />}
+          label="Goldcar"
+          open={open}
+          active={pathname === "/panel/goldcar"}
         />
 
         <SidebarLink
