@@ -7,7 +7,7 @@ const USERS = [
 ];
 
 export async function POST(req: Request) {
-  const { usuario, password } = await req.json();
+  const { usuario, password, remember } = await req.json();
 
   const found = USERS.find(
     (u) => u.user === usuario && u.pass === password
@@ -25,15 +25,16 @@ export async function POST(req: Request) {
     role: found.role,
   });
 
-  res.cookies.set("auth", "true", {
+  // Si "Mantener sesión iniciada" está marcado, la cookie persiste 30 días.
+  // Si no, se omite maxAge y queda como cookie de sesión (se borra al cerrar el navegador).
+  const cookieOptions = {
     httpOnly: true,
     path: "/",
-  });
+    ...(remember ? { maxAge: 60 * 60 * 24 * 30 } : {}),
+  };
 
-  res.cookies.set("role", found.role, {
-    httpOnly: true,
-    path: "/",
-  });
+  res.cookies.set("auth", "true", cookieOptions);
+  res.cookies.set("role", found.role, cookieOptions);
 
   return res;
 }

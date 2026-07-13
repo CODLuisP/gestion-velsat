@@ -10,14 +10,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleSubmit = async (usuario: string, password: string) => {
+  const handleSubmit = async (
+    usuario: string,
+    password: string,
+    remember: boolean
+  ) => {
     setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usuario, password }),
+        body: JSON.stringify({ usuario, password, remember }),
       });
       if (!res.ok) throw new Error("Credenciales incorrectas");
       toast.success("¡Ingreso Autorizado!");
