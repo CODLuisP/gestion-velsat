@@ -166,7 +166,7 @@ export default function Sidebar() {
         <SidebarLink
           href="/panel/agregargpstraccar"
           icon={<Plus size={17} />}
-          label="Agregar GPS Traccar"
+          label="Traccar"
           open={open}
           active={pathname === "/panel/agregargpstraccar"}
         />

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Plus,
   ShieldCheck,
@@ -16,11 +16,34 @@ import {
   FileSpreadsheet,
   Users,
   Link,
-  Hash
+  Hash,
+  List,
+  RefreshCw,
+  Pencil,
 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import * as XLSX from "xlsx";
+import ImputBuscar from "@/app/components/ui/ImputBuscar";
+import ModalEliminar from "@/app/components/modal/ModalEliminar";
+import ModalBase from "@/app/components/modal/ModalBase";
+import ButtonBase from "@/app/components/ui/ButtonBase";
+import InputBase1 from "@/app/components/ui/InputBase1";
+
+interface TraccarDevice {
+  id: number;
+  name: string;
+  uniqueId: string;
+  phone?: string;
+  model?: string;
+  status: string;
+  disabled: boolean;
+  attributes?: {
+    accountID?: string;
+    deviceID?: string;
+    [key: string]: unknown;
+  };
+}
 
 interface DeviceResult {
   name: string;
@@ -55,12 +78,40 @@ const SERVERS = [
 ];
 
 export default function AgregarGPSTraccarClient() {
+  // Tabs
+  const [activeTab, setActiveTab] = useState<"registrar" | "unidades">(
+    "registrar",
+  );
+
   // Login State
   const [email, setEmail] = useState("velsat@velsat.pe");
   const [password, setPassword] = useState("velsat2026");
   const [serverUrl, setServerUrl] = useState(SERVERS[0].url);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Unidades (listado) State
+  const [devices, setDevices] = useState<TraccarDevice[]>([]);
+  const [isLoadingDevices, setIsLoadingDevices] = useState(false);
+  const [busquedaUnidad, setBusquedaUnidad] = useState("");
+  const [deviceAEliminar, setDeviceAEliminar] = useState<TraccarDevice | null>(
+    null,
+  );
+  const [openEliminarModal, setOpenEliminarModal] = useState(false);
+  const [isDeletingDevice, setIsDeletingDevice] = useState(false);
+
+  const [deviceAEditar, setDeviceAEditar] = useState<TraccarDevice | null>(
+    null,
+  );
+  const [openEditarModal, setOpenEditarModal] = useState(false);
+  const [isSavingDevice, setIsSavingDevice] = useState(false);
+  const [editForm, setEditForm] = useState({
+    phone: "",
+    model: "",
+    uniqueId: "",
+    accountID: "",
+    deviceID: "",
+  });
 
   // Manual Entry State
   const [manualDevice, setManualDevice] = useState({
@@ -356,6 +407,173 @@ export default function AgregarGPSTraccarClient() {
     );
   };
 
+  const fetchDevices = async () => {
+    if (!isLoggedIn) return;
+    setIsLoadingDevices(true);
+    try {
+      const { data } = await axios.get<TraccarDevice[]>(
+        `${serverUrl}/api/devices`,
+        {
+          headers: { Authorization: authHeader() },
+          withCredentials: true,
+        },
+      );
+      setDevices(data);
+    } catch (error: any) {
+      console.error("Error fetching devices:", error);
+      toast.error(
+        "Error al listar unidades: " +
+          (error.response?.data || error.message),
+      );
+    } finally {
+      setIsLoadingDevices(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "unidades" && isLoggedIn) {
+      fetchDevices();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, isLoggedIn, serverUrl]);
+
+  const abrirEliminarDevice = (device: TraccarDevice) => {
+    setDeviceAEliminar(device);
+    setOpenEliminarModal(true);
+  };
+
+  const eliminarDevice = async () => {
+    if (!deviceAEliminar) return;
+    setIsDeletingDevice(true);
+    try {
+      await axios.delete(`${serverUrl}/api/devices/${deviceAEliminar.id}`, {
+        headers: { Authorization: authHeader() },
+        withCredentials: true,
+      });
+      toast.success(`Unidad "${deviceAEliminar.name}" eliminada`);
+      setOpenEliminarModal(false);
+      setDeviceAEliminar(null);
+      setDevices((prev) => prev.filter((d) => d.id !== deviceAEliminar.id));
+    } catch (error: any) {
+      console.error("Error deleting device:", error);
+      toast.error(
+        "Error al eliminar: " + (error.response?.data || error.message),
+      );
+    } finally {
+      setIsDeletingDevice(false);
+    }
+  };
+
+  const abrirEditarDevice = (device: TraccarDevice) => {
+    setDeviceAEditar(device);
+    setEditForm({
+      phone: device.phone || "",
+      model: device.model || "",
+      uniqueId: device.uniqueId || "",
+      accountID: device.attributes?.accountID || "",
+      deviceID: device.attributes?.deviceID || "",
+    });
+    setOpenEditarModal(true);
+  };
+
+  const guardarEdicionDevice = async () => {
+    if (!deviceAEditar) return;
+    if (!editForm.uniqueId.trim()) {
+      toast.error("El IMEI es obligatorio");
+      return;
+    }
+
+    const uniqueId = editForm.uniqueId.trim();
+    const phone = editForm.phone.trim();
+    const accountID = editForm.accountID.trim();
+    const deviceID = editForm.deviceID.trim();
+
+    const otrosDevices = devices.filter((d) => d.id !== deviceAEditar.id);
+
+    const imeiDuplicado = otrosDevices.find(
+      (d) => d.uniqueId?.trim() === uniqueId,
+    );
+    if (imeiDuplicado) {
+      toast.error(
+        `El IMEI "${uniqueId}" ya está en uso por la unidad "${imeiDuplicado.name}"`,
+      );
+      return;
+    }
+
+    if (phone) {
+      const phoneDuplicado = otrosDevices.find(
+        (d) => d.phone?.trim() === phone,
+      );
+      if (phoneDuplicado) {
+        toast.error(
+          `El teléfono "${phone}" ya está en uso por la unidad "${phoneDuplicado.name}"`,
+        );
+        return;
+      }
+    }
+
+    if (deviceID && accountID) {
+      const comboDuplicado = otrosDevices.find(
+        (d) =>
+          d.attributes?.deviceID?.trim() === deviceID &&
+          d.attributes?.accountID?.trim() === accountID,
+      );
+      if (comboDuplicado) {
+        toast.error(
+          `Ya existe una unidad con DeviceID "${deviceID}" y AccountID "${accountID}" (unidad "${comboDuplicado.name}")`,
+        );
+        return;
+      }
+    }
+
+    setIsSavingDevice(true);
+    try {
+      const payload = {
+        ...deviceAEditar,
+        phone: editForm.phone,
+        model: editForm.model,
+        uniqueId: editForm.uniqueId,
+        attributes: {
+          ...deviceAEditar.attributes,
+          accountID: editForm.accountID,
+          deviceID: editForm.deviceID,
+        },
+      };
+
+      await axios.put(`${serverUrl}/api/devices/${deviceAEditar.id}`, payload, {
+        headers: { Authorization: authHeader() },
+        withCredentials: true,
+      });
+
+      setDevices((prev) =>
+        prev.map((d) => (d.id === deviceAEditar.id ? payload : d)),
+      );
+      toast.success(`Unidad "${deviceAEditar.name}" actualizada`);
+      setOpenEditarModal(false);
+      setDeviceAEditar(null);
+    } catch (error: any) {
+      console.error("Error updating device:", error);
+      toast.error(
+        "Error al actualizar: " + (error.response?.data || error.message),
+      );
+    } finally {
+      setIsSavingDevice(false);
+    }
+  };
+
+  const filteredDevices = devices.filter((d) => {
+    const q = busquedaUnidad.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      d.name?.toLowerCase().includes(q) ||
+      d.uniqueId?.toLowerCase().includes(q) ||
+      d.phone?.toLowerCase().includes(q) ||
+      d.model?.toLowerCase().includes(q) ||
+      d.attributes?.accountID?.toLowerCase().includes(q) ||
+      d.attributes?.deviceID?.toLowerCase().includes(q)
+    );
+  });
+
   const downloadSampleCSV = () => {
     const csvContent =
       "name,uniqueId,phone,model,deviceID,accountID\nGPS_Unit_01,123456789012345,987654321,Coban 303,GPS_Unit_01,GPS_Unit_01";
@@ -400,16 +618,43 @@ export default function AgregarGPSTraccarClient() {
               lineHeight: 1.2,
             }}
           >
-            Registro de <span style={{ color: "#E85D2F" }}>GPS Traccar</span>
+            <span style={{ color: "#E85D2F" }}>Traccar</span>
           </h1>
           <p style={{ fontSize: 11, color: "#8A9099", margin: "2px 0 0" }}>
-            Agrega dispositivos mediante carga de archivos Excel/CSV o ingreso
-            manual
+            Registra dispositivos y administra las unidades del servidor
           </p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 p-1 bg-[#0A0C0F] rounded-lg border border-white/5">
+          <button
+            type="button"
+            onClick={() => setActiveTab("registrar")}
+            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+              activeTab === "registrar"
+                ? "bg-[#E85D2F] text-white"
+                : "text-slate-500 hover:text-slate-300"
+            }`}
+          >
+            Registrar
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("unidades")}
+            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === "unidades"
+                ? "bg-[#E85D2F] text-white"
+                : "text-slate-500 hover:text-slate-300"
+            }`}
+          >
+            <List size={13} /> Unidades
+          </button>
         </div>
       </section>
 
       <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0 mt-1">
+        {activeTab === "registrar" && (
+        <>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* LEFT COLUMN: CONNECTION & INPUTS */}
           <div className="lg:col-span-4 flex flex-col gap-4">
@@ -990,7 +1235,283 @@ export default function AgregarGPSTraccarClient() {
             </p>
           </div>
         </div>
+        </>
+        )}
+
+        {activeTab === "unidades" && (
+          <div className="flex flex-col gap-4 h-full">
+            {!isLoggedIn ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-16 text-center bg-[#1C1F26] border border-white/5 rounded-xl">
+                <LogIn className="text-slate-600" size={22} />
+                <p className="text-slate-400 text-sm font-medium">
+                  Inicia sesión en la pestaña "Registrar" para ver las
+                  unidades
+                </p>
+              </div>
+            ) : (
+              <div className="bg-[#1C1F26] border border-white/5 rounded-xl overflow-hidden shadow-2xl flex-1 flex flex-col">
+                <div className="p-3 border-b border-white/5 flex items-center justify-between gap-3 bg-white/2 flex-wrap">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2 whitespace-nowrap">
+                    <TableIcon className="text-slate-400" size={15} />
+                    Unidades del servidor
+                    <span className="text-slate-500 font-normal text-xs">
+                      ({filteredDevices.length})
+                    </span>
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <div className="w-72">
+                      <ImputBuscar
+                        placeholder="Buscar por AccountID, DeviceID, IMEI, teléfono o modelo"
+                        value={busquedaUnidad}
+                        onChange={(e) => setBusquedaUnidad(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      onClick={fetchDevices}
+                      disabled={isLoadingDevices}
+                      title="Recargar"
+                      className="p-2 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
+                    >
+                      <RefreshCw
+                        size={14}
+                        className={isLoadingDevices ? "animate-spin" : ""}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-y-auto flex-1">
+                  <table className="w-full text-left border-collapse">
+                    <thead className="sticky top-0 z-10 bg-[#1C1F26]">
+                      <tr className="bg-[#0A0C0F]/50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
+                        <th className="px-3 py-2">AccountID</th>
+                        <th className="px-3 py-2">DeviceID</th>
+                        <th className="px-3 py-2">IMEI</th>
+                        <th className="px-3 py-2">Teléfono</th>
+                        <th className="px-3 py-2">Modelo</th>
+                        <th className="px-3 py-2 w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {isLoadingDevices ? (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="px-3 py-12 text-center text-slate-500 text-xs"
+                          >
+                            <Loader2
+                              className="animate-spin inline-block mr-2"
+                              size={14}
+                            />
+                            Cargando unidades...
+                          </td>
+                        </tr>
+                      ) : filteredDevices.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="px-3 py-12 text-center text-slate-600 italic text-xs"
+                          >
+                            {devices.length === 0
+                              ? "No hay unidades registradas en este servidor."
+                              : "No se encontraron unidades con ese criterio."}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredDevices.map((d) => (
+                          <tr
+                            key={d.id}
+                            className="hover:bg-white/2 transition-colors"
+                          >
+                            <td className="px-3 py-2 text-white text-xs font-medium">
+                              {d.attributes?.accountID || "-"}
+                            </td>
+                            <td className="px-3 py-2 text-slate-300 text-[11px]">
+                              {d.attributes?.deviceID || "-"}
+                            </td>
+                            <td className="px-3 py-2 text-slate-400 font-mono text-[11px]">
+                              {d.uniqueId}
+                            </td>
+                            <td className="px-3 py-2 text-slate-300 text-[11px]">
+                              {d.phone || "-"}
+                            </td>
+                            <td className="px-3 py-2 text-slate-300 text-[11px]">
+                              {d.model || "-"}
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => abrirEditarDevice(d)}
+                                  title="Editar"
+                                  className="text-slate-600 hover:text-[#E85D2F] transition-colors"
+                                >
+                                  <Pencil size={13} />
+                                </button>
+                                <button
+                                  onClick={() => abrirEliminarDevice(d)}
+                                  title="Eliminar"
+                                  className="text-slate-600 hover:text-red-400 transition-colors"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* ---------- MODAL ELIMINAR UNIDAD ---------- */}
+      <ModalEliminar
+        open={openEliminarModal}
+        title="Eliminar unidad"
+        onClose={() => setOpenEliminarModal(false)}
+        tamaño="w-full max-w-sm"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <p style={{ fontSize: 13, color: "#ADB5BD", margin: 0 }}>
+            ¿Seguro que deseas eliminar la unidad{" "}
+            <strong style={{ color: "#F4F5F7" }}>
+              {deviceAEliminar?.name}
+            </strong>{" "}
+            (IMEI: {deviceAEliminar?.uniqueId})? Esta acción no se puede
+            deshacer.
+          </p>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <ButtonBase
+              variant="secondary"
+              onClick={() => setOpenEliminarModal(false)}
+            >
+              Cancelar
+            </ButtonBase>
+            <ButtonBase
+              variant="danger"
+              disabled={isDeletingDevice}
+              onClick={eliminarDevice}
+            >
+              {isDeletingDevice ? "Eliminando..." : "Eliminar"}
+            </ButtonBase>
+          </div>
+        </div>
+      </ModalEliminar>
+
+      {/* ---------- MODAL EDITAR UNIDAD ---------- */}
+      <ModalBase
+        open={openEditarModal}
+        title={`Editar unidad${deviceAEditar ? ` · ${deviceAEditar.name}` : ""}`}
+        onClose={() => setOpenEditarModal(false)}
+        tamaño="w-full max-w-lg"
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div className="grid grid-cols-2 gap-3">
+            <InputBase1
+              label="AccountID"
+              value={editForm.accountID}
+              onChange={(e) =>
+                setEditForm({ ...editForm, accountID: e.target.value })
+              }
+            />
+            <InputBase1
+              label="DeviceID"
+              value={editForm.deviceID}
+              onChange={(e) =>
+                setEditForm({ ...editForm, deviceID: e.target.value })
+              }
+            />
+          </div>
+
+          <InputBase1
+            label="IMEI (Unique ID)"
+            value={editForm.uniqueId}
+            required
+            onChange={(e) =>
+              setEditForm({ ...editForm, uniqueId: e.target.value })
+            }
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <InputBase1
+              label="Teléfono"
+              value={editForm.phone}
+              onChange={(e) =>
+                setEditForm({ ...editForm, phone: e.target.value })
+              }
+            />
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "#8A9099",
+                }}
+              >
+                Modelo
+              </label>
+              <select
+                value={editForm.model}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, model: e.target.value })
+                }
+                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+              >
+                <option value="" className="bg-[#0A0C0F] text-slate-500">
+                  Seleccionar modelo
+                </option>
+                <option value="teltonika" className="bg-[#0A0C0F]">
+                  teltonika
+                </option>
+                <option value="gt06" className="bg-[#0A0C0F]">
+                  gt06
+                </option>
+                <option value="gps103" className="bg-[#0A0C0F]">
+                  gps103
+                </option>
+                {editForm.model &&
+                  !["teltonika", "gt06", "gps103"].includes(
+                    editForm.model,
+                  ) && (
+                    <option value={editForm.model} className="bg-[#0A0C0F]">
+                      {editForm.model}
+                    </option>
+                  )}
+              </select>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              justifyContent: "flex-end",
+              marginTop: 4,
+            }}
+          >
+            <ButtonBase
+              variant="secondary"
+              onClick={() => setOpenEditarModal(false)}
+            >
+              Cancelar
+            </ButtonBase>
+            <ButtonBase
+              variant="primary"
+              disabled={isSavingDevice}
+              onClick={guardarEdicionDevice}
+            >
+              {isSavingDevice ? "Guardando..." : "Guardar cambios"}
+            </ButtonBase>
+          </div>
+        </div>
+      </ModalBase>
     </div>
   );
 }
