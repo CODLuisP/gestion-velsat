@@ -112,6 +112,7 @@ export default function SutranClient({ role }: Props) {
 
   const [unidades, setUnidades] = useState<DeviceSutran[]>([]);
   const [loadingUnidades, setLoadingUnidades] = useState(false);
+  const [unidadesError, setUnidadesError] = useState<string | null>(null);
   const [agregarLoading, setAgregarLoading] = useState(false);
   const [quitarLoading, setQuitarLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -120,11 +121,18 @@ export default function SutranClient({ role }: Props) {
 
   const fetchUnidades = useCallback(async () => {
     setLoadingUnidades(true);
+    setUnidadesError(null);
     try {
       const res = await axios.get<DeviceSutran[]>(getSutranApi(role).getUnidadesSutran());
       setUnidades(res.data);
-    } catch {
-      // silent — la sección mostrará lista vacía
+    } catch (e) {
+      setUnidades([]);
+      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+      setUnidadesError(
+        status === 404
+          ? "El servicio de Sutran no está disponible en este servidor."
+          : "No se pudo cargar la lista de unidades."
+      );
     } finally {
       setLoadingUnidades(false);
     }
@@ -433,6 +441,10 @@ export default function SutranClient({ role }: Props) {
         {loadingUnidades ? (
           <div style={{ padding: 24, textAlign: "center", color: "#8A9099", fontSize: 13 }}>
             Cargando...
+          </div>
+        ) : unidadesError ? (
+          <div style={{ padding: 32, textAlign: "center", color: "#E85D2F", fontSize: 13 }}>
+            {unidadesError}
           </div>
         ) : unidades.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", color: "#8A9099", fontSize: 13 }}>
