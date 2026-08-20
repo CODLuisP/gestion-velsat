@@ -148,6 +148,13 @@ export default function Sidebar() {
           open={open}
           active={pathname === "/panel/goldcar"}
         />
+        <SidebarLink
+          href="/panel/osinergmin"
+          icon={<Activity size={17} />}
+          label="Osinergmin"
+          open={open}
+          active={pathname === "/panel/osinergmin"}
+        />
 
         <SidebarLink
           href="/panel/seguimiento"
