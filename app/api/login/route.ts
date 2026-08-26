@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 const USERS = [
-  { user: "admin", pass: "125", role: "Servidor_125" },
-  { user: "admin", pass: "107", role: "Servidor_107" },
-  { user: "urbano", pass: "urbano", role: "Servidor_125_2" },
+  { user: "admin", pass: "v@26125", role: "Servidor_125" },
+  { user: "admin", pass: "v@26107", role: "Servidor_107" },
+  { user: "urbano", pass: "v@26urb", role: "Servidor_125_2" },
 ];
 
 export async function POST(req: Request) {
