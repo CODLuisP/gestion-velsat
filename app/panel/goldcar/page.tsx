@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 export default async function GoldcarPage() {
   const cookieStore = await cookies();
   const roleCookie = cookieStore.get("role")?.value;
+  const actor = cookieStore.get("usuario")?.value;
 
   let role: Role;
 
@@ -27,5 +28,5 @@ export default async function GoldcarPage() {
       role = "Servidor_125";
   }
 
-  return <GoldcarClient role={role} />;
+  return <GoldcarClient role={role} actor={actor} />;
 }

@@ -16,10 +16,15 @@ import {
   Globe,
   ShieldCheck,
   Satellite,
+  History,
 } from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
 
-export default function Sidebar() {
+type Props = {
+  isAdmin?: boolean;
+};
+
+export default function Sidebar({ isAdmin = false }: Props) {
   const [open, setOpen] = useState(true);
   const pathname = usePathname();
 
@@ -177,6 +182,16 @@ export default function Sidebar() {
           open={open}
           active={pathname === "/panel/agregargpstraccar"}
         />
+
+        {isAdmin && (
+          <SidebarLink
+            href="/panel/auditoria"
+            icon={<History size={17} />}
+            label="Auditoría"
+            open={open}
+            active={pathname === "/panel/auditoria"}
+          />
+        )}
       </nav>
 
       {/* ---------- FOOTER ---------- */}

@@ -3,7 +3,7 @@ import { Role } from "@/app/constants/roles";
 type OsinergminApi = {
   auditoria: (accountID: string, deviceID: string) => string;
   getUnidadesOsinergmin: () => string;
-  habilitarOsinergmin: (accountID: string, deviceID: string, valor: "0" | "1") => string;
+  habilitarOsinergmin: (accountID: string, deviceID: string, valor: "0" | "1", actor?: string, motivo?: string) => string;
 };
 
 const BASE_MAP: Record<Role, string> = {
@@ -19,7 +19,7 @@ export function getOsinergminApi(role: Role): OsinergminApi {
       `${base}/api/Admin/GetAuditoriaOsinergmin?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}`,
     getUnidadesOsinergmin: () =>
       `${base}/api/Admin/GetUnidadesOsinergmin`,
-    habilitarOsinergmin: (accountID, deviceID, valor) =>
-      `${base}/api/Admin/HabilitarOsinergmin?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}&valor=${encodeURIComponent(valor)}`,
+    habilitarOsinergmin: (accountID, deviceID, valor, actor, motivo) =>
+      `${base}/api/Admin/HabilitarOsinergmin?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}&valor=${encodeURIComponent(valor)}&actor=${encodeURIComponent(actor ?? "")}&motivo=${encodeURIComponent(motivo ?? "")}`,
   };
 }

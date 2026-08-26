@@ -3,7 +3,7 @@ import { Role } from "@/app/constants/roles";
 type SutranApi = {
   auditoria: (accountID: string, deviceID: string) => string;
   getUnidadesSutran: () => string;
-  habilitarSutran: (accountID: string, deviceID: string, valor: "0" | "1") => string;
+  habilitarSutran: (accountID: string, deviceID: string, valor: "0" | "1", actor?: string, motivo?: string) => string;
 };
 
 const BASE_MAP: Record<Role, string> = {
@@ -19,7 +19,7 @@ export function getSutranApi(role: Role): SutranApi {
       `${base}/api/Admin/GetAuditoriaSutran?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}`,
     getUnidadesSutran: () =>
       `${base}/api/Admin/GetUnidadesSutran`,
-    habilitarSutran: (accountID, deviceID, valor) =>
-      `${base}/api/Admin/HabilitarSutran?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}&valor=${encodeURIComponent(valor)}`,
+    habilitarSutran: (accountID, deviceID, valor, actor, motivo) =>
+      `${base}/api/Admin/HabilitarSutran?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}&valor=${encodeURIComponent(valor)}&actor=${encodeURIComponent(actor ?? "")}&motivo=${encodeURIComponent(motivo ?? "")}`,
   };
 }

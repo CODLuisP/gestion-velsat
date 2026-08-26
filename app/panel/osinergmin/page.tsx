@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 export default async function OsinergminPage() {
   const cookieStore = await cookies();
   const roleCookie = cookieStore.get("role")?.value;
+  const actor = cookieStore.get("usuario")?.value;
 
   let role: Role;
 
@@ -27,5 +28,5 @@ export default async function OsinergminPage() {
       role = "Servidor_125";
   }
 
-  return <OsinergminClient role={role} />;
+  return <OsinergminClient role={role} actor={actor} />;
 }

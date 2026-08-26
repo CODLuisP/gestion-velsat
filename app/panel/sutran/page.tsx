@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 export default async function SutranPage() {
   const cookieStore = await cookies();
   const roleCookie = cookieStore.get("role")?.value;
+  const actor = cookieStore.get("usuario")?.value;
 
   let role: Role;
 
@@ -27,5 +28,5 @@ export default async function SutranPage() {
       role = "Servidor_125";
   }
 
-  return <SutranClient role={role} />;
+  return <SutranClient role={role} actor={actor} />;
 }

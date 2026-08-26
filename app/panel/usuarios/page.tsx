@@ -10,6 +10,7 @@ import { Role } from "@/app/constants/roles";
 export default async function UsuariosPage() {
   const cookieStore = await cookies();
   const roleCookie = cookieStore.get("role")?.value;
+  const actor = cookieStore.get("usuario")?.value;
 
   let role: Role;
 
@@ -27,5 +28,5 @@ export default async function UsuariosPage() {
       role = "Servidor_125"; // fallback seguro
   }
 
-  return <UsuariosClient role={role} />;
+  return <UsuariosClient role={role} actor={actor} />;
 }

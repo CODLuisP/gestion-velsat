@@ -1,9 +1,20 @@
 import { NextResponse } from "next/server";
 
 const USERS = [
-  { user: "admin", pass: "v@26125", role: "Servidor_125" },
-  { user: "admin", pass: "v@26107", role: "Servidor_107" },
-  { user: "urbano", pass: "v@26urb", role: "Servidor_125_2" },
+  { user: "admin", pass: "L226", role: "Servidor_107" },
+  { user: "kath26", pass: "L226", role: "Servidor_107" },
+  { user: "karl26", pass: "L226", role: "Servidor_107" },
+  { user: "wil26", pass: "L226", role: "Servidor_107" },
+
+  { user: "admin", pass: "L126", role: "Servidor_125" },
+  { user: "kath26", pass: "L126", role: "Servidor_125" },
+  { user: "karl26", pass: "L126", role: "Servidor_125" },
+  { user: "wil26", pass: "L126", role: "Servidor_125" },
+
+  { user: "admin", pass: "urbano", role: "Servidor_125_2" },
+  { user: "kath26", pass: "urbano", role: "Servidor_125_2" },
+  { user: "karl26", pass: "urbano", role: "Servidor_125_2" },
+  { user: "wil26", pass: "urbano", role: "Servidor_125_2" },
 ];
 
 export async function POST(req: Request) {
@@ -35,6 +46,7 @@ export async function POST(req: Request) {
 
   res.cookies.set("auth", "true", cookieOptions);
   res.cookies.set("role", found.role, cookieOptions);
+  res.cookies.set("usuario", found.user, cookieOptions);
 
   return res;
 }

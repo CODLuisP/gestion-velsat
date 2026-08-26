@@ -3,7 +3,7 @@ import { Role } from "@/app/constants/roles";
 type GoldcarApi = {
   auditoria: (accountID: string, deviceID: string) => string;
   getUnidadesGoldcar: () => string;
-  habilitarGoldcar: (accountID: string, deviceID: string, valor: "0" | "1") => string;
+  habilitarGoldcar: (accountID: string, deviceID: string, valor: "0" | "1", actor?: string, motivo?: string) => string;
 };
 
 const BASE_MAP: Record<Role, string> = {
@@ -19,7 +19,7 @@ export function getGoldcarApi(role: Role): GoldcarApi {
       `${base}/api/Admin/GetAuditoriaGoldcar?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}`,
     getUnidadesGoldcar: () =>
       `${base}/api/Admin/GetUnidadesGoldcar`,
-    habilitarGoldcar: (accountID, deviceID, valor) =>
-      `${base}/api/Admin/HabilitarGoldcar?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}&valor=${encodeURIComponent(valor)}`,
+    habilitarGoldcar: (accountID, deviceID, valor, actor, motivo) =>
+      `${base}/api/Admin/HabilitarGoldcar?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}&valor=${encodeURIComponent(valor)}&actor=${encodeURIComponent(actor ?? "")}&motivo=${encodeURIComponent(motivo ?? "")}`,
   };
 }

@@ -10,6 +10,7 @@ import { getSutranApi } from "@/app/services/sutranApi";
 
 type Props = {
   role: Role;
+  actor?: string;
 };
 
 type DeviceSutran = {
@@ -102,13 +103,15 @@ function Badge({ text, ok }: { text: string; ok: boolean }) {
   );
 }
 
-export default function SutranClient({ role }: Props) {
+export default function SutranClient({ role, actor }: Props) {
   const [cuenta, setCuenta] = useState("");
   const [placa, setPlaca] = useState("");
+  const [motivo, setMotivo] = useState("");
   const [registros, setRegistros] = useState<AuditoriaSutran[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitAttempt, setSubmitAttempt] = useState(false);
+  const motivoValido = (m: string) => m.trim().length >= 6;
 
   const [unidades, setUnidades] = useState<DeviceSutran[]>([]);
   const [loadingUnidades, setLoadingUnidades] = useState(false);
@@ -164,13 +167,13 @@ export default function SutranClient({ role }: Props) {
 
   async function handleAgregar() {
     setSubmitAttempt(true);
-    if (!cuenta.trim() || !placa.trim()) return;
+    if (!cuenta.trim() || !placa.trim() || !motivoValido(motivo)) return;
 
     setAgregarLoading(true);
     setActionError(null);
 
     try {
-      await axios.put(api.habilitarSutran(cuenta.trim(), placa.trim(), "1"));
+      await axios.put(api.habilitarSutran(cuenta.trim(), placa.trim(), "1", actor, motivo));
       await fetchUnidades();
     } catch {
       setActionError("No se pudo agregar la unidad. Verifique los datos e intente nuevamente.");
@@ -180,12 +183,19 @@ export default function SutranClient({ role }: Props) {
   }
 
   async function handleQuitar(accountID: string, deviceID: string) {
+    const motivoQuitar = window.prompt("Motivo para quitar la unidad (mín. 6 caracteres):");
+    if (motivoQuitar === null) return;
+    if (!motivoValido(motivoQuitar)) {
+      setActionError("El motivo es obligatorio y debe tener al menos 6 caracteres.");
+      return;
+    }
+
     const key = `${accountID}|${deviceID}`;
     setQuitarLoading(key);
     setActionError(null);
 
     try {
-      await axios.put(api.habilitarSutran(accountID, deviceID, "0"));
+      await axios.put(api.habilitarSutran(accountID, deviceID, "0", actor, motivoQuitar));
       await fetchUnidades();
     } catch {
       setActionError("No se pudo quitar la unidad. Intente nuevamente.");
@@ -234,6 +244,16 @@ export default function SutranClient({ role }: Props) {
               required
               submitAttempt={submitAttempt}
               onChange={(e) => setPlaca(e.target.value)}
+            />
+          </div>
+          <div style={{ minWidth: 240 }}>
+            <InputBase1
+              label="Motivo (para Agregar)"
+              placeholder="Explica por qué se habilita (mín. 6 caracteres)"
+              value={motivo}
+              required
+              submitAttempt={submitAttempt}
+              onChange={(e) => setMotivo(e.target.value)}
             />
           </div>
           <ButtonBase

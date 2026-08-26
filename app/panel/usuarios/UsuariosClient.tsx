@@ -19,9 +19,10 @@ import ImputBuscar from "@/app/components/ui/ImputBuscar";
 
 type Props = {
   role: Role;
+  actor?: string;
 };
 
-export default function UsuariosClient({ role }: Props) {
+export default function UsuariosClient({ role, actor }: Props) {
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,6 +34,10 @@ export default function UsuariosClient({ role }: Props) {
   const [usuarioAEliminar, setUsuarioAEliminar] = useState<Usuario | null>(null);
 
   const [submitAttempt, setSubmitAttempt] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [motivoEliminar, setMotivoEliminar] = useState("");
+  const [submitAttemptEliminar, setSubmitAttemptEliminar] = useState(false);
+  const motivoValido = (m: string) => m.trim().length >= 6;
 
   const api = getUsuariosApi(role);
 
@@ -69,6 +74,7 @@ export default function UsuariosClient({ role }: Props) {
     setModo("editar");
     setOpenModal(true);
     setSubmitAttempt(false);
+    setMotivo("");
   };
 
   const abrirAgregar = () => {
@@ -76,11 +82,14 @@ export default function UsuariosClient({ role }: Props) {
     setModo("agregar");
     setOpenModal(true);
     setSubmitAttempt(false);
+    setMotivo("");
   };
 
   const abrirEliminar = (usuario: Usuario) => {
     setUsuarioAEliminar(usuario);
     setOpenEliminarModal(true);
+    setMotivoEliminar("");
+    setSubmitAttemptEliminar(false);
   };
 
   const cerrarModal = () => {
@@ -100,14 +109,15 @@ export default function UsuariosClient({ role }: Props) {
     };
     try {
       if (modo === "editar" && seleccionado) {
-        await axios.put(api.update, payload);
+        await axios.put(api.update(actor, motivo), payload);
         toast.success("Usuario actualizado correctamente");
       } else {
-        await axios.post(api.insert, payload);
+        await axios.post(api.insert(actor, motivo), payload);
         toast.success("Usuario guardado correctamente");
       }
       setOpenModal(false);
       setSeleccionado(null);
+      setMotivo("");
       mutate(["usuarios", role]);
     } catch {
       toast.error("No es posible guardar los cambios");
@@ -118,14 +128,17 @@ export default function UsuariosClient({ role }: Props) {
 
   const eliminarUsuario = async () => {
     if (!usuarioAEliminar) return;
+    setSubmitAttemptEliminar(true);
+    if (!motivoValido(motivoEliminar)) return;
     setLoading(true);
     try {
-      await axios.delete(api.delete(usuarioAEliminar.accountID), {
+      await axios.delete(api.delete(usuarioAEliminar.accountID, actor, motivoEliminar), {
         data: { accountID: usuarioAEliminar.accountID },
       });
       toast.success("Usuario eliminado");
       setOpenEliminarModal(false);
       setUsuarioAEliminar(null);
+      setMotivoEliminar("");
       mutate(["usuarios", role]);
     } catch {
       toast.error("Error al eliminar usuario");
@@ -445,6 +458,22 @@ export default function UsuariosClient({ role }: Props) {
             }
           />
 
+          <div className="col-span-2">
+            <InputBase1
+              label={modo === "editar" ? "MOTIVO DEL CAMBIO" : "MOTIVO DEL ALTA"}
+              placeholder="Explica por qué se realiza esta acción (mín. 6 caracteres)"
+              required
+              submitAttempt={submitAttempt}
+              value={motivo}
+              onChange={(e) => setMotivo(e.target.value)}
+            />
+            {submitAttempt && motivo.trim().length > 0 && !motivoValido(motivo) && (
+              <span style={{ fontSize: 11, color: "#E85D2F" }}>
+                El motivo debe tener al menos 6 caracteres
+              </span>
+            )}
+          </div>
+
           <div className="col-span-2 flex justify-between gap-4 mt-4">
             <ButtonBase variant="secondary" onClick={() => setOpenModal(false)}>
               Cancelar
@@ -459,7 +488,8 @@ export default function UsuariosClient({ role }: Props) {
                   !seleccionado?.accountID ||
                   !seleccionado?.password ||
                   !seleccionado?.contactEmail ||
-                  !seleccionado?.contactPhone
+                  !seleccionado?.contactPhone ||
+                  !motivoValido(motivo)
                 ) {
                   return;
                 }
@@ -516,6 +546,22 @@ export default function UsuariosClient({ role }: Props) {
             </strong>
             ?
           </p>
+
+          <div style={{ width: "100%", textAlign: "left" }}>
+            <InputBase1
+              label="MOTIVO DE LA ELIMINACIÓN"
+              placeholder="Explica por qué se elimina (mín. 6 caracteres)"
+              required
+              submitAttempt={submitAttemptEliminar}
+              value={motivoEliminar}
+              onChange={(e) => setMotivoEliminar(e.target.value)}
+            />
+            {submitAttemptEliminar && motivoEliminar.trim().length > 0 && !motivoValido(motivoEliminar) && (
+              <span style={{ fontSize: 11, color: "#E85D2F" }}>
+                El motivo debe tener al menos 6 caracteres
+              </span>
+            )}
+          </div>
 
           <div style={{ display: "flex", gap: 8 }}>
             <ButtonBase

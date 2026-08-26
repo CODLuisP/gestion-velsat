@@ -1,16 +1,21 @@
 import type { Metadata } from 'next';
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { Role } from "@/app/constants/roles";
+import AuditoriaClient from "./AuditoriaClient";
 
 export const metadata: Metadata = {
-  title: 'Gestión Velsat | Unidades',
+  title: 'Gestión Velsat | Auditoría',
 };
-import { cookies } from "next/headers";
-import { Role } from "@/app/constants/roles";
-import UnidadesClient from "./UnidadesClient";
 
-export default async function UnidadesPage() {
+export default async function AuditoriaPage() {
   const cookieStore = await cookies();
   const roleCookie = cookieStore.get("role")?.value;
   const actor = cookieStore.get("usuario")?.value;
+
+  if (actor !== "admin") {
+    redirect("/panel/dashboard");
+  }
 
   let role: Role;
 
@@ -25,8 +30,8 @@ export default async function UnidadesPage() {
       role = "Servidor_125_2";
       break;
     default:
-      role = "Servidor_125"; // fallback seguro
+      role = "Servidor_125";
   }
 
-  return <UnidadesClient role={role} actor={actor} />;
+  return <AuditoriaClient role={role} />;
 }

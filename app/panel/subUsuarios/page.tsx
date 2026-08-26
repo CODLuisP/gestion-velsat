@@ -10,6 +10,7 @@ import SubUsuariosClient from "./SubUsuariosClient";
 export default async function SubUsuariosPage() {
   const cookieStore = await cookies();
   const roleCookie = cookieStore.get("role")?.value;
+  const actor = cookieStore.get("usuario")?.value;
 
   let role: Role;
 
@@ -27,5 +28,5 @@ export default async function SubUsuariosPage() {
       role = "Servidor_125"; // fallback seguro
   }
 
-  return <SubUsuariosClient role={role} />;
+  return <SubUsuariosClient role={role} actor={actor} />;
 }
