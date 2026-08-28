@@ -55,18 +55,21 @@ export default function UnidadesConexClient({ role }: Props) {
       render: (row: VehiculoConDescon) => Number(row.lastValidSpeed).toFixed(0),
     },
     {
-      key: "lastGPSTimestamp_date",
-      label: "ÚLT. FECHA",
+      key: "lastGPSTimestamp",
+      label: "ULT HORA GPS",
       render: (row: VehiculoConDescon) => (
-        <UnixNormal creationTime={row.lastGPSTimestamp} show="date" />
+        <UnixNormal creationTime={row.lastGPSTimestamp} show="both" />
       ),
     },
     {
-      key: "lastGPSTimestamp_time",
-      label: "ÚLT. HORA",
-      render: (row: VehiculoConDescon) => (
-        <UnixNormal creationTime={row.lastGPSTimestamp} show="time" />
-      ),
+      key: "deviceTIme",
+      label: "ULT HORA CELULAR",
+      render: (row: VehiculoConDescon) =>
+        row.deviceTIme ? (
+          <UnixNormal creationTime={row.deviceTIme} show="both" />
+        ) : (
+          "-"
+        ),
     },
     {
       key: "tiempoDesconex",
@@ -203,6 +206,7 @@ export default function UnidadesConexClient({ role }: Props) {
           columns={columns}
           data={vehiculosFiltrados}
           loading={isLoading}
+          cellColor="#fff"
         />
       </div>
 

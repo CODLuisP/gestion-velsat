@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     shortcut: "/logoVelsat.ico",
     apple: "/logoVelsat.ico",
   },
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es" translate="no" className="notranslate">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

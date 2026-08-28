@@ -16,6 +16,7 @@ type TablaBaseProps<T> = {
   rightActions?: React.ReactNode;
   loading?: boolean;
   filasPorPagina?: number;
+  cellColor?: string;
 };
 
 export default function TablaBase<T>({
@@ -25,6 +26,7 @@ export default function TablaBase<T>({
   rightActions,
   loading,
   filasPorPagina = 50,
+  cellColor = "#ADB5BD",
 }: TablaBaseProps<T>) {
   const [paginaActual, setPaginaActual] = useState(1);
   const [registrosPorPagina, setRegistrosPorPagina] = useState(filasPorPagina);
@@ -115,7 +117,7 @@ export default function TablaBase<T>({
                       {i + 1 + (paginaActual - 1) * registrosPorPagina}
                     </td>
                     {columns.map((col) => (
-                      <td key={String(col.key)} style={{ padding: "9px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", color: "#ADB5BD", wordBreak: "break-word", whiteSpace: "normal" }}>
+                      <td key={String(col.key)} style={{ padding: "9px 14px", borderBottom: "1px solid rgba(255,255,255,0.05)", color: cellColor, wordBreak: "break-word", whiteSpace: "normal" }}>
                         {col.render ? col.render(row, i) : (row as any)[col.key]}
                       </td>
                     ))}

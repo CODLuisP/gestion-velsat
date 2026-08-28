@@ -57,10 +57,9 @@ export default function UnixNormal({
 
   if (show === 'both') {
     return (
-      <div className="flex flex-col">
-        <span>{formattedDate}</span>
-        <span className="text-sm text-gray-500">{formattedTime}</span>
-      </div>
+      <span style={{ color: '#fff', whiteSpace: 'nowrap' }}>
+        {formattedDate} {formattedTime}
+      </span>
     );
   }
 

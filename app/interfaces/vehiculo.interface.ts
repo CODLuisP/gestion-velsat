@@ -19,4 +19,5 @@ export interface VehiculoConDescon {
         imeiNumber: string,
         lastValidLatitude: string
         lastValidLongitude: string
+        deviceTIme?: number
 }
