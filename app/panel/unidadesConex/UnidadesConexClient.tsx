@@ -9,13 +9,47 @@ import { Role } from "@/app/constants/roles";
 import ImputBuscar from "@/app/components/ui/ImputBuscar";
 import { getUnidadesConexApi } from "@/app/services/unidadesConexApi";
 import UnixNormal from "@/app/components/fecha/UnixNormal";
+import ColumnFilterHeader from "@/app/components/tablas/ColumnFilterHeader";
 
 type Props = {
   role: Role;
 };
 
+// Replica el formato/estado usado por UnixNormal para poder buscar sobre el texto mostrado
+const formatFechaHora = (unixTimestamp?: number) => {
+  if (!unixTimestamp) return "-";
+  const date = new Date(Number(unixTimestamp) * 1000);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
+const formatTiempoDesconex = (unixTimestamp?: number) => {
+  if (!unixTimestamp) return "-";
+  const date = new Date(Number(unixTimestamp) * 1000);
+  const now = new Date();
+  let diffMs = now.getTime() - date.getTime();
+  if (diffMs < 0) diffMs = 0;
+
+  const TEN_MINUTES_MS = 10 * 60 * 1000;
+  if (diffMs <= TEN_MINUTES_MS) return "Conectado";
+
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const totalHours = Math.floor(totalMinutes / 60);
+  const days = Math.floor(totalHours / 24);
+  const hoursDiff = totalHours % 24;
+  const minutesDiff = totalMinutes % 60;
+  return `${days}D ${hoursDiff}H ${minutesDiff}M`;
+};
+
 export default function UnidadesConexClient({ role }: Props) {
   const [busqueda, setBusqueda] = useState("");
+  const [filtroPlaca, setFiltroPlaca] = useState<Set<string> | null>(null);
+  const [filtroUsuario, setFiltroUsuario] = useState<Set<string> | null>(null);
+  const [filtroModelo, setFiltroModelo] = useState<Set<string> | null>(null);
 
   const api = getUnidadesConexApi(role);
 
@@ -30,25 +64,73 @@ export default function UnidadesConexClient({ role }: Props) {
     { revalidateOnFocus: false, keepPreviousData: true }
   );
 
-  const vehiculosFiltrados = useMemo(() => {
-    if (!busqueda) return vehiculosConex;
-    return vehiculosConex.filter((u) =>
-      [u.deviceID, u.accountID]
-        .join(" ")
-        .toLowerCase()
-        .includes(busqueda.toLowerCase())
-    );
-  }, [busqueda, vehiculosConex]);
-
   const gpsModelMap: Record<string, string> = {
     gt06n: "GT",
     gps103a: "TK",
     gps103b: "TK",
   };
 
+  const getModeloLabel = (row: VehiculoConDescon) => {
+    const model = row.deviceCode?.toLowerCase();
+    return gpsModelMap[model] ?? row.deviceCode ?? "-";
+  };
+
+  const opcionesPlaca = useMemo(
+    () => Array.from(new Set(vehiculosConex.map((u) => u.deviceID).filter(Boolean))).sort(),
+    [vehiculosConex]
+  );
+  const opcionesUsuario = useMemo(
+    () => Array.from(new Set(vehiculosConex.map((u) => u.accountID).filter(Boolean))).sort(),
+    [vehiculosConex]
+  );
+  const opcionesModelo = useMemo(
+    () => Array.from(new Set(vehiculosConex.map((u) => getModeloLabel(u)).filter(Boolean))).sort(),
+    [vehiculosConex]
+  );
+
+  const vehiculosFiltrados = useMemo(() => {
+    return vehiculosConex.filter((u) => {
+      if (filtroPlaca && !filtroPlaca.has(u.deviceID)) return false;
+      if (filtroUsuario && !filtroUsuario.has(u.accountID)) return false;
+      if (filtroModelo && !filtroModelo.has(getModeloLabel(u))) return false;
+
+      if (!busqueda) return true;
+      const texto = [
+        u.deviceID,
+        u.accountID,
+        formatFechaHora(u.lastGPSTimestamp),
+        formatFechaHora(u.deviceTIme),
+        formatTiempoDesconex(u.lastGPSTimestamp),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return texto.includes(busqueda.toLowerCase());
+    });
+  }, [busqueda, vehiculosConex, filtroPlaca, filtroUsuario, filtroModelo]);
+
   const columns = [
-    { key: "deviceID", label: "PLACA" },
-    { key: "accountID", label: "USUARIO" },
+    {
+      key: "deviceID",
+      label: (
+        <ColumnFilterHeader
+          label="PLACA"
+          options={opcionesPlaca}
+          selected={filtroPlaca}
+          onChange={setFiltroPlaca}
+        />
+      ),
+    },
+    {
+      key: "accountID",
+      label: (
+        <ColumnFilterHeader
+          label="USUARIO"
+          options={opcionesUsuario}
+          selected={filtroUsuario}
+          onChange={setFiltroUsuario}
+        />
+      ),
+    },
     {
       key: "lastValidSpeed",
       label: "VELOCIDAD",
@@ -80,11 +162,15 @@ export default function UnidadesConexClient({ role }: Props) {
     },
     {
       key: "deviceCode",
-      label: "MODELO GPS",
-      render: (row: VehiculoConDescon) => {
-        const model = row.deviceCode?.toLowerCase();
-        return gpsModelMap[model] ?? row.deviceCode;
-      },
+      label: (
+        <ColumnFilterHeader
+          label="MODELO GPS"
+          options={opcionesModelo}
+          selected={filtroModelo}
+          onChange={setFiltroModelo}
+        />
+      ),
+      render: (row: VehiculoConDescon) => getModeloLabel(row),
     },
     { key: "imeiNumber", label: "IMEI" },
     {
@@ -160,7 +246,7 @@ export default function UnidadesConexClient({ role }: Props) {
           leftActions={
             <div style={{ width: 384 }}>
               <ImputBuscar
-                placeholder="Buscar por Placa o Usuario"
+                placeholder="Buscar por Placa, Usuario, Últ. Hora GPS, Últ. Hora Celular o T. Desconex."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
@@ -206,7 +292,6 @@ export default function UnidadesConexClient({ role }: Props) {
           columns={columns}
           data={vehiculosFiltrados}
           loading={isLoading}
-          cellColor="#fff"
         />
       </div>
 

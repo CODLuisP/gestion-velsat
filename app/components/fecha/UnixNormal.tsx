@@ -57,7 +57,7 @@ export default function UnixNormal({
 
   if (show === 'both') {
     return (
-      <span style={{ color: '#fff', whiteSpace: 'nowrap' }}>
+      <span style={{ color: '#ADB5BD', whiteSpace: 'nowrap' }}>
         {formattedDate} {formattedTime}
       </span>
     );

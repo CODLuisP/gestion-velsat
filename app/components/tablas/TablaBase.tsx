@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 
 type Column<T> = {
   key: keyof T | string;
-  label: string;
+  label: React.ReactNode;
   render?: (row: T, index: number) => React.ReactNode;
 };
 
