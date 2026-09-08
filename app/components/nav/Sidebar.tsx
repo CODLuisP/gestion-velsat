@@ -17,14 +17,17 @@ import {
   ShieldCheck,
   Satellite,
   History,
+  Radar,
 } from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
+import { Role } from "@/app/constants/roles";
 
 type Props = {
   isAdmin?: boolean;
+  role?: Role;
 };
 
-export default function Sidebar({ isAdmin = false }: Props) {
+export default function Sidebar({ isAdmin = false, role }: Props) {
   const [open, setOpen] = useState(true);
   const pathname = usePathname();
 
@@ -160,6 +163,15 @@ export default function Sidebar({ isAdmin = false }: Props) {
           open={open}
           active={pathname === "/panel/osinergmin"}
         />
+        {role === "Servidor_107" && (
+          <SidebarLink
+            href="/panel/tracklog"
+            icon={<Radar size={17} />}
+            label="Tracklog"
+            open={open}
+            active={pathname === "/panel/tracklog"}
+          />
+        )}
 
         <SidebarLink
           href="/panel/seguimiento"

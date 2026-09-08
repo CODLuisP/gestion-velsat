@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "../components/nav/Sidebar";
+import { Role } from "../constants/roles";
 
 export default async function PanelLayout({
   children,
@@ -9,10 +10,11 @@ export default async function PanelLayout({
 }) {
   const cookieStore = await cookies();
   const isAdmin = cookieStore.get("usuario")?.value === "admin";
+  const roleCookie = cookieStore.get("role")?.value as Role | undefined;
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#0A0C0F]">
-      <Sidebar isAdmin={isAdmin} />
+      <Sidebar isAdmin={isAdmin} role={roleCookie} />
 
       <main className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
         {children}
