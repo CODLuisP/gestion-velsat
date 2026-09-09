@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Search, Server } from "lucide-react";
 import ButtonBase from "@/app/components/ui/ButtonBase";
@@ -10,6 +10,11 @@ import { getTracklogApi } from "@/app/services/tracklogApi";
 
 type Props = {
   role: Role;
+};
+
+type DeviceTracklog = {
+  accountID: string;
+  deviceID: string;
 };
 
 type LastEnvio = {
@@ -101,7 +106,34 @@ export default function TracklogClient({ role }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitAttempt, setSubmitAttempt] = useState(false);
 
+  const [unidades, setUnidades] = useState<DeviceTracklog[]>([]);
+  const [loadingUnidades, setLoadingUnidades] = useState(false);
+  const [unidadesError, setUnidadesError] = useState<string | null>(null);
+
   const api = getTracklogApi(role);
+
+  const fetchUnidades = useCallback(async () => {
+    setLoadingUnidades(true);
+    setUnidadesError(null);
+    try {
+      const res = await axios.get<DeviceTracklog[]>(getTracklogApi(role).getUnidadesTracklog());
+      setUnidades(res.data);
+    } catch (e) {
+      setUnidades([]);
+      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+      setUnidadesError(
+        status === 404
+          ? "El servicio de Tracklog no está disponible en este servidor."
+          : "No se pudo cargar la lista de unidades."
+      );
+    } finally {
+      setLoadingUnidades(false);
+    }
+  }, [role]);
+
+  useEffect(() => {
+    fetchUnidades();
+  }, [fetchUnidades]);
 
   async function handleConsultar() {
     setSubmitAttempt(true);
@@ -191,6 +223,83 @@ export default function TracklogClient({ role }: Props) {
             {loading ? "Consultando..." : "Consultar"}
           </ButtonBase>
         </div>
+      </div>
+
+      {/* Unidades con Tracklog habilitado */}
+      <div
+        style={{
+          background: "#1C1F26",
+          border: "1px solid rgba(255,255,255,0.06)",
+          borderRadius: 12,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            padding: "14px 20px",
+            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ color: "#F4F5F7", fontWeight: 600, fontSize: 14 }}>
+            Unidades con Tracklog habilitado
+          </span>
+          <span
+            style={{
+              fontSize: 12,
+              color: "#8A9099",
+              background: "rgba(255,255,255,0.05)",
+              padding: "2px 10px",
+              borderRadius: 20,
+            }}
+          >
+            {loadingUnidades ? "..." : `${unidades.length} ${unidades.length === 1 ? "unidad" : "unidades"}`}
+          </span>
+        </div>
+
+        {loadingUnidades ? (
+          <div style={{ padding: 24, textAlign: "center", color: "#8A9099", fontSize: 13 }}>
+            Cargando...
+          </div>
+        ) : unidadesError ? (
+          <div style={{ padding: 32, textAlign: "center", color: "#E85D2F", fontSize: 13 }}>
+            {unidadesError}
+          </div>
+        ) : unidades.length === 0 ? (
+          <div style={{ padding: 32, textAlign: "center", color: "#8A9099", fontSize: 13 }}>
+            No hay unidades con Tracklog habilitado.
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <th style={HEADER}>Cuenta</th>
+                  <th style={HEADER}>Placa</th>
+                </tr>
+              </thead>
+              <tbody>
+                {unidades.map((u) => (
+                  <tr
+                    key={`${u.accountID}|${u.deviceID}`}
+                    style={{ transition: "background 0.15s" }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLTableRowElement).style.background = "rgba(255,255,255,0.025)")
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLTableRowElement).style.background = "transparent")
+                    }
+                  >
+                    <td style={{ ...CELL, color: "#F4F5F7", fontWeight: 500 }}>{u.accountID}</td>
+                    <td style={CELL}>{u.deviceID}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Error */}

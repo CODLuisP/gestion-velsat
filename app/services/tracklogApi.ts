@@ -2,6 +2,7 @@ import { Role } from "@/app/constants/roles";
 
 type TracklogApi = {
   auditoria: (accountID: string, deviceID: string) => string;
+  getUnidadesTracklog: () => string;
 };
 
 // Tracklog solo corre en el servidor 107: el resto de servidores no tiene
@@ -15,5 +16,7 @@ export function getTracklogApi(role: Role): TracklogApi {
   return {
     auditoria: (accountID, deviceID) =>
       `${base}/api/Admin/GetAuditoriaTracklog?accountID=${encodeURIComponent(accountID)}&deviceID=${encodeURIComponent(deviceID)}`,
+    getUnidadesTracklog: () =>
+      `${base}/api/Admin/GetUnidadesTracklog`,
   };
 }
