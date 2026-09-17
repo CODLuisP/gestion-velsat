@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { recordIncomingResponse, getSmsHistory } from "@/app/services/smsStore";
+import { gatewayRequest } from "@/app/services/gatewayFetch";
 
 function getAuthHeader() {
   const user = process.env.SMS_GATEWAY_USER;
@@ -73,12 +74,12 @@ export async function GET(request: NextRequest) {
       const auth = getAuthHeader();
       if (auth) {
         try {
-          const res = await fetch("https://api.sms-gate.app/3rdparty/v1/webhooks", {
-            headers: { Authorization: auth },
-            signal: AbortSignal.timeout(6000),
+          const res = await gatewayRequest("https://api.sms-gate.app/3rdparty/v1/webhooks", {
+            authHeader: auth,
+            timeoutMs: 6000,
           });
           if (res.ok) {
-            registeredWebhooks = await res.json();
+            registeredWebhooks = res.json();
             (globalThis as any).__velsat_webhooks_cache = {
               timestamp: now,
               data: registeredWebhooks,
@@ -122,12 +123,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const res = await fetch("https://api.sms-gate.app/3rdparty/v1/webhooks", {
+    const res = await gatewayRequest("https://api.sms-gate.app/3rdparty/v1/webhooks", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: auth,
-      },
+      authHeader: auth,
+      timeoutMs: 10000,
       body: JSON.stringify({
         id: "gps-respuestas",
         url,
@@ -135,7 +134,7 @@ export async function PUT(request: NextRequest) {
       }),
     });
 
-    const data = await res.json();
+    const data = res.json();
     if (!res.ok) {
       return NextResponse.json(
         { success: false, error: data?.message || "Error al registrar webhook en sms-gate.app" },
@@ -171,9 +170,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const res = await fetch(`https://api.sms-gate.app/3rdparty/v1/webhooks/${id}`, {
+    const res = await gatewayRequest(`https://api.sms-gate.app/3rdparty/v1/webhooks/${id}`, {
       method: "DELETE",
-      headers: { Authorization: auth },
+      authHeader: auth,
+      timeoutMs: 10000,
     });
 
     if (res.status === 204 || res.ok) {
@@ -181,7 +181,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: true, message: "Webhook eliminado correctamente" });
     }
 
-    const data = await res.json().catch(() => ({}));
+    const data = res.json();
     return NextResponse.json(
       { success: false, error: data?.message || "No se pudo eliminar el webhook" },
       { status: res.status }

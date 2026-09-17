@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addSentSms, getSmsHistory, clearSmsHistory, normalizePhoneNumber } from "@/app/services/smsStore";
+import { gatewayRequest } from "@/app/services/gatewayFetch";
 
 // Margen para reintento + verificación en Vercel
 export const maxDuration = 60;
@@ -46,17 +47,17 @@ export async function POST(request: NextRequest) {
     // el gateway no duplica el SMS, y podemos consultar si realmente quedó encolado.
     const messageId = crypto.randomUUID();
 
-    async function executeSend(timeoutMs: number): Promise<Response> {
-      return fetch(`${GATEWAY}/messages`, {
+    async function executeSend(timeoutMs: number) {
+      return gatewayRequest(`${GATEWAY}/messages`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: authHeader },
+        authHeader,
+        timeoutMs,
         body: JSON.stringify({
           id: messageId,
           textMessage: { text: message },
           phoneNumbers: [normalizedPhone],
           priority: 100, // Expedito: salta retrasos y horario de trabajo del celular
         }),
-        signal: AbortSignal.timeout(timeoutMs),
       });
     }
 
@@ -65,11 +66,8 @@ export async function POST(request: NextRequest) {
     // marcábamos como fallido un mensaje que en realidad ya salió.
     async function wasAccepted(): Promise<any | null> {
       try {
-        const r = await fetch(`${GATEWAY}/messages/${messageId}`, {
-          headers: { Authorization: authHeader },
-          signal: AbortSignal.timeout(5000),
-        });
-        return r.ok ? await r.json() : null;
+        const r = await gatewayRequest(`${GATEWAY}/messages/${messageId}`, { authHeader, timeoutMs: 5000 });
+        return r.ok ? r.json() : null;
       } catch {
         return null;
       }
@@ -79,8 +77,9 @@ export async function POST(request: NextRequest) {
 
     // Intentos cortos: si la conexión se cuelga, cortamos rápido y reintentamos
     // con el mismo ID (el gateway no duplica el SMS) en vez de esperar 20 segundos.
-    let res: Response | null = null;
+    let res: Awaited<ReturnType<typeof executeSend>> | null = null;
     let acceptedData: any = null;
+    let lastNetworkError = "";
     for (let attempt = 1; attempt <= 3 && !acceptedData; attempt++) {
       try {
         res = await executeSend(8000);
@@ -88,7 +87,8 @@ export async function POST(request: NextRequest) {
         console.warn(`[send-sms] Gateway retornó ${res.status} (intento ${attempt}).`);
       } catch (err: any) {
         res = null;
-        console.warn(`[send-sms] Intento ${attempt} sin respuesta (${err?.name || err?.message}).`);
+        lastNetworkError = err?.code || err?.name || err?.message || "desconocido";
+        console.warn(`[send-sms] Intento ${attempt} sin respuesta (${lastNetworkError}).`);
       }
       acceptedData = await wasAccepted();
     }
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!res) {
-      const errorMsg = "No se pudo contactar al SMS Gateway (sms-gate.app). Verifica tu conexión e inténtalo nuevamente.";
+      const errorMsg = `No se pudo contactar al SMS Gateway (sms-gate.app). El SMS no fue enviado [${lastNetworkError || "sin respuesta"}]. Vuelve a intentarlo.`;
       const record = addSentSms({
         phoneNumber,
         placa,
@@ -117,12 +117,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: errorMsg, record }, { status: 504 });
     }
 
-    let data: any = {};
-    try {
-      data = await res.json();
-    } catch {
-      data = { statusText: res.statusText };
-    }
+    const data: any = res.json();
 
     if (!res.ok) {
       let errorMsg = data?.message || data?.error;
@@ -201,12 +196,12 @@ export async function GET(request: NextRequest) {
     if (!light && hasUser && hasPass && (!cache || now - cache.timestamp > 30000)) {
       try {
         const auth = Buffer.from(`${process.env.SMS_GATEWAY_USER}:${process.env.SMS_GATEWAY_PASS}`).toString("base64");
-        const devRes = await fetch("https://api.sms-gate.app/3rdparty/v1/devices", {
-          headers: { Authorization: `Basic ${auth}` },
-          signal: AbortSignal.timeout(6000),
+        const devRes = await gatewayRequest("https://api.sms-gate.app/3rdparty/v1/devices", {
+          authHeader: `Basic ${auth}`,
+          timeoutMs: 6000,
         });
         if (devRes.ok) {
-          const devices = await devRes.json();
+          const devices = devRes.json();
           if (Array.isArray(devices) && devices.length > 0) {
             const dev = devices[0];
             const lastSeenMs = dev.lastSeen ? new Date(dev.lastSeen).getTime() : 0;
