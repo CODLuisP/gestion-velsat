@@ -1084,6 +1084,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       toast.error(msg, { id: toastId });
     } finally {
       setIsSending(false);
+      loadGatewayAndHistory();
     }
   };
 

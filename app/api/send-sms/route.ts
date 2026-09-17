@@ -36,17 +36,62 @@ export async function POST(request: NextRequest) {
 
     const auth = Buffer.from(`${user}:${pass}`).toString("base64");
 
-    const res = await fetch("https://api.sms-gate.app/3rdparty/v1/message", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${auth}`,
-      },
-      body: JSON.stringify({
-        textMessage: { text: message },
-        phoneNumbers: [normalizedPhone],
-      }),
-    });
+    // Función auxiliar para enviar con timeout controlado
+    async function executeSend(timeoutMs = 9000): Promise<Response> {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const response = await fetch("https://api.sms-gate.app/3rdparty/v1/message", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Basic ${auth}`,
+          },
+          body: JSON.stringify({
+            textMessage: { text: message },
+            phoneNumbers: [normalizedPhone],
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        return response;
+      } catch (err) {
+        clearTimeout(timer);
+        throw err;
+      }
+    }
+
+    let res: Response;
+    try {
+      res = await executeSend(9000);
+      // Si el módem celular estaba en reposo, Cloudflare puede devolver 520 o 504.
+      // La primera llamada despierta el celular por FCM. Reintentamos en 1 segundo.
+      if (res.status === 520 || res.status === 502 || res.status === 503 || res.status === 504) {
+        console.warn(`[send-sms] Gateway retornó ${res.status}. Reintentando envío...`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        res = await executeSend(10000);
+      }
+    } catch (err: any) {
+      console.warn(`[send-sms] Intento 1 demoró o falló (${err?.name || err?.message}). Reintentando...`);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      try {
+        res = await executeSend(10000);
+      } catch (err2: any) {
+        const errorMsg = "El celular módem no respondió a tiempo (posible reposo de batería). Mantén la app abierta y el celular cargando.";
+        const record = addSentSms({
+          phoneNumber,
+          placa,
+          model,
+          message,
+          status: "failed",
+          error: errorMsg,
+        });
+        return NextResponse.json(
+          { success: false, error: errorMsg, record },
+          { status: 504 }
+        );
+      }
+    }
 
     let data: any = {};
     try {
@@ -56,7 +101,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (!res.ok) {
-      const errorMsg = data?.message || data?.error || `Error ${res.status}: ${res.statusText}`;
+      let errorMsg = data?.message || data?.error;
+      if (!errorMsg || errorMsg === "<none>" || errorMsg.includes("<none>")) {
+        if (res.status === 520 || res.status === 504 || res.status === 502) {
+          errorMsg = "El celular módem tardó en responder (estaba en reposo). Mantén la app SMS Gateway abierta y el celular conectado al cargador.";
+        } else {
+          errorMsg = `Error ${res.status}: Servidor Gateway no disponible`;
+        }
+      }
+
       const record = addSentSms({
         phoneNumber,
         placa,
