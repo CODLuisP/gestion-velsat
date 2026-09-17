@@ -661,7 +661,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   const [history, setHistory] = useState<SentRecord[]>([]);
   const [incomingLogs, setIncomingLogs] = useState<WebhookLog[]>([]);
   const [consoleTab, setConsoleTab] = useState<"sent" | "incoming">("sent");
-  const [registeredWebhooks, setRegisteredWebhooks] = useState<any[]>([]);
+  const [registeredWebhooks, setRegisteredWebhooks] = useState<any[] | null>(null);
   const [webhookInputUrl, setWebhookInputUrl] = useState("");
   const [showWebhookModal, setShowWebhookModal] = useState(false);
 
@@ -1234,9 +1234,9 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             onClick={() => setShowWebhookModal(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1C1F26] border border-white/10 text-[11px] font-semibold text-slate-300 hover:text-white hover:border-[#E85D2F]/50 transition-all cursor-pointer shadow-sm"
           >
-            <Radio size={13} className={registeredWebhooks.length > 0 ? "text-emerald-400 animate-pulse" : "text-[#E85D2F]"} />
+            <Radio size={13} className={registeredWebhooks && registeredWebhooks.length > 0 ? "text-emerald-400 animate-pulse" : "text-[#E85D2F]"} />
             <span>Webhook Respuestas</span>
-            {registeredWebhooks.length > 0 && (
+            {registeredWebhooks && registeredWebhooks.length > 0 && (
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#2ECC71]" />
             )}
           </button>
@@ -2118,18 +2118,27 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             {/* Estado del webhook */}
             <div
               className={`p-3.5 rounded-xl border flex flex-col gap-2 ${
-                registeredWebhooks.length > 0
+                registeredWebhooks === null
+                  ? "bg-white/5 border-white/10 text-slate-300"
+                  : registeredWebhooks.length > 0
                   ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
                   : "bg-amber-500/10 border-amber-500/30 text-amber-300"
               }`}
             >
               <div className="flex justify-between items-center">
-                <span className="text-xs font-bold tracking-wide">
-                  {registeredWebhooks.length > 0
-                    ? "🟢 WEBHOOK ACTIVO EN SMS-GATE.APP"
-                    : "⚠️ SIN WEBHOOK REGISTRADO EN SMS-GATE.APP"}
+                <span className="text-xs font-bold tracking-wide flex items-center gap-2">
+                  {registeredWebhooks === null ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin text-[#E85D2F]" />
+                      <span>CONSULTANDO ESTADO EN SMS-GATE.APP...</span>
+                    </>
+                  ) : registeredWebhooks.length > 0 ? (
+                    "🟢 WEBHOOK ACTIVO EN SMS-GATE.APP"
+                  ) : (
+                    "⚠️ SIN WEBHOOK REGISTRADO EN SMS-GATE.APP"
+                  )}
                 </span>
-                {registeredWebhooks.length > 0 && (
+                {registeredWebhooks && registeredWebhooks.length > 0 && (
                   <button
                     onClick={() => handleDeleteWebhook(registeredWebhooks[0]?.id || "gps-respuestas")}
                     className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
@@ -2139,7 +2148,11 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                 )}
               </div>
 
-              {registeredWebhooks.length > 0 ? (
+              {registeredWebhooks === null ? (
+                <p className="text-xs text-slate-400 m-0">
+                  Verificando conexión con el servidor del SMS Gateway...
+                </p>
+              ) : registeredWebhooks.length > 0 ? (
                 <div className="text-xs text-white mt-1">
                   <p className="font-mono text-[11px] break-all m-0">
                     URL: <strong>{registeredWebhooks[0]?.url}</strong>
