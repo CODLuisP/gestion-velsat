@@ -18,6 +18,7 @@ import {
   Satellite,
   History,
   Radar,
+  MessageSquare,
 } from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
 import { Role } from "@/app/constants/roles";
@@ -181,11 +182,11 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
           active={pathname === "/panel/seguimiento"}
         />
         <SidebarLink
-          href="/panel/webs-velsat"
-          icon={<Globe size={17} />}
-          label="Webs Velsat"
+          href="/panel/comandos-sms"
+          icon={<MessageSquare size={17} />}
+          label="SMS GPS"
           open={open}
-          active={pathname === "/panel/webs-velsat"}
+          active={pathname === "/panel/comandos-sms"}
         />
         <SidebarLink
           href="/panel/agregargpstraccar"
