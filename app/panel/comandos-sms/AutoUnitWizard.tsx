@@ -262,10 +262,9 @@ export default function AutoUnitWizard({
 
     const poller = setInterval(async () => {
       try {
-        const [sendRes, webhookRes] = await Promise.allSettled([
-          axios.get("/api/send-sms"),
-          axios.get("/api/gps-webhook"),
-        ]);
+        // "light=1": sondeo del historial sin consultar a sms-gate.app.
+        // /api/send-sms ya devuelve los mismos SMS recibidos que /api/gps-webhook.
+        const [sendRes] = await Promise.allSettled([axios.get("/api/send-sms?light=1")]);
 
         const incoming: any[] = [];
         const history: any[] = [];
@@ -273,10 +272,6 @@ export default function AutoUnitWizard({
         if (sendRes.status === "fulfilled" && sendRes.value.data) {
           if (Array.isArray(sendRes.value.data.incoming)) incoming.push(...sendRes.value.data.incoming);
           if (Array.isArray(sendRes.value.data.history)) history.push(...sendRes.value.data.history);
-        }
-        if (webhookRes.status === "fulfilled" && webhookRes.value.data) {
-          if (Array.isArray(webhookRes.value.data.incoming)) incoming.push(...webhookRes.value.data.incoming);
-          if (Array.isArray(webhookRes.value.data.records)) history.push(...webhookRes.value.data.records);
         }
 
         if (typeof window !== "undefined") {

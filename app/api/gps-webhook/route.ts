@@ -62,19 +62,20 @@ export async function GET(request: NextRequest) {
 
     const history = getSmsHistory(phone, placa);
 
-    // Consulta webhooks registrados en sms-gate.app (con caché en memoria de 45s)
-    let registeredWebhooks: any[] = [];
+    // Consulta webhooks registrados en sms-gate.app (caché en memoria de 5 min).
+    // El webhook casi nunca cambia: si la consulta falla, devolvemos el último
+    // conocido para que la pantalla no lo muestre como desconectado.
     const now = Date.now();
     const wbCache = (globalThis as any).__velsat_webhooks_cache;
+    let registeredWebhooks: any[] = wbCache?.data ?? [];
 
-    if (wbCache && now - wbCache.timestamp < 45000) {
-      registeredWebhooks = wbCache.data;
-    } else {
+    if (!wbCache || now - wbCache.timestamp > 300000) {
       const auth = getAuthHeader();
       if (auth) {
         try {
           const res = await fetch("https://api.sms-gate.app/3rdparty/v1/webhooks", {
             headers: { Authorization: auth },
+            signal: AbortSignal.timeout(6000),
           });
           if (res.ok) {
             registeredWebhooks = await res.json();

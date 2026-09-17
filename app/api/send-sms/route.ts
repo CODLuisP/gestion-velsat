@@ -60,12 +60,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Verifica si el gateway ya registró el mensaje (cuando la respuesta se cortó o falló)
+    // Verifica si el gateway ya registró el mensaje. En serverless la conexión
+    // se puede cortar DESPUÉS de que el gateway aceptó el SMS: sin esta consulta
+    // marcábamos como fallido un mensaje que en realidad ya salió.
     async function wasAccepted(): Promise<any | null> {
       try {
         const r = await fetch(`${GATEWAY}/messages/${messageId}`, {
           headers: { Authorization: authHeader },
-          signal: AbortSignal.timeout(6000),
+          signal: AbortSignal.timeout(5000),
         });
         return r.ok ? await r.json() : null;
       } catch {
@@ -75,18 +77,25 @@ export async function POST(request: NextRequest) {
 
     const isTransient = (status: number) => status === 409 || status >= 500;
 
+    // Intentos cortos: si la conexión se cuelga, cortamos rápido y reintentamos
+    // con el mismo ID (el gateway no duplica el SMS) en vez de esperar 20 segundos.
     let res: Response | null = null;
     let acceptedData: any = null;
-    for (let attempt = 1; attempt <= 2 && !acceptedData; attempt++) {
+    for (let attempt = 1; attempt <= 3 && !acceptedData; attempt++) {
       try {
-        res = await executeSend(attempt === 1 ? 20000 : 15000);
+        res = await executeSend(8000);
         if (res.ok || !isTransient(res.status)) break;
         console.warn(`[send-sms] Gateway retornó ${res.status} (intento ${attempt}).`);
       } catch (err: any) {
         res = null;
         console.warn(`[send-sms] Intento ${attempt} sin respuesta (${err?.name || err?.message}).`);
       }
-      // Antes de reintentar, confirma si el mensaje ya quedó encolado para no duplicarlo
+      acceptedData = await wasAccepted();
+    }
+
+    // Última verificación antes de dar por fallido: el gateway pudo aceptarlo tarde
+    if (!acceptedData && (!res || !res.ok)) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       acceptedData = await wasAccepted();
     }
 
@@ -180,17 +189,21 @@ export async function GET(request: NextRequest) {
 
     const history = getSmsHistory(phone, placa);
 
-    let deviceStatus: any = null;
+    // "light=1": el sondeo frecuente del historial no consulta a sms-gate.app.
+    // El estado del celular se refresca aparte, cada 30 s, para no saturar el gateway
+    // (antes cada pantalla lo consultaba 40 veces por minuto y fallaba por ráfagas).
+    const light = searchParams.get("light") === "1";
+
     const now = Date.now();
     const cache = (globalThis as any).__velsat_device_cache;
+    let deviceStatus: any = cache?.data ?? null;
 
-    if (cache && now - cache.timestamp < 30000) {
-      deviceStatus = cache.data;
-    } else if (hasUser && hasPass) {
+    if (!light && hasUser && hasPass && (!cache || now - cache.timestamp > 30000)) {
       try {
         const auth = Buffer.from(`${process.env.SMS_GATEWAY_USER}:${process.env.SMS_GATEWAY_PASS}`).toString("base64");
         const devRes = await fetch("https://api.sms-gate.app/3rdparty/v1/devices", {
           headers: { Authorization: `Basic ${auth}` },
+          signal: AbortSignal.timeout(6000),
         });
         if (devRes.ok) {
           const devices = await devRes.json();
@@ -203,13 +216,16 @@ export async function GET(request: NextRequest) {
               name: dev.name,
               lastSeen: dev.lastSeen,
               diffMinutes,
-              isOnline: diffMinutes <= 4,
+              // El celular reporta cada pocos minutos: 10 min de margen evita
+              // que el badge salte entre "EN LÍNEA" y "EN REPOSO" sin motivo
+              isOnline: diffMinutes <= 10,
               carrier: dev.simCards?.[0]?.carrierName?.replace(/^\*/, "C") || "Móvil",
             };
             (globalThis as any).__velsat_device_cache = { data: deviceStatus, timestamp: now };
           }
         }
       } catch (err) {
+        // Si la consulta falla, conservamos el último estado conocido en vez de apagar el badge
         console.error("Error checking devices status:", err);
       }
     }

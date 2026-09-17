@@ -735,11 +735,14 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   }, [role]);
 
   // Load gateway status, history and active webhooks (merging with localStorage & auto-cleaning > 12h)
-  const loadGatewayAndHistory = async () => {
+  // includeStatus=false (sondeo del historial): no consulta a sms-gate.app,
+  // solo lee el historial del servidor. El estado del gateway/celular/webhook
+  // se revisa cada 30 s para no saturar el gateway ni la propia web.
+  const loadGatewayAndHistory = async (includeStatus = false) => {
     try {
       const [sendRes, webhookRes] = await Promise.allSettled([
-        axios.get("/api/send-sms"),
-        axios.get("/api/gps-webhook"),
+        axios.get(includeStatus ? "/api/send-sms" : "/api/send-sms?light=1"),
+        includeStatus ? axios.get("/api/gps-webhook") : Promise.resolve(null),
       ]);
 
       let serverRecords: SentRecord[] = [];
@@ -763,7 +766,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         }
       }
 
-      if (webhookRes.status === "fulfilled" && webhookRes.value.data) {
+      if (webhookRes.status === "fulfilled" && webhookRes.value?.data) {
         if (Array.isArray(webhookRes.value.data.records)) {
           serverRecords = [...serverRecords, ...webhookRes.value.data.records];
         }
@@ -884,10 +887,16 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   };
 
   useEffect(() => {
-    loadGatewayAndHistory();
-    // Poll for responses every 1.5 seconds (cached endpoints make this fast and lightweight)
-    const interval = setInterval(loadGatewayAndHistory, 1500);
-    return () => clearInterval(interval);
+    // Primera carga completa (historial + estado del gateway y del webhook)
+    loadGatewayAndHistory(true);
+    // El historial se refresca seguido: es barato, no consulta a sms-gate.app
+    const historyInterval = setInterval(() => loadGatewayAndHistory(false), 3000);
+    // El estado del gateway, celular y webhook se revisa cada 30 s
+    const statusInterval = setInterval(() => loadGatewayAndHistory(true), 30000);
+    return () => {
+      clearInterval(historyInterval);
+      clearInterval(statusInterval);
+    };
   }, []);
 
   // Filter vehicles by search query
@@ -1149,7 +1158,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       const res = await axios.put("/api/gps-webhook", { url: webhookInputUrl.trim() });
       if (res.data.success) {
         toast.success("Webhook registrado con éxito en sms-gate.app", { id: t });
-        loadGatewayAndHistory();
+        loadGatewayAndHistory(true);
       } else {
         toast.error(res.data.error || "Error al registrar webhook", { id: t });
       }
@@ -1165,7 +1174,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       const res = await axios.delete(`/api/gps-webhook?id=${id}`);
       if (res.data.success) {
         toast.success("Webhook eliminado de sms-gate.app", { id: t });
-        loadGatewayAndHistory();
+        loadGatewayAndHistory(true);
       }
     } catch (err: any) {
       toast.error(err.response?.data?.error || err.message, { id: t });
@@ -1867,7 +1876,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             </div>
 
             <button
-              onClick={loadGatewayAndHistory}
+              onClick={() => loadGatewayAndHistory(true)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
               title="Actualizar registro"
             >
