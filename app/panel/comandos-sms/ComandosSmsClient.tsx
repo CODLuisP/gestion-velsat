@@ -36,13 +36,23 @@ import AutoUnitWizard from "./AutoUnitWizard";
 type GpsModel = "teltonika" | "tk" | "gt";
 type CommandCategory = "LECTURA" | "CONFIG" | "CRÍTICO";
 
+interface QuickOption {
+  label: string;
+  value: string;
+}
+
 interface CommandParam {
   key: string;
   label: string;
   placeholder: string;
   defaultValue: string;
-  quickOptions?: string[];
+  quickOptions?: (string | QuickOption)[];
 }
+
+const SERVER_IP_OPTIONS: QuickOption[] = [
+  { label: "Linux 1 (164.92.70.28)", value: "164.92.70.28" },
+  { label: "Linux 2 (165.227.9.191)", value: "165.227.9.191" },
+];
 
 interface GpsCommand {
   id: string;
@@ -180,7 +190,7 @@ const TELTONIKA_COMMANDS: GpsCommand[] = [
       { key: "apn", label: "APN", placeholder: "movistar.pe", defaultValue: "movistar.pe", quickOptions: ["movistar.pe", "claro.pe", "entel.pe"] },
       { key: "login", label: "Usuario APN", placeholder: "", defaultValue: "" },
       { key: "pass", label: "Pass APN", placeholder: "", defaultValue: "" },
-      { key: "ip", label: "IP Servidor", placeholder: "165.227.9.191", defaultValue: "165.227.9.191", quickOptions: ["165.227.9.191", "164.92.70.28"] },
+      { key: "ip", label: "IP Servidor", placeholder: "164.92.70.28", defaultValue: "164.92.70.28", quickOptions: SERVER_IP_OPTIONS },
       { key: "port", label: "Puerto", placeholder: "5027", defaultValue: "5027", quickOptions: ["5027"] },
       { key: "modo", label: "Modo (0:TCP, 1:UDP)", placeholder: "0", defaultValue: "0", quickOptions: ["0", "1"] },
     ],
@@ -192,7 +202,7 @@ const TELTONIKA_COMMANDS: GpsCommand[] = [
     category: "CONFIG",
     description: "Configura IP y puerto del servidor Traccar (puerto 5027, TCP)",
     params: [
-      { key: "ip", label: "IP Servidor Traccar", placeholder: "165.227.9.191", defaultValue: "165.227.9.191", quickOptions: ["165.227.9.191", "164.92.70.28"] },
+      { key: "ip", label: "IP Servidor Traccar", placeholder: "164.92.70.28", defaultValue: "164.92.70.28", quickOptions: SERVER_IP_OPTIONS },
       { key: "port", label: "Puerto Traccar", placeholder: "5027", defaultValue: "5027", quickOptions: ["5027"] },
     ],
   },
@@ -272,7 +282,7 @@ const TK_COMMANDS: GpsCommand[] = [
     category: "CONFIG",
     description: "Configura IP y puerto del servidor Traccar (puerto 5001)",
     params: [
-      { key: "ip", label: "IP Servidor Traccar", placeholder: "165.227.9.191", defaultValue: "165.227.9.191", quickOptions: ["165.227.9.191", "164.92.70.28"] },
+      { key: "ip", label: "IP Servidor Traccar", placeholder: "164.92.70.28", defaultValue: "164.92.70.28", quickOptions: SERVER_IP_OPTIONS },
       { key: "puerto", label: "Puerto Traccar", placeholder: "5001", defaultValue: "5001", quickOptions: ["5001"] },
     ],
   },
@@ -437,7 +447,7 @@ const GT_COMMANDS: GpsCommand[] = [
     category: "CONFIG",
     description: "Define servidor por IP y puerto de reporte Traccar (puerto 5023)",
     params: [
-      { key: "ip", label: "IP Servidor Traccar", placeholder: "165.227.9.191", defaultValue: "165.227.9.191", quickOptions: ["165.227.9.191", "164.92.70.28"] },
+      { key: "ip", label: "IP Servidor Traccar", placeholder: "164.92.70.28", defaultValue: "164.92.70.28", quickOptions: SERVER_IP_OPTIONS },
       { key: "puerto", label: "Puerto Traccar", placeholder: "5023", defaultValue: "5023", quickOptions: ["5023"] },
     ],
   },
@@ -448,7 +458,7 @@ const GT_COMMANDS: GpsCommand[] = [
     category: "CONFIG",
     description: "Define servidor por dominio/IP y puerto de reporte Traccar (puerto 5023)",
     params: [
-      { key: "dominio", label: "IP / Dominio Traccar", placeholder: "165.227.9.191", defaultValue: "165.227.9.191", quickOptions: ["165.227.9.191", "164.92.70.28"] },
+      { key: "dominio", label: "IP / Dominio Traccar", placeholder: "164.92.70.28", defaultValue: "164.92.70.28", quickOptions: SERVER_IP_OPTIONS },
       { key: "puerto", label: "Puerto Traccar", placeholder: "5023", defaultValue: "5023", quickOptions: ["5023"] },
     ],
   },
@@ -654,7 +664,6 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   const [registeredWebhooks, setRegisteredWebhooks] = useState<any[]>([]);
   const [webhookInputUrl, setWebhookInputUrl] = useState("");
   const [showWebhookModal, setShowWebhookModal] = useState(false);
-  const [simulatedResponseText, setSimulatedResponseText] = useState("STATUS:ACC:OFF;GPS:ON;BAT:100%");
 
   // Hydrate history and incomingLogs from localStorage on initial mount (pruning > 12h)
   useEffect(() => {
@@ -1061,30 +1070,6 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
     if (!assembledMessage) return;
     navigator.clipboard.writeText(assembledMessage);
     toast.success("Comando copiado al portapapeles", { icon: "📋" });
-  };
-
-  const handleSimulateResponse = async () => {
-    if (!simLocalNumber) {
-      toast.error("Ingresa un número para asociar la respuesta simulada");
-      return;
-    }
-    const fullNumber = `+51${simLocalNumber}`;
-    try {
-      await axios.post("/api/gps-webhook", {
-        payload: {
-          messageId: `sim_${Date.now()}`,
-          message: simulatedResponseText,
-          sender: fullNumber,
-          recipient: "+51912903330",
-          simNumber: 1,
-          receivedAt: new Date().toISOString(),
-        },
-      });
-      toast.success("Respuesta simulada registrada", { icon: "📨" });
-      loadGatewayAndHistory();
-    } catch (err: any) {
-      toast.error("Error: " + err.message);
-    }
   };
 
   const handleClearHistory = async () => {
@@ -1748,26 +1733,31 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                         className="w-full bg-[#16181D] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono font-medium outline-none focus:border-[#E85D2F]"
                       />
 
-                      {/* Chips rápidos de sugerencias (APNs de Perú, etc.) */}
+                      {/* Chips rápidos de sugerencias (APNs de Perú, Servidores Linux 1 y 2, etc.) */}
                       {param.quickOptions && (
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {param.quickOptions.map((opt) => (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => {
-                                setParamValues({ ...paramValues, [param.key]: opt });
-                                setIsCustomEdited(false);
-                              }}
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer border transition-colors ${
-                                paramValues[param.key] === opt
-                                  ? "bg-[#E85D2F]/20 text-[#E85D2F] border-[#E85D2F]/40"
-                                  : "bg-white/5 text-slate-400 border-white/5 hover:text-white"
-                              }`}
-                            >
-                              {opt}
-                            </button>
-                          ))}
+                          {param.quickOptions.map((optItem, idx) => {
+                            const optValue = typeof optItem === "string" ? optItem : optItem.value;
+                            const optLabel = typeof optItem === "string" ? optItem : optItem.label;
+                            const isSelected = (paramValues[param.key] ?? param.defaultValue) === optValue;
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => {
+                                  setParamValues({ ...paramValues, [param.key]: optValue });
+                                  setIsCustomEdited(false);
+                                }}
+                                className={`text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer border transition-colors ${
+                                  isSelected
+                                    ? "bg-[#E85D2F]/20 text-[#E85D2F] border-[#E85D2F]/40 shadow-sm"
+                                    : "bg-white/5 text-slate-400 border-white/5 hover:text-white"
+                                }`}
+                              >
+                                {optLabel}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -1792,15 +1782,9 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
               <Terminal size={14} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-white m-0">
-                  Consola de Telemetría y Respuestas GPS
-                </h2>
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  En Vivo
-                </span>
-              </div>
+              <h2 className="text-sm font-bold text-white m-0">
+                Consola de Telemetría y Respuestas GPS
+              </h2>
               <p className="text-[11px] text-[#8A9099] mt-0.5 m-0 leading-tight">
                 Historial de comandos y respuestas devueltas por los módems GPS vía Webhook
               </p>
@@ -1834,21 +1818,6 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             </div>
 
             <button
-              onClick={() => {
-                const text = prompt("Simular respuesta de GPS:", simulatedResponseText);
-                if (text) {
-                  setSimulatedResponseText(text);
-                  setTimeout(handleSimulateResponse, 100);
-                }
-              }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
-              title="Simular respuesta de prueba"
-            >
-              <Zap size={12} className="text-[#E85D2F]" />
-              <span>Simular</span>
-            </button>
-
-            <button
               onClick={loadGatewayAndHistory}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
               title="Actualizar registro"
@@ -1861,26 +1830,12 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
               <button
                 onClick={handleClearHistory}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold text-rose-400 transition-colors cursor-pointer"
-                title="Limpiar historial ahora (se autolimpia cada 12 horas)"
+                title="Limpiar historial"
               >
                 <Trash2 size={12} />
                 <span>Limpiar</span>
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Nota informativa para pruebas y ciclo de vida de 12h */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#E85D2F]/5 border border-[#E85D2F]/15 text-[11px] text-slate-300">
-          <div className="flex items-center gap-2">
-            <Info size={13} className="text-[#E85D2F] flex-shrink-0" />
-            <span>
-              <strong>Consejo de prueba:</strong> Si envías SMS de respuesta desde tu celular personal al chip del Gateway, asegúrate de enviarlo como <strong>SMS tradicional</strong> (no chat RCS) para que la app del módem lo reciba y despache al webhook.
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">
-            <Clock size={11} className="text-[#E85D2F]" />
-            <span>Auto-limpieza: cada 12 hrs</span>
           </div>
         </div>
 
