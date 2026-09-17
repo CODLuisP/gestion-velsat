@@ -650,6 +650,9 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   // History & Webhook responses (Auto-clean after 12 hours)
   const STORAGE_KEY_HISTORY = "velsat_sms_history";
   const STORAGE_KEY_INCOMING = "velsat_sms_incoming";
+  // Último estado conocido del gateway: evita mostrar "PENDIENTE"/"CONSULTANDO"
+  // al volver a entrar a la página mientras se revalida en segundo plano
+  const STORAGE_KEY_STATUS = "velsat_sms_gateway_status";
   const MAX_SMS_RETENTION_MS = 12 * 60 * 60 * 1000; // 12 horas
 
   const isWithin12Hours = (dateStr?: string): boolean => {
@@ -685,6 +688,18 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             const valid = parsedInc.filter((inc: any) => isWithin12Hours(inc?.receivedAt));
             setIncomingLogs(valid);
             localStorage.setItem(STORAGE_KEY_INCOMING, JSON.stringify(valid));
+          }
+        }
+        // Estado del gateway y webhooks: se pinta al instante el último conocido
+        const savedStatus = localStorage.getItem(STORAGE_KEY_STATUS);
+        if (savedStatus) {
+          const st = JSON.parse(savedStatus);
+          if (typeof st?.gatewayConfigured === "boolean") setGatewayConfigured(st.gatewayConfigured);
+          if (st?.gatewayUser) setGatewayUser(st.gatewayUser);
+          if (st?.deviceStatus) setDeviceStatus(st.deviceStatus);
+          if (Array.isArray(st?.registeredWebhooks)) {
+            setRegisteredWebhooks(st.registeredWebhooks);
+            if (st.registeredWebhooks[0]?.url) setWebhookInputUrl(st.registeredWebhooks[0].url);
           }
         }
       } catch (err) {
@@ -729,12 +744,16 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
       let serverRecords: SentRecord[] = [];
       let serverIncoming: WebhookLog[] = [];
+      const statusSnapshot: any = {};
 
       if (sendRes.status === "fulfilled" && sendRes.value.data) {
         setGatewayConfigured(sendRes.value.data.configured);
         setGatewayUser(sendRes.value.data.gatewayUser);
+        statusSnapshot.gatewayConfigured = sendRes.value.data.configured;
+        statusSnapshot.gatewayUser = sendRes.value.data.gatewayUser;
         if (sendRes.value.data.deviceStatus) {
           setDeviceStatus(sendRes.value.data.deviceStatus);
+          statusSnapshot.deviceStatus = sendRes.value.data.deviceStatus;
         }
         if (Array.isArray(sendRes.value.data.history)) {
           serverRecords = sendRes.value.data.history;
@@ -753,10 +772,18 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         }
         if (Array.isArray(webhookRes.value.data.registeredWebhooks)) {
           setRegisteredWebhooks(webhookRes.value.data.registeredWebhooks);
+          statusSnapshot.registeredWebhooks = webhookRes.value.data.registeredWebhooks;
           if (webhookRes.value.data.registeredWebhooks.length > 0 && !webhookInputUrl) {
             setWebhookInputUrl(webhookRes.value.data.registeredWebhooks[0].url || "");
           }
         }
+      }
+
+      // Guarda el último estado conocido para la próxima visita a la página
+      if (typeof window !== "undefined" && Object.keys(statusSnapshot).length > 0) {
+        try {
+          localStorage.setItem(STORAGE_KEY_STATUS, JSON.stringify(statusSnapshot));
+        } catch (e) {}
       }
 
       // 1. Merge incoming webhook logs (only kept if < 12 hours)
