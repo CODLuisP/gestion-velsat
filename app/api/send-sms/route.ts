@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addSentSms, getSmsHistory, clearSmsHistory, normalizePhoneNumber } from "@/app/services/smsStore";
 
+// Margen para reintento + verificación en Vercel
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -36,61 +39,73 @@ export async function POST(request: NextRequest) {
 
     const auth = Buffer.from(`${user}:${pass}`).toString("base64");
 
-    // Función auxiliar para enviar con timeout controlado
-    async function executeSend(timeoutMs = 9000): Promise<Response> {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const authHeader = `Basic ${auth}`;
+    const GATEWAY = "https://api.sms-gate.app/3rdparty/v1";
+
+    // ID propio: hace el envío idempotente. Si reintentamos con el mismo ID,
+    // el gateway no duplica el SMS, y podemos consultar si realmente quedó encolado.
+    const messageId = crypto.randomUUID();
+
+    async function executeSend(timeoutMs: number): Promise<Response> {
+      return fetch(`${GATEWAY}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: authHeader },
+        body: JSON.stringify({
+          id: messageId,
+          textMessage: { text: message },
+          phoneNumbers: [normalizedPhone],
+          priority: 100, // Expedito: salta retrasos y horario de trabajo del celular
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    }
+
+    // Verifica si el gateway ya registró el mensaje (cuando la respuesta se cortó o falló)
+    async function wasAccepted(): Promise<any | null> {
       try {
-        const response = await fetch("https://api.sms-gate.app/3rdparty/v1/message", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Basic ${auth}`,
-          },
-          body: JSON.stringify({
-            textMessage: { text: message },
-            phoneNumbers: [normalizedPhone],
-          }),
-          signal: controller.signal,
+        const r = await fetch(`${GATEWAY}/messages/${messageId}`, {
+          headers: { Authorization: authHeader },
+          signal: AbortSignal.timeout(6000),
         });
-        clearTimeout(timer);
-        return response;
-      } catch (err) {
-        clearTimeout(timer);
-        throw err;
+        return r.ok ? await r.json() : null;
+      } catch {
+        return null;
       }
     }
 
-    let res: Response;
-    try {
-      res = await executeSend(9000);
-      // Si el módem celular estaba en reposo, Cloudflare puede devolver 520 o 504.
-      // La primera llamada despierta el celular por FCM. Reintentamos en 1 segundo.
-      if (res.status === 520 || res.status === 502 || res.status === 503 || res.status === 504) {
-        console.warn(`[send-sms] Gateway retornó ${res.status}. Reintentando envío...`);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        res = await executeSend(10000);
-      }
-    } catch (err: any) {
-      console.warn(`[send-sms] Intento 1 demoró o falló (${err?.name || err?.message}). Reintentando...`);
-      await new Promise((resolve) => setTimeout(resolve, 800));
+    const isTransient = (status: number) => status === 409 || status >= 500;
+
+    let res: Response | null = null;
+    let acceptedData: any = null;
+    for (let attempt = 1; attempt <= 2 && !acceptedData; attempt++) {
       try {
-        res = await executeSend(10000);
-      } catch (err2: any) {
-        const errorMsg = "El celular módem no respondió a tiempo (posible reposo de batería). Mantén la app abierta y el celular cargando.";
-        const record = addSentSms({
-          phoneNumber,
-          placa,
-          model,
-          message,
-          status: "failed",
-          error: errorMsg,
-        });
-        return NextResponse.json(
-          { success: false, error: errorMsg, record },
-          { status: 504 }
-        );
+        res = await executeSend(attempt === 1 ? 20000 : 15000);
+        if (res.ok || !isTransient(res.status)) break;
+        console.warn(`[send-sms] Gateway retornó ${res.status} (intento ${attempt}).`);
+      } catch (err: any) {
+        res = null;
+        console.warn(`[send-sms] Intento ${attempt} sin respuesta (${err?.name || err?.message}).`);
       }
+      // Antes de reintentar, confirma si el mensaje ya quedó encolado para no duplicarlo
+      acceptedData = await wasAccepted();
+    }
+
+    if (acceptedData) {
+      const record = addSentSms({ phoneNumber, placa, model, message, status: "sent", gatewayResponse: acceptedData });
+      return NextResponse.json({ success: true, data: acceptedData, record });
+    }
+
+    if (!res) {
+      const errorMsg = "No se pudo contactar al SMS Gateway (sms-gate.app). Verifica tu conexión e inténtalo nuevamente.";
+      const record = addSentSms({
+        phoneNumber,
+        placa,
+        model,
+        message,
+        status: "failed",
+        error: errorMsg,
+      });
+      return NextResponse.json({ success: false, error: errorMsg, record }, { status: 504 });
     }
 
     let data: any = {};
