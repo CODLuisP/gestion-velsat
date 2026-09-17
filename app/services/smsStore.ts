@@ -75,6 +75,24 @@ export function normalizePhoneNumber(phone: string): string {
   return cleaned ? `+${cleaned}` : "";
 }
 
+const RETENTION_MS = 12 * 60 * 60 * 1000; // 12 horas
+
+function pruneExpired(data: SmsStoreData): SmsStoreData {
+  const cutoff = Date.now() - RETENTION_MS;
+  return {
+    records: (data.records || []).filter((r) => {
+      if (!r?.sentAt) return false;
+      const t = new Date(r.sentAt).getTime();
+      return !isNaN(t) && t >= cutoff;
+    }),
+    incoming: (data.incoming || []).filter((inc) => {
+      if (!inc?.receivedAt) return false;
+      const t = new Date(inc.receivedAt).getTime();
+      return !isNaN(t) && t >= cutoff;
+    }),
+  };
+}
+
 function loadData(): SmsStoreData {
   const mem = getMemoryStore();
   try {
@@ -92,10 +110,10 @@ function loadData(): SmsStoreData {
         [...(parsed.incoming || []), ...(mem.incoming || [])].forEach((inc) => {
           if (inc?.id) incomingMap.set(inc.id, inc);
         });
-        const merged: SmsStoreData = {
+        const merged: SmsStoreData = pruneExpired({
           records: Array.from(recordMap.values()),
           incoming: Array.from(incomingMap.values()),
-        };
+        });
         globalThis.__velsat_sms_store = merged;
         return merged;
       }
@@ -103,14 +121,17 @@ function loadData(): SmsStoreData {
   } catch (err) {
     console.warn("[smsStore] Warning reading history file:", err);
   }
-  return mem;
+  const prunedMem = pruneExpired(mem);
+  globalThis.__velsat_sms_store = prunedMem;
+  return prunedMem;
 }
 
 function saveData(data: SmsStoreData) {
-  globalThis.__velsat_sms_store = data;
+  const pruned = pruneExpired(data);
+  globalThis.__velsat_sms_store = pruned;
   try {
     const filePath = getStorageFilePath();
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
+    fs.writeFileSync(filePath, JSON.stringify(pruned, null, 2), "utf-8");
   } catch (err) {
     console.warn("[smsStore] Could not persist to disk, keeping in memory:", err);
   }

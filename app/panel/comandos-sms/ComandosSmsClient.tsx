@@ -396,6 +396,13 @@ const GT_COMMANDS: GpsCommand[] = [
     description: "Estado de batería, GSM, GPS y ACC",
   },
   {
+    id: "gt_check",
+    name: "CHECK#",
+    rawTemplate: "CHECK#",
+    category: "LECTURA",
+    description: "Verificación de red, servidor IP, puerto, APN, señal GSM y satélites",
+  },
+  {
     id: "gt_param",
     name: "PARAM#",
     rawTemplate: "PARAM#",
@@ -630,9 +637,16 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   const [deviceStatus, setDeviceStatus] = useState<any>(null);
   const [isSending, setIsSending] = useState(false);
 
-  // History & Webhook responses
+  // History & Webhook responses (Auto-clean after 12 hours)
   const STORAGE_KEY_HISTORY = "velsat_sms_history";
   const STORAGE_KEY_INCOMING = "velsat_sms_incoming";
+  const MAX_SMS_RETENTION_MS = 12 * 60 * 60 * 1000; // 12 horas
+
+  const isWithin12Hours = (dateStr?: string): boolean => {
+    if (!dateStr) return false;
+    const t = new Date(dateStr).getTime();
+    return !isNaN(t) && Date.now() - t < MAX_SMS_RETENTION_MS;
+  };
 
   const [history, setHistory] = useState<SentRecord[]>([]);
   const [incomingLogs, setIncomingLogs] = useState<WebhookLog[]>([]);
@@ -642,22 +656,26 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   const [showWebhookModal, setShowWebhookModal] = useState(false);
   const [simulatedResponseText, setSimulatedResponseText] = useState("STATUS:ACC:OFF;GPS:ON;BAT:100%");
 
-  // Hydrate history and incomingLogs from localStorage on initial mount
+  // Hydrate history and incomingLogs from localStorage on initial mount (pruning > 12h)
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
         const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
         if (savedHistory) {
           const parsed = JSON.parse(savedHistory);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setHistory(parsed);
+          if (Array.isArray(parsed)) {
+            const valid = parsed.filter((r: any) => isWithin12Hours(r?.sentAt));
+            setHistory(valid);
+            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(valid));
           }
         }
         const savedIncoming = localStorage.getItem(STORAGE_KEY_INCOMING);
         if (savedIncoming) {
           const parsedInc = JSON.parse(savedIncoming);
-          if (Array.isArray(parsedInc) && parsedInc.length > 0) {
-            setIncomingLogs(parsedInc);
+          if (Array.isArray(parsedInc)) {
+            const valid = parsedInc.filter((inc: any) => isWithin12Hours(inc?.receivedAt));
+            setIncomingLogs(valid);
+            localStorage.setItem(STORAGE_KEY_INCOMING, JSON.stringify(valid));
           }
         }
       } catch (err) {
@@ -692,7 +710,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
     loadVehiculos();
   }, [role]);
 
-  // Load gateway status, history and active webhooks (merging with localStorage)
+  // Load gateway status, history and active webhooks (merging with localStorage & auto-cleaning > 12h)
   const loadGatewayAndHistory = async () => {
     try {
       const [sendRes, webhookRes] = await Promise.allSettled([
@@ -732,11 +750,13 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         }
       }
 
-      // 1. Merge incoming webhook logs
+      // 1. Merge incoming webhook logs (only kept if < 12 hours)
       setIncomingLogs((prevInc) => {
         const incMap = new Map<string, WebhookLog>();
         [...serverIncoming, ...prevInc].forEach((item) => {
-          if (item && item.id) incMap.set(item.id, item);
+          if (item && item.id && isWithin12Hours(item.receivedAt)) {
+            incMap.set(item.id, item);
+          }
         });
         const mergedInc = Array.from(incMap.values()).slice(0, 100);
         if (typeof window !== "undefined") {
@@ -747,11 +767,13 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         return mergedInc;
       });
 
-      // 2. Merge sent records and link any incoming responses by phone digits
+      // 2. Merge sent records and link any incoming responses by phone digits (only kept if < 12 hours)
       setHistory((prevHist) => {
         const recordMap = new Map<string, SentRecord>();
         [...serverRecords, ...prevHist].forEach((rec) => {
-          if (rec && rec.id) recordMap.set(rec.id, rec);
+          if (rec && rec.id && isWithin12Hours(rec.sentAt)) {
+            recordMap.set(rec.id, rec);
+          }
         });
         const mergedList = Array.from(recordMap.values());
 
@@ -1010,7 +1032,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         if (res.data.record) {
           const sentRecord: SentRecord = res.data.record;
           setHistory((prev) => {
-            const updated = [sentRecord, ...prev.filter((r) => r.id !== sentRecord.id)].slice(0, 100);
+            const updated = [sentRecord, ...prev.filter((r) => r.id !== sentRecord.id && isWithin12Hours(r.sentAt))].slice(0, 100);
             if (typeof window !== "undefined") {
               try {
                 localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
@@ -1839,7 +1861,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
               <button
                 onClick={handleClearHistory}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold text-rose-400 transition-colors cursor-pointer"
-                title="Limpiar historial"
+                title="Limpiar historial ahora (se autolimpia cada 12 horas)"
               >
                 <Trash2 size={12} />
                 <span>Limpiar</span>
@@ -1848,12 +1870,18 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           </div>
         </div>
 
-        {/* Nota informativa para pruebas */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#E85D2F]/5 border border-[#E85D2F]/15 text-[11px] text-slate-300">
-          <Info size={13} className="text-[#E85D2F] flex-shrink-0" />
-          <span>
-            <strong>Consejo de prueba:</strong> Si envías SMS de respuesta desde tu celular personal al chip del Gateway, asegúrate de enviarlo como <strong>SMS tradicional</strong> (no chat RCS) para que la app del módem lo reciba y despache al webhook.
-          </span>
+        {/* Nota informativa para pruebas y ciclo de vida de 12h */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-[#E85D2F]/5 border border-[#E85D2F]/15 text-[11px] text-slate-300">
+          <div className="flex items-center gap-2">
+            <Info size={13} className="text-[#E85D2F] flex-shrink-0" />
+            <span>
+              <strong>Consejo de prueba:</strong> Si envías SMS de respuesta desde tu celular personal al chip del Gateway, asegúrate de enviarlo como <strong>SMS tradicional</strong> (no chat RCS) para que la app del módem lo reciba y despache al webhook.
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] font-mono text-slate-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">
+            <Clock size={11} className="text-[#E85D2F]" />
+            <span>Auto-limpieza: cada 12 hrs</span>
+          </div>
         </div>
 
         {/* Listado de Tarjetas: Enviados (sent) */}

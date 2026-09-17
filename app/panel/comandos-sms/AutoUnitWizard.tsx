@@ -246,6 +246,12 @@ export default function AutoUnitWizard({
   const resultingApnCommand = currentModelSpec.getApnCommand(effectiveApn || "movistar.pe");
   const resultingConfigCommand = currentModelSpec.getConfigCommand(currentServer.ip, currentModelSpec.port);
 
+  const isWithin12Hours = (dateStr?: string): boolean => {
+    if (!dateStr) return false;
+    const t = new Date(dateStr).getTime();
+    return !isNaN(t) && Date.now() - t < 12 * 60 * 60 * 1000;
+  };
+
   // Step 2: Poll for incoming SMS while waiting
   useEffect(() => {
     if (!isWaitingSms) return;
@@ -352,7 +358,7 @@ export default function AutoUnitWizard({
           try {
             const raw = localStorage.getItem("velsat_sms_history");
             const prev = raw ? JSON.parse(raw) : [];
-            const updated = [res.data.record, ...prev.filter((r: any) => r.id !== res.data.record.id)];
+            const updated = [res.data.record, ...prev.filter((r: any) => r.id !== res.data.record.id && isWithin12Hours(r?.sentAt))];
             localStorage.setItem("velsat_sms_history", JSON.stringify(updated.slice(0, 100)));
           } catch (e) {}
         }
@@ -502,7 +508,7 @@ export default function AutoUnitWizard({
           try {
             const raw = localStorage.getItem("velsat_sms_history");
             const prev = raw ? JSON.parse(raw) : [];
-            const updated = [apnRes.data.record, ...prev.filter((r: any) => r.id !== apnRes.data.record.id)];
+            const updated = [apnRes.data.record, ...prev.filter((r: any) => r.id !== apnRes.data.record.id && isWithin12Hours(r?.sentAt))];
             localStorage.setItem("velsat_sms_history", JSON.stringify(updated.slice(0, 100)));
           } catch (e) {}
         }
@@ -550,7 +556,7 @@ export default function AutoUnitWizard({
           try {
             const raw = localStorage.getItem("velsat_sms_history");
             const prev = raw ? JSON.parse(raw) : [];
-            const updated = [smsRes.data.record, ...prev.filter((r: any) => r.id !== smsRes.data.record.id)];
+            const updated = [smsRes.data.record, ...prev.filter((r: any) => r.id !== smsRes.data.record.id && isWithin12Hours(r?.sentAt))];
             localStorage.setItem("velsat_sms_history", JSON.stringify(updated.slice(0, 100)));
           } catch (e) {}
         }
