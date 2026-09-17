@@ -631,12 +631,40 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   const [isSending, setIsSending] = useState(false);
 
   // History & Webhook responses
+  const STORAGE_KEY_HISTORY = "velsat_sms_history";
+  const STORAGE_KEY_INCOMING = "velsat_sms_incoming";
+
   const [history, setHistory] = useState<SentRecord[]>([]);
   const [incomingLogs, setIncomingLogs] = useState<WebhookLog[]>([]);
+  const [consoleTab, setConsoleTab] = useState<"sent" | "incoming">("sent");
   const [registeredWebhooks, setRegisteredWebhooks] = useState<any[]>([]);
   const [webhookInputUrl, setWebhookInputUrl] = useState("");
   const [showWebhookModal, setShowWebhookModal] = useState(false);
   const [simulatedResponseText, setSimulatedResponseText] = useState("STATUS:ACC:OFF;GPS:ON;BAT:100%");
+
+  // Hydrate history and incomingLogs from localStorage on initial mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
+        if (savedHistory) {
+          const parsed = JSON.parse(savedHistory);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setHistory(parsed);
+          }
+        }
+        const savedIncoming = localStorage.getItem(STORAGE_KEY_INCOMING);
+        if (savedIncoming) {
+          const parsedInc = JSON.parse(savedIncoming);
+          if (Array.isArray(parsedInc) && parsedInc.length > 0) {
+            setIncomingLogs(parsedInc);
+          }
+        }
+      } catch (err) {
+        console.error("Error al cargar historial local de SMS:", err);
+      }
+    }
+  }, []);
 
   // Vehicles list from api
   const [vehiculos, setVehiculos] = useState<Vehiculo[]>([]);
@@ -664,13 +692,16 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
     loadVehiculos();
   }, [role]);
 
-  // Load gateway status, history and active webhooks
+  // Load gateway status, history and active webhooks (merging with localStorage)
   const loadGatewayAndHistory = async () => {
     try {
       const [sendRes, webhookRes] = await Promise.allSettled([
         axios.get("/api/send-sms"),
         axios.get("/api/gps-webhook"),
       ]);
+
+      let serverRecords: SentRecord[] = [];
+      let serverIncoming: WebhookLog[] = [];
 
       if (sendRes.status === "fulfilled" && sendRes.value.data) {
         setGatewayConfigured(sendRes.value.data.configured);
@@ -679,14 +710,20 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           setDeviceStatus(sendRes.value.data.deviceStatus);
         }
         if (Array.isArray(sendRes.value.data.history)) {
-          setHistory(sendRes.value.data.history);
+          serverRecords = sendRes.value.data.history;
         }
         if (Array.isArray(sendRes.value.data.incoming)) {
-          setIncomingLogs(sendRes.value.data.incoming);
+          serverIncoming = [...serverIncoming, ...sendRes.value.data.incoming];
         }
       }
 
       if (webhookRes.status === "fulfilled" && webhookRes.value.data) {
+        if (Array.isArray(webhookRes.value.data.records)) {
+          serverRecords = [...serverRecords, ...webhookRes.value.data.records];
+        }
+        if (Array.isArray(webhookRes.value.data.incoming)) {
+          serverIncoming = [...serverIncoming, ...webhookRes.value.data.incoming];
+        }
         if (Array.isArray(webhookRes.value.data.registeredWebhooks)) {
           setRegisteredWebhooks(webhookRes.value.data.registeredWebhooks);
           if (webhookRes.value.data.registeredWebhooks.length > 0 && !webhookInputUrl) {
@@ -694,6 +731,74 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           }
         }
       }
+
+      // 1. Merge incoming webhook logs
+      setIncomingLogs((prevInc) => {
+        const incMap = new Map<string, WebhookLog>();
+        [...serverIncoming, ...prevInc].forEach((item) => {
+          if (item && item.id) incMap.set(item.id, item);
+        });
+        const mergedInc = Array.from(incMap.values()).slice(0, 100);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(STORAGE_KEY_INCOMING, JSON.stringify(mergedInc));
+          } catch (e) {}
+        }
+        return mergedInc;
+      });
+
+      // 2. Merge sent records and link any incoming responses by phone digits
+      setHistory((prevHist) => {
+        const recordMap = new Map<string, SentRecord>();
+        [...serverRecords, ...prevHist].forEach((rec) => {
+          if (rec && rec.id) recordMap.set(rec.id, rec);
+        });
+        const mergedList = Array.from(recordMap.values());
+
+        // Gather all known incoming logs
+        const allInc = [...serverIncoming];
+        if (typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY_INCOMING);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) allInc.push(...parsed);
+            }
+          } catch (e) {}
+        }
+
+        // Link incoming replies to matching sent records
+        allInc.forEach((inc) => {
+          const senderDigits = (inc.sender || "").replace(/[^0-9]/g, "");
+          if (senderDigits.length >= 9) {
+            const targetPhone = senderDigits.slice(-9);
+            const match = mergedList.find((r) => {
+              const rDigits = (r.phoneNumber || "").replace(/[^0-9]/g, "");
+              return rDigits.slice(-9) === targetPhone;
+            });
+            if (match) {
+              if (match.status !== "answered" || !match.response) {
+                match.status = "answered";
+                match.response = {
+                  message: inc.message,
+                  receivedAt: inc.receivedAt,
+                  sender: inc.sender,
+                };
+              }
+            }
+          }
+        });
+
+        mergedList.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+        const finalRecords = mergedList.slice(0, 100);
+
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(finalRecords));
+          } catch (e) {}
+        }
+        return finalRecords;
+      });
     } catch (err) {
       console.error("Error al cargar estado de Gateway:", err);
     }
@@ -902,6 +1007,18 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
       if (res.data.success) {
         toast.success("Comando enviado exitosamente ✅", { id: toastId });
+        if (res.data.record) {
+          const sentRecord: SentRecord = res.data.record;
+          setHistory((prev) => {
+            const updated = [sentRecord, ...prev.filter((r) => r.id !== sentRecord.id)].slice(0, 100);
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
+              } catch (e) {}
+            }
+            return updated;
+          });
+        }
         loadGatewayAndHistory();
       } else {
         toast.error(res.data.error || "Error al enviar SMS", { id: toastId });
@@ -954,6 +1071,12 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       await axios.delete("/api/send-sms");
       setHistory([]);
       setIncomingLogs([]);
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.removeItem(STORAGE_KEY_HISTORY);
+          localStorage.removeItem(STORAGE_KEY_INCOMING);
+        } catch (e) {}
+      }
       toast.success("Historial limpiado");
     } catch (err: any) {
       toast.error("Error al limpiar: " + err.message);
@@ -1662,8 +1785,32 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             </div>
           </div>
 
-          {/* Acciones de la Consola */}
-          <div className="flex items-center gap-1.5">
+          {/* Acciones y Pestañas de la Consola */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Selector de Pestañas: Enviados vs Entrantes */}
+            <div className="flex items-center bg-[#0A0C0F] p-0.5 rounded-lg border border-white/5">
+              <button
+                onClick={() => setConsoleTab("sent")}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer transition-all ${
+                  consoleTab === "sent"
+                    ? "bg-[#E85D2F] text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Comandos ({history.length})
+              </button>
+              <button
+                onClick={() => setConsoleTab("incoming")}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer transition-all ${
+                  consoleTab === "incoming"
+                    ? "bg-[#E85D2F] text-white shadow-sm"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                SMS Recibidos ({incomingLogs.length})
+              </button>
+            </div>
+
             <button
               onClick={() => {
                 const text = prompt("Simular respuesta de GPS:", simulatedResponseText);
@@ -1676,7 +1823,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
               title="Simular respuesta de prueba"
             >
               <Zap size={12} className="text-[#E85D2F]" />
-              <span>Simular Respuesta</span>
+              <span>Simular</span>
             </button>
 
             <button
@@ -1688,7 +1835,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
               <span>Actualizar</span>
             </button>
 
-            {history.length > 0 && (
+            {(history.length > 0 || incomingLogs.length > 0) && (
               <button
                 onClick={handleClearHistory}
                 className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold text-rose-400 transition-colors cursor-pointer"
@@ -1701,154 +1848,264 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           </div>
         </div>
 
-        {/* Listado de Interacciones / Tarjetas de Telemetría */}
-        <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
-          {history.length === 0 ? (
-            <div className="py-8 flex flex-col items-center justify-center text-center text-slate-400">
-              <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 mb-2">
-                <MessageSquare size={16} />
+        {/* Nota informativa para pruebas */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#E85D2F]/5 border border-[#E85D2F]/15 text-[11px] text-slate-300">
+          <Info size={13} className="text-[#E85D2F] flex-shrink-0" />
+          <span>
+            <strong>Consejo de prueba:</strong> Si envías SMS de respuesta desde tu celular personal al chip del Gateway, asegúrate de enviarlo como <strong>SMS tradicional</strong> (no chat RCS) para que la app del módem lo reciba y despache al webhook.
+          </span>
+        </div>
+
+        {/* Listado de Tarjetas: Enviados (sent) */}
+        {consoleTab === "sent" && (
+          <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
+            {history.length === 0 ? (
+              <div className="py-8 flex flex-col items-center justify-center text-center text-slate-400">
+                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 mb-2">
+                  <MessageSquare size={16} />
+                </div>
+                <span className="text-xs font-bold text-slate-300">Sin Comandos Enviados</span>
+                <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
+                  Selecciona un comando y presiona <strong>Enviar SMS al GPS</strong>. Las respuestas aparecerán aquí en tiempo real.
+                </p>
               </div>
-              <span className="text-xs font-bold text-slate-300">Sin Comandos Enviados</span>
-              <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
-                Selecciona un comando y presiona <strong>Enviar SMS al GPS</strong>. Las respuestas aparecerán aquí en tiempo real.
-              </p>
-            </div>
-          ) : (
-            history.map((item) => {
-              const hasResponse = !!item.response;
-              const mapsUrlMatch = item.response?.message.match(/(https?:\/\/[^\s]+)/g);
-              const mapsUrl = mapsUrlMatch ? mapsUrlMatch[0] : null;
+            ) : (
+              history.map((item) => {
+                const hasResponse = !!item.response;
+                const mapsUrlMatch = item.response?.message.match(/(https?:\/\/[^\s]+)/g);
+                const mapsUrl = mapsUrlMatch ? mapsUrlMatch[0] : null;
 
-              return (
-                <div
-                  key={item.id}
-                  className={`p-2.5 rounded-lg border transition-all ${
-                    hasResponse
-                      ? "bg-[#14171D] border-emerald-500/30"
-                      : item.status === "failed"
-                      ? "bg-[#161214] border-rose-500/30"
-                      : "bg-[#14171D] border-white/5"
-                  }`}
-                >
-                  {/* Encabezado del Registro */}
-                  <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b border-white/5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* Estado */}
-                      {hasResponse ? (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 uppercase">
-                          <CheckCircle2 size={11} />
-                          Respuesta Recibida
+                return (
+                  <div
+                    key={item.id}
+                    className={`p-2.5 rounded-lg border transition-all ${
+                      hasResponse
+                        ? "bg-[#14171D] border-emerald-500/30"
+                        : item.status === "failed"
+                        ? "bg-[#161214] border-rose-500/30"
+                        : "bg-[#14171D] border-white/5"
+                    }`}
+                  >
+                    {/* Encabezado del Registro */}
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b border-white/5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {/* Estado */}
+                        {hasResponse ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 uppercase">
+                            <CheckCircle2 size={11} />
+                            Respuesta Recibida
+                          </span>
+                        ) : item.status === "failed" ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-500/15 border border-rose-500/40 text-rose-300 uppercase">
+                            Falló el Envío
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 uppercase">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                            Esperando GPS
+                          </span>
+                        )}
+
+                        {/* Placa si existe */}
+                        {item.placa && (
+                          <span className="text-[10px] font-bold bg-[#E85D2F]/20 border border-[#E85D2F]/40 text-[#E85D2F] px-1.5 py-0.2 rounded">
+                            {item.placa}
+                          </span>
+                        )}
+
+                        {/* Número destino */}
+                        <span className="text-xs font-semibold text-slate-200 font-mono">
+                          {item.phoneNumber}
                         </span>
-                      ) : item.status === "failed" ? (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-500/15 border border-rose-500/40 text-rose-300 uppercase">
-                          Falló el Envío
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                          Esperando GPS
-                        </span>
-                      )}
 
-                      {/* Placa si existe */}
-                      {item.placa && (
-                        <span className="text-[10px] font-bold bg-[#E85D2F]/20 border border-[#E85D2F]/40 text-[#E85D2F] px-1.5 py-0.2 rounded">
-                          {item.placa}
-                        </span>
-                      )}
-
-                      {/* Número destino */}
-                      <span className="text-xs font-semibold text-slate-200 font-mono">
-                        {item.phoneNumber}
-                      </span>
-
-                      {/* Modelo */}
-                      {item.model && (
-                        <span className="text-[10px] font-bold text-slate-400 bg-white/5 px-1.5 py-0.2 rounded uppercase">
-                          {item.model}
-                        </span>
-                      )}
-                    </div>
-
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {new Date(item.sentAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}
-                    </span>
-                  </div>
-
-                  {/* Cuerpo: Comando Enviado y Respuesta */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                    {/* Comando Enviado */}
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A9099]">
-                        Comando Enviado
-                      </span>
-                      <div className="bg-[#0A0C0F] border border-white/10 rounded-lg p-2 flex justify-between items-start gap-1.5">
-                        <code className="text-xs font-mono text-white font-medium break-all leading-relaxed">
-                          {item.message}
-                        </code>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(item.message);
-                            toast.success("Comando copiado");
-                          }}
-                          className="text-slate-400 hover:text-white p-0.5 transition-colors cursor-pointer flex-shrink-0"
-                          title="Copiar comando"
-                        >
-                          <Copy size={11} />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Respuesta Recibida */}
-                    <div className="flex flex-col gap-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A9099]">
-                          Respuesta del Dispositivo GPS
-                        </span>
-                        {item.response && (
-                          <span className="text-[10px] text-emerald-400 font-mono">
-                            {new Date(item.response.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        {/* Modelo */}
+                        {item.model && (
+                          <span className="text-[10px] font-bold text-slate-400 bg-white/5 px-1.5 py-0.2 rounded uppercase">
+                            {item.model}
                           </span>
                         )}
                       </div>
 
-                      {hasResponse ? (
-                        <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-lg p-2 flex flex-col gap-1.5">
-                          <code className="text-xs font-mono text-emerald-300 font-medium break-all leading-relaxed">
-                            {item.response?.message}
-                          </code>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {new Date(item.sentAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}
+                      </span>
+                    </div>
 
-                          {mapsUrl && (
-                            <div>
-                              <a
-                                href={mapsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-colors no-underline shadow-sm"
-                              >
-                                <span>Abrir en Maps</span>
-                                <ExternalLink size={10} />
-                              </a>
-                            </div>
+                    {/* Cuerpo: Comando Enviado y Respuesta */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+                      {/* Comando Enviado */}
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A9099]">
+                          Comando Enviado
+                        </span>
+                        <div className="bg-[#0A0C0F] border border-white/10 rounded-lg p-2 flex justify-between items-start gap-1.5">
+                          <code className="text-xs font-mono text-white font-medium break-all leading-relaxed">
+                            {item.message}
+                          </code>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(item.message);
+                              toast.success("Comando copiado");
+                            }}
+                            className="text-slate-400 hover:text-white p-0.5 transition-colors cursor-pointer flex-shrink-0"
+                            title="Copiar comando"
+                          >
+                            <Copy size={11} />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Respuesta Recibida */}
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A9099]">
+                            Respuesta del Dispositivo GPS
+                          </span>
+                          {item.response && (
+                            <span className="text-[10px] text-emerald-400 font-mono">
+                              {new Date(item.response.receivedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                            </span>
                           )}
                         </div>
-                      ) : item.status === "failed" ? (
-                        <div className="bg-rose-950/20 border border-rose-500/30 rounded-lg p-2 text-xs text-rose-300">
-                          {item.error || "No se pudo entregar el mensaje al módem"}
-                        </div>
-                      ) : (
-                        <div className="bg-[#0A0C0F]/60 border border-dashed border-white/10 rounded-lg p-2 text-xs text-slate-400 flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                          <span>Esperando respuesta vía SMS del dispositivo GPS...</span>
-                        </div>
-                      )}
+
+                        {hasResponse ? (
+                          <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-lg p-2 flex flex-col gap-1.5">
+                            <code className="text-xs font-mono text-emerald-300 font-medium break-all leading-relaxed">
+                              {item.response?.message}
+                            </code>
+
+                            {mapsUrl && (
+                              <div>
+                                <a
+                                  href={mapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-colors no-underline shadow-sm"
+                                >
+                                  <span>Abrir en Maps</span>
+                                  <ExternalLink size={10} />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        ) : item.status === "failed" ? (
+                          <div className="bg-rose-950/20 border border-rose-500/30 rounded-lg p-2 text-xs text-rose-300">
+                            {item.error || "No se pudo entregar el mensaje al módem"}
+                          </div>
+                        ) : (
+                          <div className="bg-[#0A0C0F]/60 border border-dashed border-white/10 rounded-lg p-2 text-xs text-slate-400 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                            <span>Esperando respuesta vía SMS del dispositivo GPS...</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
+                );
+              })
+            )}
+          </div>
+        )}
+
+        {/* Listado de Tarjetas: Mensajes Entrantes vía Webhook (incoming) */}
+        {consoleTab === "incoming" && (
+          <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
+            {incomingLogs.length === 0 ? (
+              <div className="py-8 flex flex-col items-center justify-center text-center text-slate-400">
+                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 mb-2">
+                  <Radio size={16} />
                 </div>
-              );
-            })
-          )}
-        </div>
+                <span className="text-xs font-bold text-slate-300">Sin Mensajes Entrantes Registrados</span>
+                <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
+                  Cuando un GPS o número telefónico responda un SMS al celular del módem, la notificación aparecerá aquí inmediatamente vía Webhook.
+                </p>
+              </div>
+            ) : (
+              incomingLogs.map((inc) => {
+                const mapsUrlMatch = inc.message.match(/(https?:\/\/[^\s]+)/g);
+                const mapsUrl = mapsUrlMatch ? mapsUrlMatch[0] : null;
+                const cleanDigits = (inc.sender || "").replace(/[^0-9]/g, "");
+                const peruvian9 = cleanDigits.slice(-9);
+
+                return (
+                  <div
+                    key={inc.id}
+                    className="p-2.5 rounded-lg border border-white/10 bg-[#14171D] flex flex-col gap-2 hover:border-[#E85D2F]/30 transition-colors"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1.5 border-b border-white/5">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <Check size={11} />
+                          SMS RECIBIDO
+                        </span>
+
+                        <span className="text-xs font-mono font-bold text-white">
+                          {inc.sender}
+                        </span>
+
+                        {inc.matchedRecordId && (
+                          <span className="text-[10px] font-semibold bg-white/5 text-slate-400 px-1.5 py-0.2 rounded">
+                            Vinculado a comando
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {new Date(inc.receivedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}
+                        </span>
+
+                        {/* Botón para cargar número en el panel de envío */}
+                        <button
+                          onClick={() => {
+                            if (peruvian9.length === 9) {
+                              setSimLocalNumber(peruvian9);
+                              toast.success(`Número +51 ${peruvian9} cargado en el panel de comandos`, { icon: "📱" });
+                            }
+                          }}
+                          className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                          title="Cargar número para enviarle un comando"
+                        >
+                          Cargar Número
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="bg-[#0A0C0F] border border-white/10 rounded-lg p-2 flex justify-between items-start gap-2">
+                      <code className="text-xs font-mono text-emerald-300 font-medium break-all leading-relaxed">
+                        {inc.message}
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(inc.message);
+                          toast.success("Mensaje copiado");
+                        }}
+                        className="text-slate-400 hover:text-white p-0.5 transition-colors cursor-pointer flex-shrink-0"
+                        title="Copiar contenido"
+                      >
+                        <Copy size={12} />
+                      </button>
+                    </div>
+
+                    {mapsUrl && (
+                      <div>
+                        <a
+                          href={mapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-colors no-underline shadow-sm"
+                        >
+                          <span>Abrir en Maps</span>
+                          <ExternalLink size={10} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </section>
 
       {/* ------------------------------------------------------------- */}

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import os from "os";
 
 export interface SmsRecord {
   id: string;
@@ -34,7 +35,30 @@ interface SmsStoreData {
   incoming: WebhookLog[];
 }
 
-const FILE_PATH = path.join(process.cwd(), ".sms_history.json");
+declare global {
+  // eslint-disable-next-line no-var
+  var __velsat_sms_store: SmsStoreData | undefined;
+}
+
+function getMemoryStore(): SmsStoreData {
+  if (!globalThis.__velsat_sms_store) {
+    globalThis.__velsat_sms_store = { records: [], incoming: [] };
+  }
+  return globalThis.__velsat_sms_store;
+}
+
+function getStorageFilePath(): string {
+  // Use os.tmpdir() on Vercel or production serverless environments where process.cwd() is read-only
+  const isServerless = Boolean(
+    process.env.VERCEL ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.NODE_ENV === "production"
+  );
+  if (isServerless) {
+    return path.join(os.tmpdir(), "velsat_sms_history.json");
+  }
+  return path.join(process.cwd(), ".sms_history.json");
+}
 
 export function normalizePhoneNumber(phone: string): string {
   if (!phone) return "";
@@ -52,22 +76,43 @@ export function normalizePhoneNumber(phone: string): string {
 }
 
 function loadData(): SmsStoreData {
+  const mem = getMemoryStore();
   try {
-    if (fs.existsSync(FILE_PATH)) {
-      const raw = fs.readFileSync(FILE_PATH, "utf-8");
-      return JSON.parse(raw);
+    const filePath = getStorageFilePath();
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const parsed: SmsStoreData = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.records)) {
+        // Merge file records with memory records, deduplicating by ID
+        const recordMap = new Map<string, SmsRecord>();
+        [...parsed.records, ...mem.records].forEach((r) => {
+          if (r?.id) recordMap.set(r.id, r);
+        });
+        const incomingMap = new Map<string, WebhookLog>();
+        [...(parsed.incoming || []), ...(mem.incoming || [])].forEach((inc) => {
+          if (inc?.id) incomingMap.set(inc.id, inc);
+        });
+        const merged: SmsStoreData = {
+          records: Array.from(recordMap.values()),
+          incoming: Array.from(incomingMap.values()),
+        };
+        globalThis.__velsat_sms_store = merged;
+        return merged;
+      }
     }
   } catch (err) {
-    console.error("Error reading sms history file:", err);
+    console.warn("[smsStore] Warning reading history file:", err);
   }
-  return { records: [], incoming: [] };
+  return mem;
 }
 
 function saveData(data: SmsStoreData) {
+  globalThis.__velsat_sms_store = data;
   try {
-    fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2), "utf-8");
+    const filePath = getStorageFilePath();
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
-    console.error("Error saving sms history file:", err);
+    console.warn("[smsStore] Could not persist to disk, keeping in memory:", err);
   }
 }
 
@@ -93,10 +138,28 @@ export function recordIncomingResponse(payload: { sender: string; message: strin
   const normalizedSender = normalizePhoneNumber(payload.sender);
   const receivedAt = payload.receivedAt || new Date().toISOString();
   const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `inc_${Date.now()}`;
+  const senderDigits = (payload.sender || "").replace(/[^0-9]/g, "");
 
-  const matchingIndex = data.records.findIndex(
-    (r) => r.normalizedPhone === normalizedSender || r.phoneNumber.replace(/[^0-9]/g, "").endsWith(normalizedSender.slice(-9))
-  );
+  // 1. Prefer matching a command that is still waiting for an answer ('sent' or 'delivered')
+  let matchingIndex = data.records.findIndex((r) => {
+    if (r.status !== "sent" && r.status !== "delivered") return false;
+    const recordDigits = (r.phoneNumber || "").replace(/[^0-9]/g, "");
+    return (
+      r.normalizedPhone === normalizedSender ||
+      (senderDigits.length >= 9 && recordDigits.length >= 9 && recordDigits.slice(-9) === senderDigits.slice(-9))
+    );
+  });
+
+  // 2. If all are already answered or failed, match the most recent record from this phone
+  if (matchingIndex === -1) {
+    matchingIndex = data.records.findIndex((r) => {
+      const recordDigits = (r.phoneNumber || "").replace(/[^0-9]/g, "");
+      return (
+        r.normalizedPhone === normalizedSender ||
+        (senderDigits.length >= 9 && recordDigits.length >= 9 && recordDigits.slice(-9) === senderDigits.slice(-9))
+      );
+    });
+  }
 
   let matchedRecordId: string | undefined = undefined;
   if (matchingIndex !== -1) {
@@ -133,7 +196,15 @@ export function getSmsHistory(filterPhone?: string, filterPlaca?: string) {
   let results = data.records;
   if (filterPhone) {
     const norm = normalizePhoneNumber(filterPhone);
-    results = results.filter((r) => r.normalizedPhone === norm || r.phoneNumber.includes(filterPhone));
+    const filterDigits = filterPhone.replace(/[^0-9]/g, "");
+    results = results.filter((r) => {
+      const recordDigits = (r.phoneNumber || "").replace(/[^0-9]/g, "");
+      return (
+        r.normalizedPhone === norm ||
+        r.phoneNumber.includes(filterPhone) ||
+        (filterDigits.length >= 9 && recordDigits.endsWith(filterDigits.slice(-9)))
+      );
+    });
   }
   if (filterPlaca) {
     results = results.filter((r) => r.placa?.toLowerCase().includes(filterPlaca.toLowerCase()));
@@ -145,6 +216,16 @@ export function getSmsHistory(filterPhone?: string, filterPlaca?: string) {
 }
 
 export function clearSmsHistory() {
-  saveData({ records: [], incoming: [] });
+  const empty: SmsStoreData = { records: [], incoming: [] };
+  globalThis.__velsat_sms_store = empty;
+  try {
+    const filePath = getStorageFilePath();
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (err) {
+    console.warn("[smsStore] Warning unlinking history file:", err);
+  }
+  saveData(empty);
 }
 

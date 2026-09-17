@@ -256,13 +256,36 @@ export default function AutoUnitWizard({
 
     const poller = setInterval(async () => {
       try {
-        const res = await axios.get("/api/send-sms");
-        const incoming = res.data?.incoming;
-        const history = res.data?.history;
+        const [sendRes, webhookRes] = await Promise.allSettled([
+          axios.get("/api/send-sms"),
+          axios.get("/api/gps-webhook"),
+        ]);
+
+        const incoming: any[] = [];
+        const history: any[] = [];
+
+        if (sendRes.status === "fulfilled" && sendRes.value.data) {
+          if (Array.isArray(sendRes.value.data.incoming)) incoming.push(...sendRes.value.data.incoming);
+          if (Array.isArray(sendRes.value.data.history)) history.push(...sendRes.value.data.history);
+        }
+        if (webhookRes.status === "fulfilled" && webhookRes.value.data) {
+          if (Array.isArray(webhookRes.value.data.incoming)) incoming.push(...webhookRes.value.data.incoming);
+          if (Array.isArray(webhookRes.value.data.records)) history.push(...webhookRes.value.data.records);
+        }
+
+        if (typeof window !== "undefined") {
+          try {
+            const rawInc = localStorage.getItem("velsat_sms_incoming");
+            if (rawInc) {
+              const parsed = JSON.parse(rawInc);
+              if (Array.isArray(parsed)) incoming.push(...parsed);
+            }
+          } catch (e) {}
+        }
 
         const checkMessages = [
-          ...(Array.isArray(incoming) ? incoming : []),
-          ...(Array.isArray(history) ? history.map((h: any) => h.response).filter(Boolean) : []),
+          ...incoming,
+          ...history.map((h: any) => h.response).filter(Boolean),
         ];
 
         for (const item of checkMessages) {
@@ -325,6 +348,14 @@ export default function AutoUnitWizard({
       const res = await axios.post("/api/send-sms", payload);
       if (res.data?.success) {
         toast.success(`Comando ${currentModelSpec.imeiCommand} enviado a +51 ${simDigits}`);
+        if (res.data?.record && typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("velsat_sms_history");
+            const prev = raw ? JSON.parse(raw) : [];
+            const updated = [res.data.record, ...prev.filter((r: any) => r.id !== res.data.record.id)];
+            localStorage.setItem("velsat_sms_history", JSON.stringify(updated.slice(0, 100)));
+          } catch (e) {}
+        }
         sentSmsTimestamp.current = Date.now();
         setIsWaitingSms(true);
       } else {
@@ -467,6 +498,14 @@ export default function AutoUnitWizard({
       const apnRes = await axios.post("/api/send-sms", apnPayload);
       if (apnRes.data?.success) {
         apnSuccess = true;
+        if (apnRes.data?.record && typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("velsat_sms_history");
+            const prev = raw ? JSON.parse(raw) : [];
+            const updated = [apnRes.data.record, ...prev.filter((r: any) => r.id !== apnRes.data.record.id)];
+            localStorage.setItem("velsat_sms_history", JSON.stringify(updated.slice(0, 100)));
+          } catch (e) {}
+        }
         setPipelineState((prev) => ({
           ...prev,
           smsApn: {
@@ -507,6 +546,14 @@ export default function AutoUnitWizard({
       const smsRes = await axios.post("/api/send-sms", smsPayload);
       if (smsRes.data?.success) {
         smsSuccess = true;
+        if (smsRes.data?.record && typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("velsat_sms_history");
+            const prev = raw ? JSON.parse(raw) : [];
+            const updated = [smsRes.data.record, ...prev.filter((r: any) => r.id !== smsRes.data.record.id)];
+            localStorage.setItem("velsat_sms_history", JSON.stringify(updated.slice(0, 100)));
+          } catch (e) {}
+        }
         setPipelineState((prev) => ({
           ...prev,
           smsConfig: {
