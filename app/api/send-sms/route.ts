@@ -113,7 +113,12 @@ export async function GET(request: NextRequest) {
     const history = getSmsHistory(phone, placa);
 
     let deviceStatus: any = null;
-    if (hasUser && hasPass) {
+    const now = Date.now();
+    const cache = (globalThis as any).__velsat_device_cache;
+
+    if (cache && now - cache.timestamp < 30000) {
+      deviceStatus = cache.data;
+    } else if (hasUser && hasPass) {
       try {
         const auth = Buffer.from(`${process.env.SMS_GATEWAY_USER}:${process.env.SMS_GATEWAY_PASS}`).toString("base64");
         const devRes = await fetch("https://api.sms-gate.app/3rdparty/v1/devices", {
@@ -133,6 +138,7 @@ export async function GET(request: NextRequest) {
               isOnline: diffMinutes <= 4,
               carrier: dev.simCards?.[0]?.carrierName?.replace(/^\*/, "C") || "Móvil",
             };
+            (globalThis as any).__velsat_device_cache = { data: deviceStatus, timestamp: now };
           }
         }
       } catch (err) {

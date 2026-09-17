@@ -62,19 +62,30 @@ export async function GET(request: NextRequest) {
 
     const history = getSmsHistory(phone, placa);
 
-    // Consulta webhooks registrados en sms-gate.app
+    // Consulta webhooks registrados en sms-gate.app (con caché en memoria de 45s)
     let registeredWebhooks: any[] = [];
-    const auth = getAuthHeader();
-    if (auth) {
-      try {
-        const res = await fetch("https://api.sms-gate.app/3rdparty/v1/webhooks", {
-          headers: { Authorization: auth },
-        });
-        if (res.ok) {
-          registeredWebhooks = await res.json();
+    const now = Date.now();
+    const wbCache = (globalThis as any).__velsat_webhooks_cache;
+
+    if (wbCache && now - wbCache.timestamp < 45000) {
+      registeredWebhooks = wbCache.data;
+    } else {
+      const auth = getAuthHeader();
+      if (auth) {
+        try {
+          const res = await fetch("https://api.sms-gate.app/3rdparty/v1/webhooks", {
+            headers: { Authorization: auth },
+          });
+          if (res.ok) {
+            registeredWebhooks = await res.json();
+            (globalThis as any).__velsat_webhooks_cache = {
+              timestamp: now,
+              data: registeredWebhooks,
+            };
+          }
+        } catch (err) {
+          console.error("Error al consultar webhooks de sms-gate.app:", err);
         }
-      } catch (err) {
-        console.error("Error al consultar webhooks de sms-gate.app:", err);
       }
     }
 
@@ -131,6 +142,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    (globalThis as any).__velsat_webhooks_cache = undefined;
+
     return NextResponse.json({
       success: true,
       message: "Webhook registrado con éxito en sms-gate.app",
@@ -163,6 +176,7 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (res.status === 204 || res.ok) {
+      (globalThis as any).__velsat_webhooks_cache = undefined;
       return NextResponse.json({ success: true, message: "Webhook eliminado correctamente" });
     }
 

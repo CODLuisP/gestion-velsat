@@ -779,7 +779,8 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       // 2. Merge sent records and link any incoming responses by phone digits (only kept if < 12 hours)
       setHistory((prevHist) => {
         const recordMap = new Map<string, SentRecord>();
-        [...serverRecords, ...prevHist].forEach((rec) => {
+        // Fresh serverRecords overwrite prevHist if IDs match
+        [...prevHist, ...serverRecords].forEach((rec) => {
           if (rec && rec.id && isWithin12Hours(rec.sentAt)) {
             recordMap.set(rec.id, rec);
           }
@@ -798,29 +799,49 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           } catch (e) {}
         }
 
-        // Link incoming replies to matching sent records
-        allInc.forEach((inc) => {
-          const senderDigits = (inc.sender || "").replace(/[^0-9]/g, "");
-          if (senderDigits.length >= 9) {
-            const targetPhone = senderDigits.slice(-9);
-            const match = mergedList.find((r) => {
+        // Sort records by sentAt descending
+        mergedList.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
+
+        // Link incoming replies to matching sent records:
+        // Each command receives its matching replies, and displays the most recent one received
+        mergedList.forEach((record, idx) => {
+          const recDigits = (record.phoneNumber || "").replace(/[^0-9]/g, "");
+          if (recDigits.length >= 9) {
+            const phoneSuffix = recDigits.slice(-9);
+            const sentMs = new Date(record.sentAt).getTime();
+
+            // Find if there is a newer command sent to the exact same phone number
+            const newerCommand = mergedList.slice(0, idx).find((r) => {
               const rDigits = (r.phoneNumber || "").replace(/[^0-9]/g, "");
-              return rDigits.slice(-9) === targetPhone;
+              return rDigits.slice(-9) === phoneSuffix;
             });
-            if (match) {
-              if (match.status !== "answered" || !match.response) {
-                match.status = "answered";
-                match.response = {
-                  message: inc.message,
-                  receivedAt: inc.receivedAt,
-                  sender: inc.sender,
-                };
-              }
+            const nextSentMs = newerCommand ? new Date(newerCommand.sentAt).getTime() : Infinity;
+
+            // Find all replies from this phone that arrived for this command:
+            // (after this command was sent, with 15s grace for clock skew, and before the next command to this phone)
+            const matchingReplies = allInc.filter((inc) => {
+              const incDigits = (inc.sender || "").replace(/[^0-9]/g, "");
+              if (incDigits.slice(-9) !== phoneSuffix) return false;
+              const incMs = new Date(inc.receivedAt).getTime();
+              const afterThis = isNaN(sentMs) || isNaN(incMs) || incMs >= sentMs - 15000;
+              const beforeNext = isNaN(nextSentMs) || isNaN(incMs) || incMs < nextSentMs - 15000;
+              return afterThis && beforeNext;
+            });
+
+            if (matchingReplies.length > 0) {
+              // Sort descending: index 0 is always the latest/newest response received
+              matchingReplies.sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+              const latest = matchingReplies[0];
+              record.status = "answered";
+              record.response = {
+                message: latest.message,
+                receivedAt: latest.receivedAt,
+                sender: latest.sender,
+              };
             }
           }
         });
 
-        mergedList.sort((a, b) => new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime());
         const finalRecords = mergedList.slice(0, 100);
 
         if (typeof window !== "undefined") {
@@ -837,8 +858,8 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
   useEffect(() => {
     loadGatewayAndHistory();
-    // Poll for responses every 3.5 seconds
-    const interval = setInterval(loadGatewayAndHistory, 3500);
+    // Poll for responses every 1.5 seconds (cached endpoints make this fast and lightweight)
+    const interval = setInterval(loadGatewayAndHistory, 1500);
     return () => clearInterval(interval);
   }, []);
 
