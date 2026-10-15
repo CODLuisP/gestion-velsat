@@ -30,7 +30,6 @@ import {
 import toast from "react-hot-toast";
 import { Vehiculo } from "@/app/interfaces/vehiculo.interface";
 import { Role } from "@/app/constants/roles";
-import { getUnidadesApi } from "@/app/services/unidadesApi";
 import AutoUnitWizard from "./AutoUnitWizard";
 
 type GpsModel = "teltonika" | "tk" | "gt";
@@ -714,14 +713,25 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Vehicles from server API (same as /panel/unidades)
+  // Unidades de los tres servidores: el comando se manda a la SIM del GPS,
+  // así que se puede buscar cualquier placa sin importar con qué usuario se entró.
   const loadVehiculos = async () => {
     setLoadingVehiculos(true);
     try {
-      const api = getUnidadesApi(role);
-      const res = await axios.get<Vehiculo[]>(api.list);
-      if (Array.isArray(res.data)) {
-        setVehiculos(res.data);
+      const res = await axios.get("/api/placas");
+      if (Array.isArray(res.data?.placas)) {
+        setVehiculos(
+          res.data.placas.map((p: any) => ({
+            deviceID: p.placa,
+            accountID: p.cuenta,
+            equipmentType: p.equipmentType || "",
+            uniqueID: p.imeiNumber || "",
+            deviceCode: p.deviceCode || "",
+            simPhoneNumber: p.simPhoneNumber || "",
+            imeiNumber: p.imeiNumber || "",
+            isActive: "1",
+          }))
+        );
       }
     } catch (err) {
       console.error("Error al cargar unidades para SMS:", err);
@@ -732,7 +742,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
   useEffect(() => {
     loadVehiculos();
-  }, [role]);
+  }, []);
 
   // Load gateway status, history and active webhooks (merging with localStorage & auto-cleaning > 12h)
   // includeStatus=false (sondeo del historial): no consulta a sms-gate.app,

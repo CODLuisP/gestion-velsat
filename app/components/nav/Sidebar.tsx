@@ -19,6 +19,7 @@ import {
   History,
   Radar,
   MessageSquare,
+  DatabaseBackup,
 } from "lucide-react";
 import LogoutItem from "../login/LogoutItem";
 import { Role } from "@/app/constants/roles";
@@ -187,6 +188,13 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
           label="SMS GPS"
           open={open}
           active={pathname === "/panel/comandos-sms"}
+        />
+        <SidebarLink
+          href="/panel/carga"
+          icon={<DatabaseBackup size={17} />}
+          label="Carga de Data"
+          open={open}
+          active={pathname === "/panel/carga"}
         />
         <SidebarLink
           href="/panel/agregargpstraccar"
