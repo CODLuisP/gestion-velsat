@@ -147,11 +147,18 @@ export default function UnidadesClient({ role, actor }: Props) {
       ...(modo === "editar" && vehiculoOriginal?.deviceID !== vehiculo.deviceID
         ? { oldDeviceID: vehiculoOriginal?.deviceID }
         : {}),
+      // La cuenta ahora también se puede cambiar: hay que decirle al API cuál era
+      ...(modo === "editar" && vehiculoOriginal?.accountID !== vehiculo.accountID
+        ? { oldAccountID: vehiculoOriginal?.accountID }
+        : {}),
     };
 
     try {
       if (modo === "editar") {
-        await axios.put(api.update(actor, motivo), payload);
+        await axios.put(
+          api.update(vehiculoOriginal?.deviceID, vehiculoOriginal?.accountID, actor, motivo),
+          payload
+        );
         toast.success("Unidad actualizada correctamente");
       } else {
         await axios.post(api.insert(actor, motivo), payload);
@@ -415,7 +422,6 @@ export default function UnidadesClient({ role, actor }: Props) {
 
           <InputBase1
             label="Account"
-            desabilitar={modo === "editar"}
             placeholder="Account ID"
             required
             submitAttempt={submitAttempt}
