@@ -7,6 +7,7 @@ import ButtonBase from "@/app/components/ui/ButtonBase";
 import InputBase1 from "@/app/components/ui/InputBase1";
 import { Role } from "@/app/constants/roles";
 import { getOsinergminApi } from "@/app/services/osinergminApi";
+import PanelHeader from "@/app/components/nav/PanelHeader";
 
 type Props = {
   role: Role;
@@ -67,9 +68,9 @@ function formatDate(iso: string) {
 
 const CELL: React.CSSProperties = {
   padding: "10px 14px",
-  fontSize: 12,
-  color: "#ADB5BD",
-  borderBottom: "1px solid rgba(255,255,255,0.05)",
+  fontSize: 13,
+  color: "#CFCFD3",
+  borderBottom: "1px solid #222327",
   verticalAlign: "middle",
   textAlign: "left",
 };
@@ -78,10 +79,9 @@ const HEADER: React.CSSProperties = {
   padding: "10px 14px",
   fontSize: 11,
   fontWeight: 700,
-  letterSpacing: "0.07em",
+  letterSpacing: "0.08em",
   textTransform: "uppercase",
-  color: "#8A9099",
-  borderBottom: "1px solid rgba(255,255,255,0.08)",
+  color: "#FFFFFF",
   whiteSpace: "nowrap",
   textAlign: "left",
 };
@@ -89,17 +89,17 @@ const HEADER: React.CSSProperties = {
 function Badge({ text, ok }: { text: string; ok: boolean }) {
   return (
     <span
-      style={{
-        display: "inline-block",
-        padding: "2px 8px",
-        borderRadius: 5,
-        fontSize: 11,
-        fontWeight: 600,
-        background: ok ? "rgba(46,204,113,0.12)" : "rgba(232,93,47,0.12)",
-        color: ok ? "#2ecc71" : "#E85D2F",
-        border: `1px solid ${ok ? "rgba(46,204,113,0.3)" : "rgba(232,93,47,0.3)"}`,
-      }}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[5px] text-[11px] font-bold tracking-wider uppercase font-mono ${
+        ok
+          ? "bg-[#4ADE80]/10 text-[#4ADE80] border border-[#4ADE80]/30"
+          : "bg-[#F05A28]/10 text-[#F05A28] border border-[#F05A28]/30"
+      }`}
     >
+      <span
+        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+          ok ? "bg-[#4ADE80]" : "bg-[#F05A28]"
+        }`}
+      />
       {text}
     </span>
   );
@@ -207,47 +207,42 @@ export default function OsinergminClient({ role, actor }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Título */}
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: "#F4F5F7" }}>
-          Osinergmin
-        </h1>
-        <p style={{ color: "#8A9099", fontSize: 13, marginTop: 4 }}>
-          Retransmisión PLATIN — consulta de auditoría por cuenta y placa
-        </p>
-      </div>
+    <div className="flex flex-col h-full min-h-0 bg-[#121214]">
+      {/* Header */}
+      <PanelHeader
+        title={
+          <span>
+            Integración <span className="text-[#F05A28]">Osinergmin</span>
+          </span>
+        }
+        subtitle="Retransmisión PLATIN — consulta de auditoría y gestión de retransmisión por cuenta y placa"
+        role={role}
+      />
 
-      {/* Formulario */}
-      <div
-        style={{
-          background: "#1C1F26",
-          border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 12,
-          padding: "20px 24px",
-        }}
-      >
-        <div className="flex flex-wrap items-end gap-4">
-          <div style={{ minWidth: 200 }}>
-            <InputBase1
-              label="Cuenta"
-              placeholder="Ej: movilbus"
-              value={cuenta}
-              required
-              submitAttempt={submitAttempt}
-              onChange={(e) => setCuenta(e.target.value)}
-            />
-          </div>
-          <div style={{ minWidth: 200 }}>
-            <InputBase1
-              label="Placa"
-              placeholder="Ej: s129-m2l777"
-              value={placa}
-              required
-              submitAttempt={submitAttempt}
-              onChange={(e) => setPlaca(e.target.value)}
-            />
-          </div>
+      <div className="flex-1 min-h-0 p-6 overflow-y-auto velsat-scroll flex flex-col gap-6">
+        {/* Formulario */}
+        <div className="bg-[#161719] border border-[#26272B] rounded-[12px] p-5">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="min-w-[200px] flex-1">
+              <InputBase1
+                label="Cuenta"
+                placeholder="Ej: movilbus"
+                value={cuenta}
+                required
+                submitAttempt={submitAttempt}
+                onChange={(e) => setCuenta(e.target.value)}
+              />
+            </div>
+            <div className="min-w-[200px] flex-1">
+              <InputBase1
+                label="Placa"
+                placeholder="Ej: s129-m2l777"
+                value={placa}
+                required
+                submitAttempt={submitAttempt}
+                onChange={(e) => setPlaca(e.target.value)}
+              />
+            </div>
           <div style={{ minWidth: 240 }}>
             <InputBase1
               label="Motivo (para Agregar)"
@@ -281,11 +276,11 @@ export default function OsinergminClient({ role, actor }: Props) {
       {actionError && (
         <div
           style={{
-            background: "rgba(232,93,47,0.08)",
-            border: "1px solid rgba(232,93,47,0.25)",
+            background: "rgba(240,90,40,0.08)",
+            border: "1px solid rgba(240,90,40,0.25)",
             borderRadius: 8,
             padding: "12px 16px",
-            color: "#E85D2F",
+            color: "#F05A28",
             fontSize: 13,
           }}
         >
@@ -297,11 +292,11 @@ export default function OsinergminClient({ role, actor }: Props) {
       {error && (
         <div
           style={{
-            background: "rgba(232,93,47,0.08)",
-            border: "1px solid rgba(232,93,47,0.25)",
+            background: "rgba(240,90,40,0.08)",
+            border: "1px solid rgba(240,90,40,0.25)",
             borderRadius: 8,
             padding: "12px 16px",
-            color: "#E85D2F",
+            color: "#F05A28",
             fontSize: 13,
           }}
         >
@@ -309,111 +304,146 @@ export default function OsinergminClient({ role, actor }: Props) {
         </div>
       )}
 
-      {/* Resultados de auditoría */}
-      {registros !== null && (
-        <div
-          style={{
-            background: "#1C1F26",
-            border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: 12,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              padding: "14px 20px",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span style={{ color: "#F4F5F7", fontWeight: 600, fontSize: 14 }}>
-              Últimos registros
+        {/* Resultados de auditoría */}
+        {registros !== null && (
+          <div className="bg-[#161719] border border-[#26272B] rounded-[12px] overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-[#26272B] flex items-center justify-between">
+              <span className="text-[#ECECEE] font-semibold text-[14px]">
+                Últimos registros
+              </span>
+              <span className="text-xs text-[#9B9CA1] font-mono bg-[#1D1E21] px-2.5 py-1 rounded-[6px] border border-[#26272B]">
+                {registros.length} {registros.length === 1 ? "registro" : "registros"}
+              </span>
+            </div>
+
+            {registros.length === 0 ? (
+              <div className="p-8 text-center text-[#9B9CA1] text-xs">
+                Sin registros para esta consulta.
+              </div>
+            ) : (
+              <div className="overflow-x-auto velsat-scroll">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr style={{ background: "linear-gradient(90deg, #7A3A10 0%, #6A310D 100%)" }}>
+                      <th style={HEADER}>#</th>
+                      <th style={HEADER}>Cuenta</th>
+                      <th style={HEADER}>Dispositivo</th>
+                      <th style={HEADER}>Fecha Registro</th>
+                      <th style={HEADER}>Placa</th>
+                      <th style={HEADER}>Velocidad</th>
+                      <th style={HEADER}>Posición</th>
+                      <th style={HEADER}>Fecha GPS</th>
+                      <th style={HEADER}>Estado</th>
+                      <th style={HEADER}>Mensaje</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {registros.map((r) => {
+                      const envio = parseJSON<LastEnvio>(r.lastenvio);
+                      const respuesta = parseJSON<LastRespuesta>(r.lastrespuesta);
+                      const isOk = respuesta?.status?.toUpperCase() === "CREATED";
+
+                      return (
+                        <tr
+                          key={r.id}
+                          className="border-b border-[#222327] hover:bg-[#1D1E21] transition-colors"
+                        >
+                          <td style={{ ...CELL, color: "#9B9CA1" }}>{r.id}</td>
+                          <td style={{ ...CELL, color: "#ECECEE", fontWeight: 500 }}>
+                            {r.accountID}
+                          </td>
+                          <td style={{ ...CELL, fontFamily: "var(--font-ibm-mono)" }}>{r.deviceID}</td>
+                          <td style={{ ...CELL, whiteSpace: "nowrap", fontFamily: "var(--font-ibm-mono)" }}>
+                            {formatDate(r.fecharegistro)}
+                          </td>
+                          <td style={{ ...CELL, color: "#ECECEE", fontWeight: 600, fontFamily: "var(--font-ibm-mono)" }}>
+                            {envio?.plate ?? "—"}
+                          </td>
+                          <td style={{ ...CELL, fontFamily: "var(--font-ibm-mono)" }}>
+                            {envio != null ? `${envio.speed} km/h` : "—"}
+                          </td>
+                          <td style={{ ...CELL, whiteSpace: "nowrap", fontFamily: "var(--font-ibm-mono)" }}>
+                            {envio?.position
+                              ? `${envio.position.latitude.toFixed(5)}, ${envio.position.longitude.toFixed(5)}`
+                              : "—"}
+                          </td>
+                          <td style={{ ...CELL, whiteSpace: "nowrap", fontFamily: "var(--font-ibm-mono)" }}>
+                            {envio?.gpsDate ?? "—"}
+                          </td>
+                          <td style={CELL}>
+                            {respuesta?.status ? (
+                              <Badge text={respuesta.status} ok={isOk} />
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          <td style={CELL}>{respuesta?.message ?? "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Unidades con Osinergmin habilitado */}
+        <div className="bg-[#161719] border border-[#26272B] rounded-[12px] overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-[#26272B] flex items-center justify-between">
+            <span className="text-[#ECECEE] font-semibold text-[14px]">
+              Unidades con Osinergmin habilitado
             </span>
-            <span
-              style={{
-                fontSize: 12,
-                color: "#8A9099",
-                background: "rgba(255,255,255,0.05)",
-                padding: "2px 10px",
-                borderRadius: 20,
-              }}
-            >
-              {registros.length} {registros.length === 1 ? "registro" : "registros"}
+            <span className="text-xs text-[#9B9CA1] font-mono bg-[#1D1E21] px-2.5 py-1 rounded-[6px] border border-[#26272B]">
+              {loadingUnidades ? "..." : `${unidades.length} ${unidades.length === 1 ? "unidad" : "unidades"}`}
             </span>
           </div>
 
-          {registros.length === 0 ? (
-            <div style={{ padding: 32, textAlign: "center", color: "#8A9099", fontSize: 13 }}>
-              Sin registros para esta consulta.
+          {loadingUnidades ? (
+            <div className="p-8 text-center text-[#9B9CA1] text-xs">
+              Cargando...
+            </div>
+          ) : unidadesError ? (
+            <div className="p-8 text-center text-[#F05A28] text-xs">
+              {unidadesError}
+            </div>
+          ) : unidades.length === 0 ? (
+            <div className="p-8 text-center text-[#9B9CA1] text-xs">
+              No hay unidades con Osinergmin habilitado.
             </div>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "auto" }}>
+            <div className="overflow-x-auto velsat-scroll">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr style={{ background: "rgba(255,255,255,0.02)" }}>
-                    <th style={HEADER}>#</th>
+                  <tr style={{ background: "linear-gradient(90deg, #7A3A10 0%, #6A310D 100%)" }}>
                     <th style={HEADER}>Cuenta</th>
                     <th style={HEADER}>Dispositivo</th>
-                    <th style={HEADER}>Fecha Registro</th>
-                    <th style={HEADER}>Placa</th>
-                    <th style={HEADER}>Velocidad</th>
-                    <th style={HEADER}>Posición</th>
-                    <th style={HEADER}>Fecha GPS</th>
-                    <th style={HEADER}>Estado</th>
-                    <th style={HEADER}>Mensaje</th>
+                    <th style={{ ...HEADER, textAlign: "right" }}>Acción</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {registros.map((r) => {
-                    const envio = parseJSON<LastEnvio>(r.lastenvio);
-                    const respuesta = parseJSON<LastRespuesta>(r.lastrespuesta);
-                    const isOk = respuesta?.status?.toUpperCase() === "CREATED";
-
+                  {unidades.map((u) => {
+                    const key = `${u.accountID}|${u.deviceID}`;
+                    const removing = quitarLoading === key;
                     return (
                       <tr
-                        key={r.id}
-                        style={{ transition: "background 0.15s" }}
-                        onMouseEnter={(e) =>
-                          ((e.currentTarget as HTMLTableRowElement).style.background =
-                            "rgba(255,255,255,0.025)")
-                        }
-                        onMouseLeave={(e) =>
-                          ((e.currentTarget as HTMLTableRowElement).style.background =
-                            "transparent")
-                        }
+                        key={key}
+                        className="border-b border-[#222327] hover:bg-[#1D1E21] transition-colors"
                       >
-                        <td style={{ ...CELL, color: "#8A9099" }}>{r.id}</td>
-                        <td style={{ ...CELL, color: "#F4F5F7", fontWeight: 500 }}>
-                          {r.accountID}
+                        <td style={{ ...CELL, color: "#ECECEE", fontWeight: 500 }}>
+                          {u.accountID}
                         </td>
-                        <td style={CELL}>{r.deviceID}</td>
-                        <td style={{ ...CELL, whiteSpace: "nowrap" }}>
-                          {formatDate(r.fecharegistro)}
+                        <td style={{ ...CELL, fontFamily: "var(--font-ibm-mono)" }}>{u.deviceID}</td>
+                        <td style={{ ...CELL, textAlign: "right" }}>
+                          <ButtonBase
+                            variant="danger"
+                            onClick={() => handleQuitar(u.accountID, u.deviceID)}
+                            disabled={removing || quitarLoading !== null}
+                          >
+                            <Trash2 size={13} />
+                            {removing ? "Quitando..." : "Quitar"}
+                          </ButtonBase>
                         </td>
-                        <td style={{ ...CELL, color: "#F4F5F7", fontWeight: 600 }}>
-                          {envio?.plate ?? "—"}
-                        </td>
-                        <td style={CELL}>
-                          {envio != null ? `${envio.speed} km/h` : "—"}
-                        </td>
-                        <td style={{ ...CELL, whiteSpace: "nowrap" }}>
-                          {envio?.position
-                            ? `${envio.position.latitude.toFixed(5)}, ${envio.position.longitude.toFixed(5)}`
-                            : "—"}
-                        </td>
-                        <td style={{ ...CELL, whiteSpace: "nowrap" }}>
-                          {envio?.gpsDate ?? "—"}
-                        </td>
-                        <td style={CELL}>
-                          {respuesta?.status ? (
-                            <Badge text={respuesta.status} ok={isOk} />
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td style={CELL}>{respuesta?.message ?? "—"}</td>
                       </tr>
                     );
                   })}
@@ -422,104 +452,7 @@ export default function OsinergminClient({ role, actor }: Props) {
             </div>
           )}
         </div>
-      )}
-
-      {/* Unidades con Osinergmin habilitado */}
-      <div
-        style={{
-          background: "#1C1F26",
-          border: "1px solid rgba(255,255,255,0.06)",
-          borderRadius: 12,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            padding: "14px 20px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <span style={{ color: "#F4F5F7", fontWeight: 600, fontSize: 14 }}>
-            Unidades con Osinergmin habilitado
-          </span>
-          <span
-            style={{
-              fontSize: 12,
-              color: "#8A9099",
-              background: "rgba(255,255,255,0.05)",
-              padding: "2px 10px",
-              borderRadius: 20,
-            }}
-          >
-            {loadingUnidades ? "..." : `${unidades.length} ${unidades.length === 1 ? "unidad" : "unidades"}`}
-          </span>
-        </div>
-
-        {loadingUnidades ? (
-          <div style={{ padding: 24, textAlign: "center", color: "#8A9099", fontSize: 13 }}>
-            Cargando...
-          </div>
-        ) : unidadesError ? (
-          <div style={{ padding: 32, textAlign: "center", color: "#E85D2F", fontSize: 13 }}>
-            {unidadesError}
-          </div>
-        ) : unidades.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", color: "#8A9099", fontSize: 13 }}>
-            No hay unidades con Osinergmin habilitado.
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <th style={HEADER}>Cuenta</th>
-                  <th style={HEADER}>Dispositivo</th>
-                  <th style={{ ...HEADER, textAlign: "right" }}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {unidades.map((u) => {
-                  const key = `${u.accountID}|${u.deviceID}`;
-                  const removing = quitarLoading === key;
-                  return (
-                    <tr
-                      key={key}
-                      style={{ transition: "background 0.15s" }}
-                      onMouseEnter={(e) =>
-                        ((e.currentTarget as HTMLTableRowElement).style.background =
-                          "rgba(255,255,255,0.025)")
-                      }
-                      onMouseLeave={(e) =>
-                        ((e.currentTarget as HTMLTableRowElement).style.background =
-                          "transparent")
-                      }
-                    >
-                      <td style={{ ...CELL, color: "#F4F5F7", fontWeight: 500 }}>
-                        {u.accountID}
-                      </td>
-                      <td style={CELL}>{u.deviceID}</td>
-                      <td style={{ ...CELL, textAlign: "right" }}>
-                        <ButtonBase
-                          variant="danger"
-                          onClick={() => handleQuitar(u.accountID, u.deviceID)}
-                          disabled={removing || quitarLoading !== null}
-                        >
-                          <Trash2 size={13} />
-                          {removing ? "Quitando..." : "Quitar"}
-                        </ButtonBase>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
-
     </div>
   );
 }

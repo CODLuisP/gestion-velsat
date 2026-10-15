@@ -42,22 +42,22 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
         .lf-root {
-          --ink:          #0A0C0F;
-          --ink-soft:     #1C1F26;
-          --ink-muted:    #252830;
-          --rule:         rgba(255,255,255,0.07);
-          --rule-strong:  rgba(255,255,255,0.12);
-          --text-primary: #F4F5F7;
-          --text-secondary:#8A9099;
-          --text-tertiary: #525760;
-          --accent:       #E85D2F;
-          --accent-dim:   rgba(232,93,47,0.15);
-          --accent-glow:  rgba(232,93,47,0.07);
+          --ink:          #121214;
+          --ink-soft:     #161719;
+          --ink-muted:    #1D1E21;
+          --rule:         #26272B;
+          --rule-strong:  #2D2E32;
+          --text-primary: #ECECEE;
+          --text-secondary:#CFCFD3;
+          --text-tertiary: #9B9CA1;
+          --accent:       #F05A28;
+          --accent-dim:   rgba(240,90,40,0.15);
+          --accent-glow:  rgba(240,90,40,0.07);
           --danger:       rgba(226,75,74,0.15);
           --danger-border:rgba(226,75,74,0.30);
           --danger-text:  #F09595;
-          --success:      #2ECC71;
-          font-family: 'DM Sans', sans-serif;
+          --success:      #4ADE80;
+          font-family: var(--font-ibm-sans), sans-serif;
           color: var(--text-primary);
         }
 

@@ -40,18 +40,18 @@ export default function LoginPage() {
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap');
 
         :root {
-          --ink:          #0A0C0F;
-          --ink-soft:     #1C1F26;
-          --rule:         rgba(255,255,255,0.06);
-          --rule-strong:  rgba(255,255,255,0.11);
-          --text-primary: #F4F5F7;
-          --text-secondary:#8A9099;
-          --text-tertiary: #adb5bd;
-          --accent:       #E85D2F;
+          --ink:          #121214;
+          --ink-soft:     #161719;
+          --rule:         #26272B;
+          --rule-strong:  #2D2E32;
+          --text-primary: #ECECEE;
+          --text-secondary:#CFCFD3;
+          --text-tertiary: #9B9CA1;
+          --accent:       #F05A28;
           --gold:         #C9A86C;
-          --success:      #2ECC71;
-          --font-display: 'Syne', sans-serif;
-          --font-body:    'DM Sans', sans-serif;
+          --success:      #4ADE80;
+          --font-display: var(--font-ibm-sans), sans-serif;
+          --font-body:    var(--font-ibm-sans), sans-serif;
         }
 
         /* ── LAYOUT ── */

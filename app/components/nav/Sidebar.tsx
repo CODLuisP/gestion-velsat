@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   User,
@@ -13,7 +12,6 @@ import {
   RefreshCwOff,
   MapPinned,
   Plus,
-  Globe,
   ShieldCheck,
   Satellite,
   History,
@@ -21,7 +19,7 @@ import {
   MessageSquare,
   DatabaseBackup,
 } from "lucide-react";
-import LogoutItem from "../login/LogoutItem";
+import toast from "react-hot-toast";
 import { Role } from "@/app/constants/roles";
 
 type Props = {
@@ -29,277 +27,244 @@ type Props = {
   role?: Role;
 };
 
+interface NavItemConfig {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  visible?: boolean;
+}
+
 export default function Sidebar({ isAdmin = false, role }: Props) {
-  const [open, setOpen] = useState(true);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+      toast.success("Sesión cerrada");
+      router.push("/");
+      router.refresh();
+    } catch {
+      toast.error("Error al cerrar sesión");
+    }
+  };
+
+  const generalGroup: NavItemConfig[] = [
+    {
+      href: "/panel/dashboard",
+      label: "Dashboard",
+      icon: <Home size={17} />,
+    },
+    {
+      href: "/panel/usuarios",
+      label: "Usuarios",
+      icon: <User size={17} />,
+    },
+    {
+      href: "/panel/subUsuarios",
+      label: "Sub usuarios",
+      icon: <Users size={17} />,
+    },
+    {
+      href: "/panel/unidades",
+      label: "Unidades",
+      icon: <Car size={17} />,
+    },
+    {
+      href: "/panel/unidadesConex",
+      label: "Conexión / Desconexión",
+      icon: <RefreshCwOff size={17} />,
+    },
+  ];
+
+  const integracionesGroup: NavItemConfig[] = [
+    {
+      href: "/panel/sutran",
+      label: "Sutran",
+      icon: <ShieldCheck size={17} />,
+    },
+    {
+      href: "/panel/goldcar",
+      label: "Goldcar",
+      icon: <Satellite size={17} />,
+    },
+    {
+      href: "/panel/osinergmin",
+      label: "Osinergmin",
+      icon: <Activity size={17} />,
+    },
+    {
+      href: "/panel/tracklog",
+      label: "Tracklog",
+      icon: <Radar size={17} />,
+      visible: role === "Servidor_107" || isAdmin,
+    },
+    {
+      href: "/panel/agregargpstraccar",
+      label: "+ Traccar",
+      icon: <Plus size={17} />,
+    },
+  ];
+
+  const operacionesGroup: NavItemConfig[] = [
+    {
+      href: "/panel/seguimiento",
+      label: "Seguimiento",
+      icon: <MapPinned size={17} />,
+    },
+    {
+      href: "/panel/comandos-sms",
+      label: "SMS GPS",
+      icon: <MessageSquare size={17} />,
+    },
+    {
+      href: "/panel/carga",
+      label: "Carga de data",
+      icon: <DatabaseBackup size={17} />,
+    },
+    {
+      href: "/panel/auditoria",
+      label: "Auditoria",
+      icon: <History size={17} />,
+      visible: isAdmin,
+    },
+  ];
 
   return (
-    <aside
-      style={{
-        background: "#1C1F26",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
-        color: "#F4F5F7",
-      }}
-      className={`
-        h-screen flex flex-col
-        transition-all duration-300
-        ${open ? "w-64" : "w-16"}
-      `}
-    >
-      {/* ---------- HEADER ---------- */}
-      <div
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-        className="relative flex items-center h-16 px-4"
-      >
-        <div
-          className={`
-            flex items-center gap-3 overflow-hidden
-            transition-all duration-300
-            ${open ? "opacity-100" : "opacity-0 pointer-events-none"}
-          `}
-        >
-          {/* Emblem */}
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 8,
-              background: "rgba(232,93,47,0.12)",
-              border: "1px solid rgba(232,93,47,0.28)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <img src="/logoVelsat.jpg" alt="" className="rounded-lg p-0.2" />
+    <aside className="w-[240px] min-w-[240px] max-w-[240px] h-screen flex flex-col bg-[#18191C] border-r border-[#26272B] select-none flex-shrink-0 z-20">
+      {/* ---------- HEADER (68px) ---------- */}
+      <div className="h-[68px] min-h-[68px] px-4 flex items-center gap-3 border-b border-[#26272B] flex-shrink-0">
+        <div className="w-[34px] h-[34px] rounded-[8px] bg-[#F05A28] flex items-center justify-center text-white font-bold text-[17px] flex-shrink-0">
+          V
+        </div>
+        <div className="flex flex-col justify-center overflow-hidden">
+          <div className="text-[15px] font-bold leading-tight truncate">
+            <span className="text-[#ECECEE]">Gestión </span>
+            <span className="text-[#F05A28]">Velsat</span>
           </div>
+          <span className="text-[9px] uppercase font-semibold tracking-wider text-[#76777C] mt-0.5 leading-none">
+            PANEL DE CONTROL
+          </span>
+        </div>
+      </div>
 
-          <div className="whitespace-nowrap">
-            <h1
-              className="text-[16px] font-bold leading-none"
-              style={{ color: "#F4F5F7" }}
-            >
-              Gestión <span style={{ color: "#E85D2F" }}>Velsat</span>
-            </h1>
-            <p
-              className="text-[9px] uppercase tracking-widest font-semibold mt-0.5"
-              style={{ color: "#8A9099" }}
-            >
-              Panel de Control
-            </p>
+      {/* ---------- MENÚ CON GRUPOS ---------- */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-2.5 py-3 space-y-4 velsat-scroll">
+        {/* GRUPO GENERAL */}
+        <div>
+          <div className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#76777C]">
+            GENERAL
+          </div>
+          <div className="flex flex-col gap-1">
+            {generalGroup.map((item) => (
+              <SidebarLink
+                key={item.href}
+                href={item.href}
+                icon={item.icon}
+                label={item.label}
+                active={pathname === item.href}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Toggle */}
-        <button
-          onClick={() => setOpen(!open)}
-          style={{ color: "#E85D2F" }}
-          className={`
-            absolute top-1/2 -translate-y-1/2
-            py-2 px-3 rounded-md text-base
-            hover:bg-white/5
-            transition
-            ${open ? "right-3" : "left-1/2 -translate-x-1/2"}
-          `}
-        >
-          ☰
-        </button>
+        {/* GRUPO INTEGRACIONES */}
+        <div>
+          <div className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#76777C]">
+            INTEGRACIONES
+          </div>
+          <div className="flex flex-col gap-1">
+            {integracionesGroup
+              .filter((i) => i.visible !== false)
+              .map((item) => (
+                <SidebarLink
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  active={pathname === item.href}
+                />
+              ))}
+          </div>
+        </div>
+
+        {/* GRUPO OPERACIONES */}
+        <div>
+          <div className="px-3 pb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#76777C]">
+            OPERACIONES
+          </div>
+          <div className="flex flex-col gap-1">
+            {operacionesGroup
+              .filter((i) => i.visible !== false)
+              .map((item) => (
+                <SidebarLink
+                  key={item.href}
+                  href={item.href}
+                  icon={item.icon}
+                  label={item.label}
+                  active={pathname === item.href}
+                />
+              ))}
+          </div>
+        </div>
       </div>
 
-      {/* ---------- MENÚ ---------- */}
-      <nav className="mt-2 flex flex-col gap-0.5 px-2 font-medium">
-        <SidebarLink
-          href="/panel/dashboard"
-          icon={<Home size={17} />}
-          label="Dashboard"
-          open={open}
-          active={pathname === "/panel/dashboard"}
-        />
-        <SidebarLink
-          href="/panel/usuarios"
-          icon={<User size={17} />}
-          label="Usuarios"
-          open={open}
-          active={pathname === "/panel/usuarios"}
-        />
-        <SidebarLink
-          href="/panel/subUsuarios"
-          icon={<Users size={17} />}
-          label="Sub Usuarios"
-          open={open}
-          active={pathname === "/panel/subUsuarios"}
-        />
-        <SidebarLink
-          href="/panel/unidades"
-          icon={<Car size={17} />}
-          label="Unidades"
-          open={open}
-          active={pathname === "/panel/unidades"}
-        />
-        <SidebarLink
-          href="/panel/unidadesConex"
-          icon={<RefreshCwOff size={17} />}
-          label="Conexión / Desconexión"
-          open={open}
-          active={pathname === "/panel/unidadesConex"}
-        />
-        <SidebarLink
-          href="/panel/sutran"
-          icon={<ShieldCheck size={17} />}
-          label="Sutran"
-          open={open}
-          active={pathname === "/panel/sutran"}
-        />
-        <SidebarLink
-          href="/panel/goldcar"
-          icon={<Satellite size={17} />}
-          label="Goldcar"
-          open={open}
-          active={pathname === "/panel/goldcar"}
-        />
-        <SidebarLink
-          href="/panel/osinergmin"
-          icon={<Activity size={17} />}
-          label="Osinergmin"
-          open={open}
-          active={pathname === "/panel/osinergmin"}
-        />
-        {role === "Servidor_107" && (
-          <SidebarLink
-            href="/panel/tracklog"
-            icon={<Radar size={17} />}
-            label="Tracklog"
-            open={open}
-            active={pathname === "/panel/tracklog"}
-          />
-        )}
+      {/* ---------- FOOTER CON USUARIO Y SALIDA ---------- */}
+      <div className="h-[56px] min-h-[56px] px-3 border-t border-[#26272B] flex items-center justify-between bg-[#18191C] flex-shrink-0">
+        <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
+          <div className="w-[32px] h-[32px] rounded-[7px] bg-[#222327] border border-[#26272B] flex items-center justify-center text-[11px] font-bold text-[#CFCFD3] flex-shrink-0">
+            AD
+          </div>
+          <div className="flex flex-col min-w-0 overflow-hidden">
+            <span className="text-[13px] font-semibold text-[#ECECEE] truncate leading-tight">
+              Administrador
+            </span>
+            <span className="text-[10.5px] font-mono text-[#76777C] truncate leading-tight">
+              admin@velsat.com.pe
+            </span>
+          </div>
+        </div>
 
-        <SidebarLink
-          href="/panel/seguimiento"
-          icon={<MapPinned size={17} />}
-          label="Seguimiento"
-          open={open}
-          active={pathname === "/panel/seguimiento"}
-        />
-        <SidebarLink
-          href="/panel/comandos-sms"
-          icon={<MessageSquare size={17} />}
-          label="SMS GPS"
-          open={open}
-          active={pathname === "/panel/comandos-sms"}
-        />
-        <SidebarLink
-          href="/panel/carga"
-          icon={<DatabaseBackup size={17} />}
-          label="Carga de Data"
-          open={open}
-          active={pathname === "/panel/carga"}
-        />
-        <SidebarLink
-          href="/panel/agregargpstraccar"
-          icon={<Plus size={17} />}
-          label="Traccar"
-          open={open}
-          active={pathname === "/panel/agregargpstraccar"}
-        />
-
-        {isAdmin && (
-          <SidebarLink
-            href="/panel/auditoria"
-            icon={<History size={17} />}
-            label="Auditoría"
-            open={open}
-            active={pathname === "/panel/auditoria"}
-          />
-        )}
-      </nav>
-
-      {/* ---------- FOOTER ---------- */}
-      <div className="mt-auto px-2 pb-4">
-        <div
-          className="mb-4 h-px"
-          style={{ background: "rgba(255,255,255,0.06)" }}
-        />
-        <LogoutItem
-          icon={<LogOut size={17} style={{ color: "#8A9099" }} />}
-          label="Cerrar Sesión"
-          open={open}
-        />
+        <button
+          onClick={handleLogout}
+          title="Cerrar Sesión"
+          className="w-[32px] h-[32px] rounded-[7px] flex items-center justify-center text-[#76777C] hover:text-[#F05A28] hover:bg-[#212226] transition-colors flex-shrink-0 cursor-pointer"
+        >
+          <LogOut size={17} />
+        </button>
       </div>
     </aside>
   );
 }
 
-/* ---------- LINK REUTILIZABLE ---------- */
-
 function SidebarLink({
   href,
   icon,
   label,
-  open,
   active,
 }: {
   href: string;
   icon: React.ReactNode;
   label: string;
-  open: boolean;
   active: boolean;
 }) {
   return (
     <Link
       href={href}
-      style={
+      className={`h-[36px] px-3 rounded-[8px] flex items-center gap-2.5 text-[13.5px] font-medium transition-all duration-150 ${
         active
-          ? {
-              background: "rgba(255,255,255,0.07)",
-              color: "#F4F5F7",
-              boxShadow: "inset 0 0 0 1px rgba(232,93,47,0.22)",
-            }
-          : {}
-      }
-      className={`
-        group relative
-        flex items-center gap-3 px-3 py-2 rounded-lg
-        transition-all duration-200
-        ${!active ? "hover:bg-white/5" : ""}
-      `}
+          ? "bg-[#1C1714] border border-[#8A3A1C] text-[#ECECEE]"
+          : "border border-transparent text-[#9B9CA1] hover:bg-[#212226] hover:text-[#ECECEE]"
+      }`}
     >
-      {/* Barra naranja izquierda cuando activo */}
-      {active && (
-        <span
-          style={{
-            position: "absolute",
-            left: 0,
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: 3,
-            height: 22,
-            background: "#E85D2F",
-            borderRadius: "0 3px 3px 0",
-          }}
-        />
-      )}
-
-      {/* Ícono */}
       <span
-        style={{ color: active ? "#E85D2F" : "#ADB5BD", flexShrink: 0 }}
-        className="transition-colors group-hover:text-[#F4F5F7]!"
+        className={`flex-shrink-0 flex items-center transition-colors ${
+          active ? "text-[#F05A28]" : "text-[#9B9CA1] group-hover:text-[#ECECEE]"
+        }`}
       >
         {icon}
       </span>
-
-      {/* Label */}
-      <span
-        style={{ color: active ? "#F4F5F7" : "rgba(173,181,189,0.85)" }}
-        className={`
-          transition-all duration-300 whitespace-nowrap text-[13px]
-          group-hover:text-[#F4F5F7]!
-          ${open ? "opacity-100 ml-0" : "opacity-0 -ml-4"}
-        `}
-      >
-        {label}
-      </span>
+      <span className="truncate">{label}</span>
     </Link>
   );
 }

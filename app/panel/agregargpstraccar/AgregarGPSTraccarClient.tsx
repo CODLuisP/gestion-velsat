@@ -29,6 +29,7 @@ import ModalEliminar from "@/app/components/modal/ModalEliminar";
 import ModalBase from "@/app/components/modal/ModalBase";
 import ButtonBase from "@/app/components/ui/ButtonBase";
 import InputBase1 from "@/app/components/ui/InputBase1";
+import PanelHeader from "@/app/components/nav/PanelHeader";
 
 interface TraccarDevice {
   id: number;
@@ -586,73 +587,43 @@ export default function AgregarGPSTraccarClient() {
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        minHeight: 0,
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-      }}
-    >
-      {/* ---------- HEADER ---------- */}
-      <section
-        style={{
-          marginBottom: 12,
-          paddingBottom: 10,
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 8,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: 16,
-              fontWeight: 700,
-              color: "#F4F5F7",
-              margin: 0,
-              lineHeight: 1.2,
-            }}
-          >
-            <span style={{ color: "#E85D2F" }}>Traccar</span>
-          </h1>
-          <p style={{ fontSize: 11, color: "#8A9099", margin: "2px 0 0" }}>
-            Registra dispositivos y administra las unidades del servidor
-          </p>
-        </div>
+    <div className="flex flex-col h-full min-h-0">
+      <PanelHeader
+        title={
+          <span>
+            Integración <span className="text-[#F05A28]">Traccar</span>
+          </span>
+        }
+        subtitle="Registra dispositivos y administra las unidades del servidor GPS"
+        rightContent={
+          <div className="flex gap-1 p-1 bg-[#161719] rounded-lg border border-[#26272B]">
+            <button
+              type="button"
+              onClick={() => setActiveTab("registrar")}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                activeTab === "registrar"
+                  ? "bg-[#F05A28] text-white shadow-sm"
+                  : "text-[#9B9CA1] hover:text-[#ECECEE]"
+              }`}
+            >
+              Registrar
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("unidades")}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === "unidades"
+                  ? "bg-[#F05A28] text-white shadow-sm"
+                  : "text-[#9B9CA1] hover:text-[#ECECEE]"
+              }`}
+            >
+              <List size={13} /> Unidades
+            </button>
+          </div>
+        }
+      />
 
-        {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-[#0A0C0F] rounded-lg border border-white/5">
-          <button
-            type="button"
-            onClick={() => setActiveTab("registrar")}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-              activeTab === "registrar"
-                ? "bg-[#E85D2F] text-white"
-                : "text-slate-500 hover:text-slate-300"
-            }`}
-          >
-            Registrar
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("unidades")}
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === "unidades"
-                ? "bg-[#E85D2F] text-white"
-                : "text-slate-500 hover:text-slate-300"
-            }`}
-          >
-            <List size={13} /> Unidades
-          </button>
-        </div>
-      </section>
-
-      <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0 mt-1">
+      <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0 mt-3">
         {activeTab === "registrar" && (
         <>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -660,31 +631,31 @@ export default function AgregarGPSTraccarClient() {
           <div className="lg:col-span-4 flex flex-col gap-4">
             {/* STEP 1: LOGIN */}
             <div
-              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${isLoggedIn ? "border-emerald-500/30" : "border-white/5 shadow-xl"}`}
+              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#161719] border transition-all ${isLoggedIn ? "border-[#4ADE80]/30" : "border-[#26272B]"}`}
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
                   <LogIn
                     className={
-                      isLoggedIn ? "text-emerald-500" : "text-[#E85D2F]"
+                      isLoggedIn ? "text-[#4ADE80]" : "text-[#F05A28]"
                     }
                     size={16}
                   />
                   1. Conexión
                 </h2>
                 {isLoggedIn && (
-                  <CheckCircle2 className="text-emerald-500" size={16} />
+                  <CheckCircle2 className="text-[#4ADE80]" size={16} />
                 )}
               </div>
 
               <form onSubmit={handleLogin} className="flex flex-col gap-2.5">
                 {/* Selector de servidor */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-slate-500 uppercase font-bold px-1">
+                  <label className="text-[10px] text-[#9B9CA1] uppercase font-bold px-1">
                     Servidor
                   </label>
                   <div
-                    className={`flex gap-1 p-1 bg-[#0A0C0F] rounded-lg border border-white/5 ${isLoggedIn ? "opacity-60 pointer-events-none" : ""}`}
+                    className={`flex gap-1 p-1 bg-[#121214] rounded-lg border border-[#2D2E32] ${isLoggedIn ? "opacity-60 pointer-events-none" : ""}`}
                   >
                     {SERVERS.map((s) => {
                       const active = serverUrl === s.url;
@@ -697,15 +668,15 @@ export default function AgregarGPSTraccarClient() {
                           title={s.url}
                           className={`flex-1 flex flex-col items-center py-1.5 rounded-md transition-all ${
                             active
-                              ? "bg-[#E85D2F] text-white shadow"
-                              : "text-slate-500 hover:text-slate-300"
+                              ? "bg-[#F05A28] text-white shadow-sm"
+                              : "text-[#9B9CA1] hover:text-[#ECECEE]"
                           }`}
                         >
                           <span className="text-[11px] font-bold leading-tight">
                             {s.label}
                           </span>
                           <span
-                            className={`text-[9px] leading-tight ${active ? "text-white/70" : "text-slate-600"}`}
+                            className={`text-[9px] leading-tight ${active ? "text-white/80" : "text-[#76777C]"}`}
                           >
                             {s.host}
                           </span>
@@ -720,7 +691,7 @@ export default function AgregarGPSTraccarClient() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoggedIn}
-                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-xs"
+                  className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-2 text-[#ECECEE] focus:outline-none focus:border-[#F05A28] transition-all disabled:opacity-50 text-xs placeholder-[#76777C]"
                   placeholder="email@velsat.pe"
                 />
                 <input
@@ -728,7 +699,7 @@ export default function AgregarGPSTraccarClient() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoggedIn}
-                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-[#E85D2F]/50 transition-all disabled:opacity-50 text-xs"
+                  className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-2 text-[#ECECEE] focus:outline-none focus:border-[#F05A28] transition-all disabled:opacity-50 text-xs placeholder-[#76777C]"
                   placeholder="********"
                 />
                 <button
@@ -736,8 +707,8 @@ export default function AgregarGPSTraccarClient() {
                   disabled={isLoggingIn || isLoggedIn}
                   className={`font-bold py-2 text-xs rounded-lg flex items-center justify-center gap-2 transition-all ${
                     isLoggedIn
-                      ? "bg-emerald-500/20 text-emerald-500 cursor-default"
-                      : "bg-[#E85D2F] hover:bg-[#ff6b3d] text-white shadow-lg active:scale-95"
+                      ? "bg-[#4ADE80]/15 text-[#4ADE80] border border-[#4ADE80]/30 cursor-default"
+                      : "bg-[#F05A28] hover:bg-[#FF6A35] text-white shadow active:scale-95"
                   }`}
                 >
                   {isLoggingIn ? (
@@ -753,10 +724,10 @@ export default function AgregarGPSTraccarClient() {
 
             {/* STEP 2: MANUAL INPUT */}
             <div
-              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? "opacity-50 pointer-events-none" : "border-white/5 shadow-xl"}`}
+              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#161719] border transition-all ${!isLoggedIn ? "opacity-50 pointer-events-none" : "border-[#26272B]"}`}
             >
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <Keyboard className="text-[#E85D2F]" size={16} />
+              <h2 className="text-sm font-bold text-[#ECECEE] flex items-center gap-2">
+                <Keyboard className="text-[#F05A28]" size={16} />
                 2. Ingreso Manual
               </h2>
 
@@ -767,7 +738,7 @@ export default function AgregarGPSTraccarClient() {
                   onChange={(e) =>
                     setManualDevice({ ...manualDevice, name: e.target.value })
                   }
-                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                  className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] placeholder-[#76777C] text-xs focus:outline-none focus:border-[#F05A28]"
                 />
                 <input
                   placeholder="IMEI (Unique ID)"
@@ -778,7 +749,7 @@ export default function AgregarGPSTraccarClient() {
                       uniqueId: e.target.value,
                     })
                   }
-                  className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                  className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] font-mono placeholder-[#76777C] text-xs focus:outline-none focus:border-[#F05A28]"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -790,7 +761,7 @@ export default function AgregarGPSTraccarClient() {
                         phone: e.target.value,
                       })
                     }
-                    className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                    className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] font-mono placeholder-[#76777C] text-xs focus:outline-none focus:border-[#F05A28]"
                   />
                   <select
                     value={manualDevice.model}
@@ -800,23 +771,23 @@ export default function AgregarGPSTraccarClient() {
                         model: e.target.value,
                       })
                     }
-                    className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                    className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] text-xs focus:outline-none focus:border-[#F05A28]"
                   >
-                    <option value="" className="bg-[#0A0C0F] text-slate-500">
+                    <option value="" className="bg-[#121214] text-[#76777C]">
                       Seleccionar modelo
                     </option>
-                    <option value="teltonika" className="bg-[#0A0C0F]">
+                    <option value="teltonika" className="bg-[#121214]">
                       teltonika
                     </option>
-                    <option value="gt06" className="bg-[#0A0C0F]">
+                    <option value="gt06" className="bg-[#121214]">
                       gt06
                     </option>
-                    <option value="gps103" className="bg-[#0A0C0F]">
+                    <option value="gps103" className="bg-[#121214]">
                       gps103
                     </option>
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2 mt-0.5">
+                <div className="grid grid-cols-2 gap-2 border-t border-[#26272B] pt-2 mt-0.5">
                   <input
                     placeholder="DeviceID (Attr)"
                     value={manualDevice.deviceID}
@@ -826,7 +797,7 @@ export default function AgregarGPSTraccarClient() {
                         deviceID: e.target.value,
                       })
                     }
-                    className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-1.5 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
+                    className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] font-mono placeholder-[#76777C] text-[11px] focus:outline-none focus:border-[#F05A28]"
                   />
                   <input
                     placeholder="AccountID (Attr)"
@@ -837,14 +808,14 @@ export default function AgregarGPSTraccarClient() {
                         accountID: e.target.value,
                       })
                     }
-                    className="bg-[#0A0C0F] border border-white/5 rounded-lg px-3 py-1.5 text-white text-[11px] focus:ring-1 focus:ring-[#E85D2F]"
+                    className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] font-mono placeholder-[#76777C] text-[11px] focus:outline-none focus:border-[#F05A28]"
                   />
                 </div>
               </div>
 
               <button
                 onClick={addManualDevice}
-                className="bg-white/5 hover:bg-white/10 text-white text-xs font-bold py-1.5 rounded-lg border border-white/10 transition-all flex items-center justify-center gap-2"
+                className="bg-[#1A1210] hover:bg-[#251814] text-[#F05A28] text-xs font-bold py-1.5 rounded-lg border border-[#5A2A18] hover:border-[#F05A28] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Plus size={14} /> Añadir a la lista
               </button>
@@ -852,22 +823,22 @@ export default function AgregarGPSTraccarClient() {
 
             {/* STEP 3: FILE UPLOAD */}
             <div
-              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? "opacity-50 pointer-events-none" : "border-white/5 shadow-xl"}`}
+              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#161719] border transition-all ${!isLoggedIn ? "opacity-50 pointer-events-none" : "border-[#26272B]"}`}
             >
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <FileSpreadsheet className="text-[#E85D2F]" size={16} />
+              <h2 className="text-sm font-bold text-[#ECECEE] flex items-center gap-2">
+                <FileSpreadsheet className="text-[#F05A28]" size={16} />
                 3. Cargar Archivo
               </h2>
 
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-white/10 rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:border-[#E85D2F]/50 hover:bg-[#E85D2F]/5 cursor-pointer transition-all group"
+                className="border-2 border-dashed border-[#2D2E32] rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:border-[#F05A28]/50 hover:bg-[#F05A28]/5 cursor-pointer transition-all group"
               >
                 <FileSpreadsheet
-                  className="text-slate-400 group-hover:text-[#E85D2F]"
+                  className="text-[#9B9CA1] group-hover:text-[#F05A28]"
                   size={18}
                 />
-                <p className="text-white text-xs font-medium text-center">
+                <p className="text-[#ECECEE] text-xs font-medium text-center">
                   Subir Excel (.xlsx) o CSV
                 </p>
                 <input
@@ -881,7 +852,7 @@ export default function AgregarGPSTraccarClient() {
 
               <button
                 onClick={downloadSampleCSV}
-                className="flex items-center justify-center gap-2 text-[10px] text-slate-500 hover:text-white transition-colors"
+                className="flex items-center justify-center gap-2 text-[10px] text-[#9B9CA1] hover:text-[#ECECEE] transition-colors cursor-pointer"
               >
                 <Download size={12} /> Descargar formato CSV
               </button>
@@ -889,21 +860,21 @@ export default function AgregarGPSTraccarClient() {
 
             {/* STEP 4: ASSIGN PERMISSIONS */}
             <div
-              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#1C1F26] border transition-all ${!isLoggedIn ? "opacity-50 pointer-events-none" : "border-white/5 shadow-xl"}`}
+              className={`flex flex-col gap-3 p-4 rounded-xl bg-[#161719] border transition-all ${!isLoggedIn ? "opacity-50 pointer-events-none" : "border-[#26272B]"}`}
             >
-              <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <Link className="text-[#E85D2F]" size={16} />
+              <h2 className="text-sm font-bold text-[#ECECEE] flex items-center gap-2">
+                <Link className="text-[#F05A28]" size={16} />
                 4. Asignar GPS a Usuario
               </h2>
 
               <div className="flex flex-col gap-2.5">
                 <div className="flex flex-col gap-1">
-                  <label className="text-[10px] text-slate-500 uppercase font-bold px-1">
+                  <label className="text-[10px] text-[#9B9CA1] uppercase font-bold px-1">
                     ID de Usuario
                   </label>
                   <div className="relative">
                     <Users
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777C]"
                       size={14}
                     />
                     <input
@@ -911,21 +882,21 @@ export default function AgregarGPSTraccarClient() {
                       placeholder="Ej: 42"
                       value={assignUserId}
                       onChange={(e) => setAssignUserId(e.target.value)}
-                      className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                      className="w-full bg-[#121214] border border-[#2D2E32] rounded-lg pl-9 pr-3 py-1.5 text-[#ECECEE] font-mono text-xs focus:outline-none focus:border-[#F05A28]"
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-2 p-1 bg-[#0A0C0F] rounded-lg border border-white/5">
+                <div className="flex gap-2 p-1 bg-[#121214] rounded-lg border border-[#2D2E32]">
                   <button
                     onClick={() => setAssignmentMode("range")}
-                    className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${assignmentMode === "range" ? "bg-[#E85D2F] text-white" : "text-slate-500 hover:text-slate-300"}`}
+                    className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${assignmentMode === "range" ? "bg-[#F05A28] text-white shadow-sm" : "text-[#9B9CA1] hover:text-[#ECECEE]"}`}
                   >
                     RANGO
                   </button>
                   <button
                     onClick={() => setAssignmentMode("manual")}
-                    className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${assignmentMode === "manual" ? "bg-[#E85D2F] text-white" : "text-slate-500 hover:text-slate-300"}`}
+                    className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${assignmentMode === "manual" ? "bg-[#F05A28] text-white shadow-sm" : "text-[#9B9CA1] hover:text-[#ECECEE]"}`}
                   >
                     MANUAL
                   </button>
@@ -934,7 +905,7 @@ export default function AgregarGPSTraccarClient() {
                 {assignmentMode === "range" ? (
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-slate-500 uppercase font-bold px-1">
+                      <label className="text-[10px] text-[#9B9CA1] uppercase font-bold px-1">
                         Desde
                       </label>
                       <input
@@ -942,11 +913,11 @@ export default function AgregarGPSTraccarClient() {
                         placeholder="4"
                         value={rangeFrom}
                         onChange={(e) => setRangeFrom(e.target.value)}
-                        className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                        className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] font-mono text-xs focus:outline-none focus:border-[#F05A28]"
                       />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[10px] text-slate-500 uppercase font-bold px-1">
+                      <label className="text-[10px] text-[#9B9CA1] uppercase font-bold px-1">
                         Hasta
                       </label>
                       <input
@@ -954,13 +925,13 @@ export default function AgregarGPSTraccarClient() {
                         placeholder="10"
                         value={rangeTo}
                         onChange={(e) => setRangeTo(e.target.value)}
-                        className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                        className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] font-mono text-xs focus:outline-none focus:border-[#F05A28]"
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-1">
-                    <label className="text-[10px] text-slate-500 uppercase font-bold px-1">
+                    <label className="text-[10px] text-[#9B9CA1] uppercase font-bold px-1">
                       IDs (separados por coma)
                     </label>
                     <textarea
@@ -968,7 +939,7 @@ export default function AgregarGPSTraccarClient() {
                       value={manualDeviceIds}
                       onChange={(e) => setManualDeviceIds(e.target.value)}
                       rows={2}
-                      className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 text-white text-xs focus:ring-1 focus:ring-[#E85D2F] resize-none"
+                      className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-1.5 text-[#ECECEE] font-mono text-xs focus:outline-none focus:border-[#F05A28] resize-none"
                     />
                   </div>
                 )}
@@ -976,7 +947,7 @@ export default function AgregarGPSTraccarClient() {
                 <button
                   onClick={handleAssignPermissions}
                   disabled={isAssigning}
-                  className="bg-[#E85D2F] hover:bg-[#ff6b3d] text-white text-xs font-bold py-2 rounded-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="bg-[#F05A28] hover:bg-[#FF6A35] text-white text-xs font-bold py-2 rounded-lg shadow active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   {isAssigning ? (
                     <Loader2 className="animate-spin" size={16} />
@@ -989,12 +960,12 @@ export default function AgregarGPSTraccarClient() {
 
               {permissionResults.length > 0 && (
                 <div className="mt-1 flex flex-col gap-2">
-                  <div className="flex items-center justify-between border-t border-white/5 pt-3">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold">
+                  <div className="flex items-center justify-between border-t border-[#26272B] pt-3">
+                    <span className="text-[10px] text-[#9B9CA1] uppercase font-bold">
                       Progreso
                     </span>
-                    <div className="flex gap-2">
-                      <span className="text-[10px] text-emerald-500 font-bold">
+                    <div className="flex gap-2 font-mono">
+                      <span className="text-[10px] text-[#4ADE80] font-bold">
                         {
                           permissionResults.filter(
                             (r) => r.status === "success",
@@ -1016,31 +987,31 @@ export default function AgregarGPSTraccarClient() {
                     {permissionResults.map((res, i) => (
                       <div
                         key={i}
-                        className="flex items-center justify-between bg-black/20 p-1.5 rounded-lg border border-white/5"
+                        className="flex items-center justify-between bg-[#121214] p-1.5 rounded-lg border border-[#26272B]"
                       >
                         <div className="flex items-center gap-2">
-                          <Hash className="text-slate-600" size={12} />
-                          <span className="text-xs text-white font-mono">
+                          <Hash className="text-[#76777C]" size={12} />
+                          <span className="text-xs text-[#ECECEE] font-mono">
                             ID: {res.deviceId}
                           </span>
                         </div>
                         <div>
                           {res.status === "loading" && (
                             <Loader2
-                              className="animate-spin text-[#E85D2F]"
+                              className="animate-spin text-[#F05A28]"
                               size={14}
                             />
                           )}
                           {res.status === "success" && (
                             <CheckCircle2
-                              className="text-emerald-500"
+                              className="text-[#4ADE80]"
                               size={14}
                             />
                           )}
                           {res.status === "error" && (
                             <div className="group relative">
                               <XCircle className="text-red-500" size={14} />
-                              <div className="absolute right-0 bottom-full mb-2 w-32 p-2 bg-red-900 text-white text-[9px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
+                              <div className="absolute right-0 bottom-full mb-2 w-32 p-2 bg-[#251814] border border-red-500/50 text-[#ECECEE] text-[9px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-30">
                                 {res.message}
                               </div>
                             </div>
@@ -1061,29 +1032,29 @@ export default function AgregarGPSTraccarClient() {
               className={`grid grid-cols-1 md:grid-cols-4 gap-3 transition-all ${results.length === 0 ? "opacity-50" : ""}`}
             >
               {/* Total */}
-              <div className="rounded-xl p-3 flex flex-col backdrop-blur-xl bg-white/4 border border-white/10 transition-all hover:bg-white/6">
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+              <div className="rounded-xl p-3.5 flex flex-col bg-[#161719] border border-[#26272B]">
+                <span className="text-[10px] text-[#9B9CA1] uppercase font-bold tracking-widest">
                   Total
                 </span>
-                <span className="text-2xl font-black text-white mt-0.5">
+                <span className="text-2xl font-bold font-mono text-[#ECECEE] mt-0.5">
                   {total}
                 </span>
               </div>
               {/* Éxitos */}
-              <div className="rounded-xl p-3 flex flex-col backdrop-blur-xl bg-white/4 border border-white/10 transition-all hover:bg-white/6">
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+              <div className="rounded-xl p-3.5 flex flex-col bg-[#161719] border border-[#26272B]">
+                <span className="text-[10px] text-[#4ADE80] uppercase font-bold tracking-widest">
                   Éxitos
                 </span>
-                <span className="text-2xl font-black text-white mt-0.5">
+                <span className="text-2xl font-bold font-mono text-[#4ADE80] mt-0.5">
                   {successes}
                 </span>
               </div>
               {/* Fallos */}
-              <div className="rounded-xl p-3 flex flex-col backdrop-blur-xl bg-white/4 border border-white/10 transition-all hover:bg-white/6">
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
+              <div className="rounded-xl p-3.5 flex flex-col bg-[#161719] border border-[#26272B]">
+                <span className="text-[10px] text-red-500 uppercase font-bold tracking-widest">
                   Fallos
                 </span>
-                <span className="text-2xl font-black text-white mt-0.5">
+                <span className="text-2xl font-bold font-mono text-red-400 mt-0.5">
                   {failures}
                 </span>
               </div>
@@ -1091,28 +1062,28 @@ export default function AgregarGPSTraccarClient() {
               <button
                 onClick={processDevices}
                 disabled={isProcessing || results.length === 0}
-                className="rounded-xl py-3 px-3 flex items-center justify-center gap-2 text-sm font-black text-white backdrop-blur-xl bg-white/4 border border-white/10 transition-all hover:bg-white/8 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="rounded-xl py-3 px-3 flex items-center justify-center gap-2 text-xs font-bold text-white bg-[#F05A28] hover:bg-[#FF6A35] transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow"
               >
                 {isProcessing ? (
-                  <Loader2 className="animate-spin" size={18} />
+                  <Loader2 className="animate-spin" size={16} />
                 ) : (
-                  <Zap size={18} />
+                  <Zap size={16} />
                 )}
                 {isProcessing ? "PROCESANDO..." : "INICIAR"}
               </button>
             </div>
 
             {/* TABLE */}
-            <div className="bg-[#1C1F26] border border-white/5 rounded-xl overflow-hidden shadow-2xl flex-1 flex flex-col">
-              <div className="p-3 border-b border-white/5 flex items-center justify-between bg-white/2">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <TableIcon className="text-slate-400" size={15} />
+            <div className="bg-[#161719] border border-[#26272B] rounded-xl overflow-hidden flex-1 flex flex-col">
+              <div className="p-3 border-b border-[#26272B] flex items-center justify-between">
+                <h3 className="text-xs font-bold text-[#ECECEE] flex items-center gap-2">
+                  <TableIcon className="text-[#9B9CA1]" size={15} />
                   Lista de Dispositivos
                 </h3>
                 {results.length > 0 && !isProcessing && (
                   <button
                     onClick={() => setResults([])}
-                    className="text-[11px] text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
+                    className="text-[11px] text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <Trash2 size={12} /> Limpiar lista
                   </button>
@@ -1121,21 +1092,21 @@ export default function AgregarGPSTraccarClient() {
 
               <div className="overflow-y-auto max-h-150">
                 <table className="w-full text-left border-collapse">
-                  <thead className="sticky top-0 z-10 bg-[#1C1F26]">
-                    <tr className="bg-[#0A0C0F]/50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-                      <th className="px-3 py-2">Nombre / IMEI</th>
-                      <th className="px-3 py-2">Phone / Model</th>
-                      <th className="px-3 py-2">Attributes</th>
-                      <th className="px-3 py-2 text-center">Estado</th>
-                      {!isProcessing && <th className="px-3 py-2 w-8"></th>}
+                  <thead className="sticky top-0 z-10 bg-gradient-to-r from-[#7A3A10] to-[#6A310D]">
+                    <tr className="text-white text-[11px] uppercase tracking-[0.08em] font-bold">
+                      <th className="px-3 py-2.5">Nombre / IMEI</th>
+                      <th className="px-3 py-2.5">Phone / Model</th>
+                      <th className="px-3 py-2.5">Attributes</th>
+                      <th className="px-3 py-2.5 text-center">Estado</th>
+                      {!isProcessing && <th className="px-3 py-2.5 w-8"></th>}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className="divide-y divide-[#222327]">
                     {results.length === 0 ? (
                       <tr>
                         <td
                           colSpan={5}
-                          className="px-3 py-12 text-center text-slate-600 italic text-xs"
+                          className="px-3 py-12 text-center text-[#76777C] italic text-xs"
                         >
                           No hay dispositivos en la lista. Carga un Excel/CSV o
                           ingresa uno manualmente.
@@ -1145,47 +1116,47 @@ export default function AgregarGPSTraccarClient() {
                       results.map((res, idx) => (
                         <tr
                           key={idx}
-                          className="hover:bg-white/2 transition-colors"
+                          className="hover:bg-[#1D1E21] transition-colors"
                         >
-                          <td className="px-3 py-2">
-                            <div className="text-white font-medium text-xs">
+                          <td className="px-3 py-2.5">
+                            <div className="text-[#ECECEE] font-medium text-xs">
                               {res.name}
                             </div>
-                            <div className="text-slate-500 font-mono text-[10px]">
+                            <div className="text-[#9B9CA1] font-mono text-[10px]">
                               {res.uniqueId}
                             </div>
                           </td>
-                          <td className="px-3 py-2">
-                            <div className="text-slate-300 text-[11px]">
+                          <td className="px-3 py-2.5">
+                            <div className="text-[#CFCFD3] font-mono text-[11px]">
                               {res.phone || "-"}
                             </div>
-                            <div className="text-slate-500 text-[10px]">
+                            <div className="text-[#9B9CA1] text-[10px]">
                               {res.model || "-"}
                             </div>
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2.5">
                             <div className="flex flex-col gap-0.5">
-                              <span className="text-[9px] text-slate-500">
+                              <span className="text-[10px] text-[#9B9CA1] font-mono">
                                 ID: {res.deviceID}
                               </span>
-                              <span className="text-[9px] text-slate-500">
+                              <span className="text-[10px] text-[#9B9CA1] font-mono">
                                 ACC: {res.accountID}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-2.5 text-center">
                             {res.status === "pending" && (
-                              <span className="inline-block w-2 h-2 rounded-full bg-slate-700" />
+                              <span className="inline-block w-2 h-2 rounded-full bg-[#76777C]" />
                             )}
                             {res.status === "loading" && (
                               <Loader2
-                                className="animate-spin text-[#E85D2F] mx-auto"
+                                className="animate-spin text-[#F05A28] mx-auto"
                                 size={15}
                               />
                             )}
                             {res.status === "success" && (
                               <CheckCircle2
-                                className="text-emerald-500 mx-auto"
+                                className="text-[#4ADE80] mx-auto"
                                 size={16}
                               />
                             )}
@@ -1195,17 +1166,17 @@ export default function AgregarGPSTraccarClient() {
                                   className="text-red-500 mx-auto cursor-help"
                                   size={16}
                                 />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-red-900 text-white text-[10px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-[#251814] border border-red-500/50 text-[#ECECEE] text-[10px] rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                                   {res.message}
                                 </div>
                               </div>
                             )}
                           </td>
                           {!isProcessing && (
-                            <td className="px-3 py-2">
+                            <td className="px-3 py-2.5">
                               <button
                                 onClick={() => removeDevice(idx)}
-                                className="text-slate-600 hover:text-red-400 transition-colors"
+                                className="text-[#76777C] hover:text-red-400 transition-colors cursor-pointer"
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -1222,15 +1193,15 @@ export default function AgregarGPSTraccarClient() {
         </div>
 
         {/* Footer Info */}
-        <div className="bg-[#E85D2F]/5 border border-[#E85D2F]/10 rounded-lg p-2.5 mt-3 flex items-start gap-2.5">
-          <ShieldCheck className="text-[#E85D2F] shrink-0" size={16} />
+        <div className="bg-[#161719] border border-[#26272B] rounded-lg p-3 mt-3 flex items-start gap-2.5">
+          <ShieldCheck className="text-[#F05A28] shrink-0" size={16} />
           <div>
-            <p className="text-[#E85D2F] text-xs font-bold">
+            <p className="text-[#F05A28] text-xs font-bold">
               Resumen de Atributos
             </p>
-            <p className="text-slate-400 text-[10px]">
-              El sistema enviará `category: "car"` y `groupId: 0` por defecto.
-              Soporta archivos **.csv**, **.xlsx** y **.xls**. Asegúrate de que
+            <p className="text-[#9B9CA1] text-[11px] mt-0.5">
+              El sistema enviará <code className="text-[#ECECEE] font-mono">category: &quot;car&quot;</code> y <code className="text-[#ECECEE] font-mono">groupId: 0</code> por defecto.
+              Soporta archivos <strong>.csv</strong>, <strong>.xlsx</strong> y <strong>.xls</strong>. Asegúrate de que
               los encabezados coincidan con los nombres esperados.
             </p>
           </div>
@@ -1241,27 +1212,27 @@ export default function AgregarGPSTraccarClient() {
         {activeTab === "unidades" && (
           <div className="flex flex-col gap-4 h-full">
             {!isLoggedIn ? (
-              <div className="flex flex-col items-center justify-center gap-2 py-16 text-center bg-[#1C1F26] border border-white/5 rounded-xl">
-                <LogIn className="text-slate-600" size={22} />
-                <p className="text-slate-400 text-sm font-medium">
-                  Inicia sesión en la pestaña "Registrar" para ver las
+              <div className="flex flex-col items-center justify-center gap-2 py-16 text-center bg-[#161719] border border-[#26272B] rounded-xl">
+                <LogIn className="text-[#76777C]" size={22} />
+                <p className="text-[#9B9CA1] text-sm font-medium">
+                  Inicia sesión en la pestaña &quot;Registrar&quot; para ver las
                   unidades
                 </p>
               </div>
             ) : (
-              <div className="bg-[#1C1F26] border border-white/5 rounded-xl overflow-hidden shadow-2xl flex-1 flex flex-col">
-                <div className="p-3 border-b border-white/5 flex items-center justify-between gap-3 bg-white/2 flex-wrap">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2 whitespace-nowrap">
-                    <TableIcon className="text-slate-400" size={15} />
+              <div className="bg-[#161719] border border-[#26272B] rounded-xl overflow-hidden flex-1 flex flex-col">
+                <div className="p-3 border-b border-[#26272B] flex items-center justify-between gap-3 flex-wrap">
+                  <h3 className="text-xs font-bold text-[#ECECEE] flex items-center gap-2 whitespace-nowrap">
+                    <TableIcon className="text-[#9B9CA1]" size={15} />
                     Unidades del servidor
-                    <span className="text-slate-500 font-normal text-xs">
+                    <span className="text-[#76777C] font-mono text-xs">
                       ({filteredDevices.length})
                     </span>
                   </h3>
                   <div className="flex items-center gap-2">
                     <div className="w-72">
                       <ImputBuscar
-                        placeholder="Buscar por AccountID, DeviceID, IMEI, teléfono o modelo"
+                        placeholder="Buscar por AccountID, DeviceID, IMEI..."
                         value={busquedaUnidad}
                         onChange={(e) => setBusquedaUnidad(e.target.value)}
                       />
@@ -1270,7 +1241,7 @@ export default function AgregarGPSTraccarClient() {
                       onClick={fetchDevices}
                       disabled={isLoadingDevices}
                       title="Recargar"
-                      className="p-2 rounded-lg border border-white/10 bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
+                      className="p-2 rounded-lg border border-[#2D2E32] bg-[#121214] text-[#9B9CA1] hover:text-[#ECECEE] hover:border-[#F05A28] transition-all disabled:opacity-50 cursor-pointer"
                     >
                       <RefreshCw
                         size={14}
@@ -1282,25 +1253,25 @@ export default function AgregarGPSTraccarClient() {
 
                 <div className="overflow-y-auto flex-1">
                   <table className="w-full text-left border-collapse">
-                    <thead className="sticky top-0 z-10 bg-[#1C1F26]">
-                      <tr className="bg-[#0A0C0F]/50 text-slate-500 text-[10px] uppercase tracking-widest font-bold">
-                        <th className="px-3 py-2">AccountID</th>
-                        <th className="px-3 py-2">DeviceID</th>
-                        <th className="px-3 py-2">IMEI</th>
-                        <th className="px-3 py-2">Teléfono</th>
-                        <th className="px-3 py-2">Modelo</th>
-                        <th className="px-3 py-2 w-8"></th>
+                    <thead className="sticky top-0 z-10 bg-gradient-to-r from-[#7A3A10] to-[#6A310D]">
+                      <tr className="text-white text-[11px] uppercase tracking-[0.08em] font-bold">
+                        <th className="px-3.5 py-2.5">AccountID</th>
+                        <th className="px-3.5 py-2.5">DeviceID</th>
+                        <th className="px-3.5 py-2.5">IMEI</th>
+                        <th className="px-3.5 py-2.5">Teléfono</th>
+                        <th className="px-3.5 py-2.5">Modelo</th>
+                        <th className="px-3.5 py-2.5 text-right w-24">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-[#222327]">
                       {isLoadingDevices ? (
                         <tr>
                           <td
                             colSpan={6}
-                            className="px-3 py-12 text-center text-slate-500 text-xs"
+                            className="px-3 py-12 text-center text-[#76777C] text-xs"
                           >
                             <Loader2
-                              className="animate-spin inline-block mr-2"
+                              className="animate-spin inline-block mr-2 text-[#F05A28]"
                               size={14}
                             />
                             Cargando unidades...
@@ -1310,7 +1281,7 @@ export default function AgregarGPSTraccarClient() {
                         <tr>
                           <td
                             colSpan={6}
-                            className="px-3 py-12 text-center text-slate-600 italic text-xs"
+                            className="px-3 py-12 text-center text-[#76777C] italic text-xs"
                           >
                             {devices.length === 0
                               ? "No hay unidades registradas en este servidor."
@@ -1321,36 +1292,36 @@ export default function AgregarGPSTraccarClient() {
                         filteredDevices.map((d) => (
                           <tr
                             key={d.id}
-                            className="hover:bg-white/2 transition-colors"
+                            className="hover:bg-[#1D1E21] transition-colors"
                           >
-                            <td className="px-3 py-2 text-white text-xs font-medium">
+                            <td className="px-3.5 py-2.5 text-[#ECECEE] text-xs font-mono font-medium">
                               {d.attributes?.accountID || "-"}
                             </td>
-                            <td className="px-3 py-2 text-slate-300 text-[11px]">
+                            <td className="px-3.5 py-2.5 text-[#CFCFD3] font-mono text-[11px]">
                               {d.attributes?.deviceID || "-"}
                             </td>
-                            <td className="px-3 py-2 text-slate-400 font-mono text-[11px]">
+                            <td className="px-3.5 py-2.5 text-[#9B9CA1] font-mono text-[11px]">
                               {d.uniqueId}
                             </td>
-                            <td className="px-3 py-2 text-slate-300 text-[11px]">
+                            <td className="px-3.5 py-2.5 text-[#CFCFD3] font-mono text-[11px]">
                               {d.phone || "-"}
                             </td>
-                            <td className="px-3 py-2 text-slate-300 text-[11px]">
+                            <td className="px-3.5 py-2.5 text-[#9B9CA1] text-[11px]">
                               {d.model || "-"}
                             </td>
-                            <td className="px-3 py-2">
-                              <div className="flex items-center gap-2">
+                            <td className="px-3.5 py-2.5 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   onClick={() => abrirEditarDevice(d)}
-                                  title="Editar"
-                                  className="text-slate-600 hover:text-[#E85D2F] transition-colors"
+                                  title="Editar unidad"
+                                  className="w-8 h-8 rounded-[7px] bg-[#1A1210] border border-[#5A2A18] text-[#F05A28] hover:border-[#F05A28] hover:bg-[#251814] flex items-center justify-center transition-all cursor-pointer"
                                 >
                                   <Pencil size={13} />
                                 </button>
                                 <button
                                   onClick={() => abrirEliminarDevice(d)}
-                                  title="Eliminar"
-                                  className="text-slate-600 hover:text-red-400 transition-colors"
+                                  title="Eliminar unidad"
+                                  className="w-8 h-8 rounded-[7px] bg-[#1A1210] border border-[#5A2A18] text-[#F05A28] hover:border-[#F05A28] hover:bg-[#251814] flex items-center justify-center transition-all cursor-pointer"
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -1376,9 +1347,9 @@ export default function AgregarGPSTraccarClient() {
         tamaño="w-full max-w-sm"
       >
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <p style={{ fontSize: 13, color: "#ADB5BD", margin: 0 }}>
+          <p style={{ fontSize: 13, color: "#CFCFD3", margin: 0 }}>
             ¿Seguro que deseas eliminar la unidad{" "}
-            <strong style={{ color: "#F4F5F7" }}>
+            <strong style={{ color: "#ECECEE" }}>
               {deviceAEliminar?.name}
             </strong>{" "}
             (IMEI: {deviceAEliminar?.uniqueId})? Esta acción no se puede
@@ -1452,7 +1423,7 @@ export default function AgregarGPSTraccarClient() {
                   fontWeight: 600,
                   letterSpacing: "0.08em",
                   textTransform: "uppercase",
-                  color: "#8A9099",
+                  color: "#9B9CA1",
                 }}
               >
                 Modelo
@@ -1462,25 +1433,25 @@ export default function AgregarGPSTraccarClient() {
                 onChange={(e) =>
                   setEditForm({ ...editForm, model: e.target.value })
                 }
-                className="bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:ring-1 focus:ring-[#E85D2F]"
+                className="bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-2 text-[#ECECEE] text-xs focus:outline-none focus:border-[#F05A28]"
               >
-                <option value="" className="bg-[#0A0C0F] text-slate-500">
+                <option value="" className="bg-[#121214] text-[#76777C]">
                   Seleccionar modelo
                 </option>
-                <option value="teltonika" className="bg-[#0A0C0F]">
+                <option value="teltonika" className="bg-[#121214]">
                   teltonika
                 </option>
-                <option value="gt06" className="bg-[#0A0C0F]">
+                <option value="gt06" className="bg-[#121214]">
                   gt06
                 </option>
-                <option value="gps103" className="bg-[#0A0C0F]">
+                <option value="gps103" className="bg-[#121214]">
                   gps103
                 </option>
                 {editForm.model &&
                   !["teltonika", "gt06", "gps103"].includes(
                     editForm.model,
                   ) && (
-                    <option value={editForm.model} className="bg-[#0A0C0F]">
+                    <option value={editForm.model} className="bg-[#121214]">
                       {editForm.model}
                     </option>
                   )}

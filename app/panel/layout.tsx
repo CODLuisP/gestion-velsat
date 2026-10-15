@@ -13,43 +13,35 @@ export default async function PanelLayout({
   const roleCookie = cookieStore.get("role")?.value as Role | undefined;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0A0C0F]">
+    <div className="flex h-screen overflow-hidden bg-[#121214]">
       <Sidebar isAdmin={isAdmin} role={roleCookie} />
 
-      <main className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
+      <main className="flex-1 min-h-0 min-w-0 overflow-y-auto flex flex-col bg-[#121214]">
         {children}
-        
+
         <Toaster
           position="bottom-right"
           toastOptions={{
-            // Estilos generales
             className:
-              'bg-white border border-slate-200 shadow-md rounded-lg ' +
-              'text-xs text-slate-800 flex items-center gap-2',
-
-            // Tamaño del contenedor
+              "bg-[#161719] border border-[#26272B] shadow-xl rounded-[8px] text-[13px] text-[#ECECEE] flex items-center gap-2 font-sans",
             style: {
-              padding: '6px 10px',
-              minHeight: 'auto',
+              background: "#161719",
+              color: "#ECECEE",
+              border: "1px solid #26272B",
+              borderRadius: "8px",
+              padding: "8px 14px",
+              fontSize: "13px",
             },
-
-            // Toast de éxito
             success: {
-              className:
-                'bg-emerald-50 text-xs text-emerald-800',
               iconTheme: {
-                primary: '#059669', // verde
-                secondary: '#ECFDF5',
+                primary: "#4ADE80",
+                secondary: "#161719",
               },
             },
-
-            // Toast de error
             error: {
-              className:
-                'bg-red-50 text-red-800',
               iconTheme: {
-                primary: '#DC2626',
-                secondary: '#FEF2F2',
+                primary: "#F05A28",
+                secondary: "#161719",
               },
             },
           }}

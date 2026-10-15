@@ -36,17 +36,17 @@ export default function LogoutItem({
         cursor: "pointer",
         textAlign: "left",
         transition: "background 0.15s, border-color 0.15s",
-        color: "#8A9099",
+        color: "#9B9CA1",
       }}
       onMouseEnter={e => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.08)";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(232,93,47,0.2)";
-        (e.currentTarget as HTMLButtonElement).style.color = "#E85D2F";
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(240,90,40,0.08)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(240,90,40,0.2)";
+        (e.currentTarget as HTMLButtonElement).style.color = "#F05A28";
       }}
       onMouseLeave={e => {
         (e.currentTarget as HTMLButtonElement).style.background = "transparent";
         (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
-        (e.currentTarget as HTMLButtonElement).style.color = "#8A9099";
+        (e.currentTarget as HTMLButtonElement).style.color = "#9B9CA1";
       }}
     >
       <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>

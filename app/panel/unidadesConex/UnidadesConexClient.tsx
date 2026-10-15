@@ -1,48 +1,20 @@
 "use client";
+
 import useSWR, { mutate } from "swr";
 import { useState, useMemo } from "react";
-import TablaBase from "@/app/components/tablas/TablaBase";
-import { RefreshCw, Server } from "lucide-react";
+import TablaBase, { Column } from "@/app/components/tablas/TablaBase";
+import { RefreshCw, Download, Search } from "lucide-react";
 import axios from "axios";
 import { VehiculoConDescon } from "@/app/interfaces/vehiculo.interface";
 import { Role } from "@/app/constants/roles";
-import ImputBuscar from "@/app/components/ui/ImputBuscar";
 import { getUnidadesConexApi } from "@/app/services/unidadesConexApi";
 import UnixNormal from "@/app/components/fecha/UnixNormal";
 import ColumnFilterHeader from "@/app/components/tablas/ColumnFilterHeader";
+import PanelHeader from "@/app/components/nav/PanelHeader";
+import * as XLSX from "xlsx";
 
 type Props = {
   role: Role;
-};
-
-// Replica el formato/estado usado por UnixNormal para poder buscar sobre el texto mostrado
-const formatFechaHora = (unixTimestamp?: number) => {
-  if (!unixTimestamp) return "-";
-  const date = new Date(Number(unixTimestamp) * 1000);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
-};
-
-const formatTiempoDesconex = (unixTimestamp?: number) => {
-  if (!unixTimestamp) return "-";
-  const date = new Date(Number(unixTimestamp) * 1000);
-  const now = new Date();
-  let diffMs = now.getTime() - date.getTime();
-  if (diffMs < 0) diffMs = 0;
-
-  const TEN_MINUTES_MS = 10 * 60 * 1000;
-  if (diffMs <= TEN_MINUTES_MS) return "Conectado";
-
-  const totalMinutes = Math.floor(diffMs / (1000 * 60));
-  const totalHours = Math.floor(totalMinutes / 60);
-  const days = Math.floor(totalHours / 24);
-  const hoursDiff = totalHours % 24;
-  const minutesDiff = totalMinutes % 60;
-  return `${days}D ${hoursDiff}H ${minutesDiff}M`;
 };
 
 export default function UnidadesConexClient({ role }: Props) {
@@ -98,19 +70,41 @@ export default function UnidadesConexClient({ role }: Props) {
       const texto = [
         u.deviceID,
         u.accountID,
-        formatFechaHora(u.lastGPSTimestamp),
-        formatFechaHora(u.deviceTIme),
-        formatTiempoDesconex(u.lastGPSTimestamp),
+        getModeloLabel(u),
+        u.imeiNumber,
       ]
         .join(" ")
         .toLowerCase();
+
       return texto.includes(busqueda.toLowerCase());
     });
-  }, [busqueda, vehiculosConex, filtroPlaca, filtroUsuario, filtroModelo]);
+  }, [busqueda, filtroPlaca, filtroUsuario, filtroModelo, vehiculosConex]);
 
-  const columns = [
+  const exportarExcel = () => {
+    if (vehiculosFiltrados.length === 0) {
+      return;
+    }
+    const dataToExport = vehiculosFiltrados.map((u, i) => ({
+      "N°": i + 1,
+      Placa: u.deviceID || "",
+      Usuario: u.accountID || "",
+      Velocidad: Number(u.lastValidSpeed || 0).toFixed(0),
+      "Modelo GPS": getModeloLabel(u),
+      IMEI: u.imeiNumber || "",
+      Latitud: Number(u.lastValidLatitude || 0).toFixed(5),
+      Longitud: Number(u.lastValidLongitude || 0).toFixed(5),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Conexion_Desconexion");
+    XLSX.writeFile(workbook, `Conexion_Desconexion_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
+  const columns: Column<VehiculoConDescon>[] = [
     {
       key: "deviceID",
+      width: "12%",
       label: (
         <ColumnFilterHeader
           label="PLACA"
@@ -119,9 +113,15 @@ export default function UnidadesConexClient({ role }: Props) {
           onChange={setFiltroPlaca}
         />
       ),
+      render: (row) => (
+        <span className="font-mono text-[13px] text-[#ECECEE] font-semibold">
+          {row.deviceID}
+        </span>
+      ),
     },
     {
       key: "accountID",
+      width: "14%",
       label: (
         <ColumnFilterHeader
           label="USUARIO"
@@ -130,172 +130,139 @@ export default function UnidadesConexClient({ role }: Props) {
           onChange={setFiltroUsuario}
         />
       ),
+      render: (row) => (
+        <span className="font-mono text-[13px] text-[#CFCFD3]">
+          {row.accountID}
+        </span>
+      ),
     },
     {
       key: "lastValidSpeed",
       label: "VELOCIDAD",
-      render: (row: VehiculoConDescon) => Number(row.lastValidSpeed).toFixed(0),
+      width: "9%",
+      render: (row) => (
+        <span className="font-mono text-[12.5px] text-[#9B9CA1]">
+          {Number(row.lastValidSpeed || 0).toFixed(0)} km/h
+        </span>
+      ),
     },
     {
       key: "lastGPSTimestamp",
-      label: "ULT HORA GPS",
-      render: (row: VehiculoConDescon) => (
+      label: "ÚLT. HORA GPS",
+      width: "16%",
+      render: (row) => (
         <UnixNormal creationTime={row.lastGPSTimestamp} show="both" />
       ),
     },
     {
       key: "deviceTIme",
-      label: "ULT HORA CELULAR",
-      render: (row: VehiculoConDescon) =>
+      label: "ÚLT. HORA CELULAR",
+      width: "16%",
+      render: (row) =>
         row.deviceTIme ? (
           <UnixNormal creationTime={row.deviceTIme} show="both" />
         ) : (
-          "-"
+          <span className="text-[#76777C] font-mono">—</span>
         ),
     },
     {
       key: "tiempoDesconex",
       label: "T. DESCONEX.",
-      render: (row: VehiculoConDescon) => (
+      width: "13%",
+      render: (row) => (
         <UnixNormal creationTime={row.lastGPSTimestamp} diffWithStatus />
       ),
     },
     {
       key: "deviceCode",
+      width: "11%",
       label: (
         <ColumnFilterHeader
-          label="MODELO GPS"
+          label="MODELO"
           options={opcionesModelo}
           selected={filtroModelo}
           onChange={setFiltroModelo}
         />
       ),
-      render: (row: VehiculoConDescon) => getModeloLabel(row),
-    },
-    { key: "imeiNumber", label: "IMEI" },
-    {
-      key: "lastValidLatitude",
-      label: "LATITUD",
-      render: (row: VehiculoConDescon) => Number(row.lastValidLatitude).toFixed(5),
+      render: (row) => (
+        <span className="font-mono text-[12px] text-[#9B9CA1]">
+          {getModeloLabel(row)}
+        </span>
+      ),
     },
     {
-      key: "lastValidLongitude",
-      label: "LONGITUD",
-      render: (row: VehiculoConDescon) => Number(row.lastValidLongitude).toFixed(5),
+      key: "imeiNumber",
+      label: "IMEI",
+      width: "14%",
+      render: (row) => (
+        <span className="font-mono text-[12px] text-[#9B9CA1]">
+          {row.imeiNumber || "—"}
+        </span>
+      ),
     },
   ];
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        minHeight: 0,
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-      }}
-    >
-      {/* ---------- HEADER ---------- */}
-      <section
-        style={{
-          marginBottom: 20,
-          paddingBottom: 16,
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#F4F5F7", margin: 0, lineHeight: 1.2 }}>
-            Unidades <span style={{ color: "#E85D2F" }}>Conexión / Desconexión</span>
-          </h1>
-          <p style={{ fontSize: 12, color: "#8A9099", margin: "4px 0 0" }}>
-            Monitoreo de estado de conexión de unidades
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 12px",
-            borderRadius: 8,
-            background: "#1C1F26",
-            border: "1px solid rgba(255,255,255,0.06)",
-            fontSize: 12,
-            color: "#ADB5BD",
-          }}
-        >
-          <Server size={13} style={{ color: "#E85D2F" }} />
+    <div className="flex flex-col h-full min-h-0 bg-[#121214]">
+      {/* ---------- HEADER (68px) ---------- */}
+      <PanelHeader
+        title={
           <span>
-            Conectado a{" "}
-            <strong style={{ color: "#E85D2F" }}>
-              {role === "Servidor_125_2" ? "Urbano_125" : role}
-            </strong>
+            Unidades <span className="text-[#F05A28]">Conexión / Desconexión</span>
           </span>
-        </div>
-      </section>
+        }
+        subtitle={`${vehiculosConex.length} unidades monitoreadas`}
+        role={role}
+      />
 
       {/* ---------- TABLA ---------- */}
-      <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
+      <div className="flex-1 min-h-0 p-6 overflow-hidden">
         <TablaBase
           leftActions={
-            <div style={{ width: 384 }}>
-              <ImputBuscar
-                placeholder="Buscar por Placa, Usuario, Últ. Hora GPS, Últ. Hora Celular o T. Desconex."
+            <div className="relative w-[380px]">
+              <Search
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777C] pointer-events-none"
+              />
+              <input
+                type="search"
+                placeholder="Buscar por Placa, Usuario, Modelo o IMEI"
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
+                className="w-full h-[36px] pl-9 pr-3.5 bg-[#121214] border border-[#2D2E32] rounded-[8px] text-[13px] text-[#ECECEE] placeholder-[#76777C] outline-none transition-colors focus:border-[#F05A28]"
               />
             </div>
           }
           rightActions={
-            <button
-              onClick={() => mutate(["unidadesConex", role], undefined, { revalidate: true })}
-              disabled={isLoading}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "8px 16px",
-                borderRadius: 8,
-                border: "none",
-                background: "#E85D2F",
-                color: "#fff",
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: isLoading ? "not-allowed" : "pointer",
-                opacity: isLoading ? 0.6 : 1,
-                transition: "background 0.15s",
-              }}
-              onMouseEnter={e => {
-                if (!isLoading)
-                  (e.currentTarget as HTMLButtonElement).style.background = "#cf4e24";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = "#E85D2F";
-              }}
-            >
-              <RefreshCw
-                style={{
-                  width: 14,
-                  height: 14,
-                  animation: isLoading ? "spin 1s linear infinite" : "none",
-                }}
-              />
-              {isLoading ? "Actualizando..." : "Actualizar"}
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={exportarExcel}
+                className="h-[36px] px-3.5 rounded-[8px] bg-[#161719] border border-[#26272B] text-[#ECECEE] hover:bg-[#212226] hover:border-[#2D2E32] transition-colors text-[13px] font-medium flex items-center gap-2 cursor-pointer"
+              >
+                <Download size={15} />
+                <span>Exportar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => mutate(["unidadesConex", role], undefined, { revalidate: true })}
+                disabled={isLoading}
+                className="h-[36px] px-4 rounded-[8px] bg-[#F05A28] hover:bg-[#FF6A35] text-white font-semibold text-[13px] flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-none"
+              >
+                <RefreshCw
+                  size={14}
+                  className={isLoading ? "animate-spin" : ""}
+                />
+                <span>{isLoading ? "Actualizando..." : "Actualizar"}</span>
+              </button>
+            </>
           }
           columns={columns}
           data={vehiculosFiltrados}
           loading={isLoading}
         />
       </div>
-
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

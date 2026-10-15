@@ -73,27 +73,21 @@ export default function ColumnFilterHeader({ label, options, selected, onChange 
   };
 
   return (
-    <div ref={wrapperRef} style={{ display: "inline-flex", alignItems: "center", gap: 6, position: "relative" }}>
+    <div ref={wrapperRef} className="inline-flex items-center gap-1.5 relative">
       <span>{label}</span>
       <button
         onClick={(e) => {
           e.stopPropagation();
           openDropdown();
         }}
+        className="flex items-center justify-center p-0.5 bg-transparent border-0 cursor-pointer transition-opacity"
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "transparent",
-          border: "none",
-          padding: 2,
-          cursor: "pointer",
-          color: active ? "#E85D2F" : "#f7eddb",
-          opacity: active ? 1 : 0.7,
+          color: active ? "#F05A28" : "#ffffff",
+          opacity: active ? 1 : 0.8,
         }}
         title="Filtrar"
       >
-        <Filter size={12} fill={active ? "#E85D2F" : "none"} />
+        <Filter size={11} fill={active ? "#F05A28" : "none"} />
       </button>
 
       {open && pos && (
@@ -102,119 +96,74 @@ export default function ColumnFilterHeader({ label, options, selected, onChange 
             position: "fixed",
             top: pos.top,
             left: pos.left,
-            width: 230,
-            background: "#1C1F26",
-            border: "1px solid rgba(255,255,255,0.1)",
+            width: 240,
+            background: "#161719",
+            border: "1px solid #26272B",
             borderRadius: 8,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+            boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
             zIndex: 1000,
-            padding: 10,
+            padding: 12,
             fontWeight: 400,
             textTransform: "none",
             fontSize: 12,
-            color: "#F4F5F7",
+            color: "#ECECEE",
+            letterSpacing: "normal",
           }}
         >
-          <div style={{ position: "relative", marginBottom: 8 }}>
-            <Search size={13} style={{ position: "absolute", top: 8, left: 8, color: "#8A9099" }} />
+          <div className="relative mb-2">
+            <Search size={13} className="absolute top-2.5 left-2.5 text-[#76777C]" />
             <input
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar..."
-              style={{
-                width: "100%",
-                background: "#0A0C0F",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 6,
-                color: "#F4F5F7",
-                padding: "6px 8px 6px 26px",
-                fontSize: 12,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
+              className="w-full bg-[#121214] border border-[#2D2E32] rounded-[6px] text-[#ECECEE] pl-8 pr-2.5 py-1.5 text-xs outline-none focus:border-[#F05A28]"
             />
           </div>
 
           <div style={{ maxHeight: 200, overflowY: "auto" }} className="velsat-scroll">
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "4px 2px",
-                cursor: "pointer",
-                fontWeight: 700,
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-                marginBottom: 4,
-              }}
-            >
-              <input type="checkbox" checked={allChecked} onChange={toggleAll} />
+            <label className="flex items-center gap-2 py-1.5 px-1 cursor-pointer font-bold border-b border-[#26272B] mb-1 text-[12px] text-[#ECECEE]">
+              <input type="checkbox" checked={allChecked} onChange={toggleAll} className="accent-[#F05A28]" />
               (Seleccionar todo)
             </label>
 
             {filteredOptions.map((opt) => (
               <label
                 key={opt}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "4px 2px",
-                  cursor: "pointer",
-                }}
+                className="flex items-center gap-2 py-1 px-1 cursor-pointer hover:bg-[#1D1E21] rounded text-[12px] text-[#CFCFD3]"
               >
-                <input type="checkbox" checked={draft.has(opt)} onChange={() => toggleOne(opt)} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{opt}</span>
+                <input
+                  type="checkbox"
+                  checked={draft.has(opt)}
+                  onChange={() => toggleOne(opt)}
+                  className="accent-[#F05A28]"
+                />
+                <span className="truncate">{opt}</span>
               </label>
             ))}
 
             {filteredOptions.length === 0 && (
-              <div style={{ padding: "8px 2px", color: "#8A9099" }}>Sin resultados</div>
+              <div className="py-2 px-1 text-[#76777C] text-xs">Sin resultados</div>
             )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10, gap: 6 }}>
+          <div className="flex items-center justify-between mt-3 pt-2 border-t border-[#26272B] gap-2">
             <button
               onClick={handleLimpiar}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#8A9099",
-                fontSize: 12,
-                cursor: "pointer",
-                padding: "4px 2px",
-              }}
+              className="bg-transparent border-0 text-[#9B9CA1] hover:text-[#ECECEE] text-xs cursor-pointer py-1 px-1 transition-colors"
             >
               Limpiar
             </button>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div className="flex gap-2">
               <button
                 onClick={handleCancelar}
-                style={{
-                  background: "transparent",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  color: "#F4F5F7",
-                  borderRadius: 6,
-                  padding: "5px 10px",
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
+                className="bg-[#1D1E21] border border-[#26272B] text-[#CFCFD3] hover:text-[#ECECEE] rounded-[6px] px-2.5 py-1 text-xs cursor-pointer transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleAceptar}
-                style={{
-                  background: "#E85D2F",
-                  border: "none",
-                  color: "#fff",
-                  borderRadius: 6,
-                  padding: "5px 10px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
+                className="bg-[#F05A28] hover:bg-[#FF6A35] text-white font-semibold rounded-[6px] px-2.5 py-1 text-xs cursor-pointer transition-colors"
               >
                 Aceptar
               </button>

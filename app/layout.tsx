@@ -1,15 +1,5 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Gestión Velsat",
@@ -31,7 +21,11 @@ export default function RootLayout({
   return (
     <html lang="es" translate="no" className="notranslate">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased bg-[#121214] text-[#ECECEE]"
+        style={{
+          fontFamily: "'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          fontSize: "13.5px",
+        }}
       >
         {children}
       </body>

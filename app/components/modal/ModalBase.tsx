@@ -1,5 +1,8 @@
 "use client";
 
+import React from "react";
+import { X } from "lucide-react";
+
 type ModalBaseProps = {
   open: boolean;
   title: string;
@@ -18,80 +21,24 @@ export default function ModalBase({
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 50,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(0,0,0,0.65)",
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-      }}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       <div
-        className={tamaño ?? "w-full max-w-3xl"}
-        style={{
-          background: "#1C1F26",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 12,
-          padding: 28,
-          margin: "0 16px",
-        }}
+        className={`${
+          tamaño ?? "w-full max-w-3xl"
+        } bg-[#161719] border border-[#26272B] rounded-[12px] p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto velsat-scroll`}
       >
         {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 24,
-            paddingBottom: 16,
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 17,
-              fontWeight: 700,
-              color: "#F4F5F7",
-              margin: 0,
-            }}
-          >
-            <span style={{ color: "#E85D2F" }}>|</span>{" "}
+        <div className="flex items-center justify-between pb-4 mb-5 border-b border-[#26272B]">
+          <h2 className="text-[17px] font-bold text-[#ECECEE] flex items-center gap-2 m-0">
+            <span className="w-1.5 h-4 bg-[#F05A28] rounded-full inline-block" />
             {title}
           </h2>
 
           <button
             onClick={onClose}
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 7,
-              width: 30,
-              height: 30,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              color: "#8A9099",
-              fontSize: 16,
-              fontWeight: 700,
-              transition: "background 0.15s, color 0.15s",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.12)";
-              (e.currentTarget as HTMLButtonElement).style.color = "#E85D2F";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(232,93,47,0.25)";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
-              (e.currentTarget as HTMLButtonElement).style.color = "#8A9099";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.08)";
-            }}
+            className="w-8 h-8 rounded-[7px] bg-[#1D1E21] border border-[#26272B] text-[#9B9CA1] hover:text-[#F05A28] hover:border-[#F05A28] flex items-center justify-center transition-colors cursor-pointer"
           >
-            ✕
+            <X size={16} />
           </button>
         </div>
 

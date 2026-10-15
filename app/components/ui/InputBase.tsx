@@ -1,4 +1,5 @@
 "use client";
+
 import { EyeOff, Eye } from "lucide-react";
 import { useState } from "react";
 
@@ -14,7 +15,7 @@ type InputBaseProps = {
 
 export default function InputBase({
   label,
-  type,
+  type = "text",
   placeholder,
   value,
   defaultValue,
@@ -25,14 +26,14 @@ export default function InputBase({
   const isPassword = type === "password";
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label className="text-sm font-bold text-foreground">
+        <label className="text-[11px] font-bold tracking-wider uppercase text-[#9B9CA1]">
           {label}
         </label>
       )}
 
-      <div className="relative">
+      <div className="relative w-full">
         <input
           disabled={desabilitar}
           type={isPassword && showPassword ? "text" : type}
@@ -40,7 +41,7 @@ export default function InputBase({
           value={value}
           onChange={onChange}
           defaultValue={defaultValue}
-          className={`block w-full text-sm pl-4 py-1 bg-slate-800/10 border border-slate-700/40 rounded-sm text-black placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500/60 transition-all ${
+          className={`w-full h-[36px] px-3 bg-[#121214] border border-[#2D2E32] rounded-[8px] text-[13px] text-[#ECECEE] placeholder-[#76777C] outline-none transition-colors focus:border-[#F05A28] disabled:opacity-50 disabled:cursor-not-allowed ${
             isPassword ? "pr-10" : ""
           }`}
         />
@@ -49,10 +50,10 @@ export default function InputBase({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#76777C] hover:text-[#F05A28] transition-colors p-1"
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
       </div>

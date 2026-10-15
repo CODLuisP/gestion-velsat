@@ -31,6 +31,7 @@ import toast from "react-hot-toast";
 import { Vehiculo } from "@/app/interfaces/vehiculo.interface";
 import { Role } from "@/app/constants/roles";
 import AutoUnitWizard from "./AutoUnitWizard";
+import PanelHeader from "@/app/components/nav/PanelHeader";
 
 type GpsModel = "teltonika" | "tk" | "gt";
 type CommandCategory = "LECTURA" | "CONFIG" | "CRÍTICO";
@@ -1199,117 +1200,108 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       {/* ------------------------------------------------------------- */}
       {/* 1. HEADER DE CONTROL                                          */}
       {/* ------------------------------------------------------------- */}
-      <header className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-white/5">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-[#E85D2F]/15 border border-[#E85D2F]/30 flex items-center justify-center text-[#E85D2F]">
-              <MessageSquare size={17} />
-            </div>
-            <div>
-              <h1 className="text-base font-bold text-[#F4F5F7] m-0 leading-tight">
-                Comandos SMS <span className="text-[#E85D2F]">GPS</span>
-              </h1>
-              <p className="text-[11px] text-[#8A9099] mt-0.5 m-0 leading-tight">
-                Configuración remota y telemetría de unidades Teltonika, TK y GT
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Badges de estado & Botones de Cabecera */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Badge Gateway API */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#1C1F26] border border-white/5 shadow-sm">
-            <span className="text-[9px] font-bold uppercase px-1.5 py-0.2 rounded bg-[#E85D2F]/20 text-[#E85D2F]">
-              API
-            </span>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-semibold text-gray-200 leading-none">Gateway SMS</span>
-              <span className="text-[8px] text-[#8A9099]">sms-gate.app</span>
-            </div>
-            <span
-              className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                gatewayConfigured
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                  : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-              }`}
-            >
-              {gatewayConfigured ? "ACTIVO" : "PENDIENTE"}
-            </span>
-          </div>
-
-          {/* Badge Celular Módem (Dispositivo Físico) */}
-          {deviceStatus && (
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#1C1F26] border border-white/5 shadow-sm">
-              <Smartphone size={14} className={deviceStatus.isOnline ? "text-emerald-400" : "text-amber-400"} />
+      <PanelHeader
+        title={
+          <span>
+            Comandos SMS <span className="text-[#F05A28]">GPS</span>
+          </span>
+        }
+        subtitle="Configuración remota y telemetría de unidades Teltonika, TK y GT"
+        rightContent={
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Badge Gateway API */}
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#161719] border border-[#26272B]">
+              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#F05A28]/20 text-[#F05A28]">
+                API
+              </span>
               <div className="flex flex-col">
-                <span className="text-[10px] font-semibold text-gray-200 leading-none">
-                  {deviceStatus.name.split("/")[0]} ({deviceStatus.carrier})
-                </span>
-                <span className="text-[8px] text-[#8A9099]">
-                  {deviceStatus.isOnline
-                    ? "Conectado"
-                    : `Standby (${deviceStatus.diffMinutes} min)`}
-                </span>
+                <span className="text-[10px] font-semibold text-[#ECECEE] leading-none">Gateway SMS</span>
+                <span className="text-[8px] text-[#76777C]">sms-gate.app</span>
               </div>
               <span
-                className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                  deviceStatus.isOnline
-                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                  gatewayConfigured
+                    ? "bg-[#4ADE80]/15 text-[#4ADE80] border border-[#4ADE80]/30"
                     : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
                 }`}
               >
-                {deviceStatus.isOnline ? "EN LÍNEA" : "EN REPOSO"}
+                {gatewayConfigured ? "ACTIVO" : "PENDIENTE"}
               </span>
             </div>
-          )}
 
-          {/* Switch: Crear Unidad en Automático */}
-          <button
-            type="button"
-            onClick={() => setAutoWizardMode(!autoWizardMode)}
-            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer shadow-sm ${
-              autoWizardMode
-                ? "bg-[#E85D2F] text-white border-[#E85D2F] shadow-[0_0_15px_rgba(232,93,47,0.35)]"
-                : "bg-[#1C1F26] text-slate-300 border-white/10 hover:border-[#E85D2F]/50 hover:text-white"
-            }`}
-          >
-            <Sparkles size={13} className={autoWizardMode ? "text-white animate-pulse" : "text-[#E85D2F]"} />
-            <div className="flex flex-col text-left">
-              <span className="text-[11px] font-bold leading-none">
-                Crear Unidad en automático
-              </span>
-              <span className={`text-[8px] leading-tight ${autoWizardMode ? "text-orange-100" : "text-[#8A9099]"}`}>
-                {autoWizardMode ? "Asistente 1-Click Activo" : "Activar Pasarela"}
-              </span>
-            </div>
-            {/* Pill Switch */}
-            <div
-              className={`w-7 h-3.5 rounded-full relative flex items-center p-0.5 transition-colors ${
-                autoWizardMode ? "bg-white/30" : "bg-white/10"
+            {/* Badge Celular Módem (Dispositivo Físico) */}
+            {deviceStatus && (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#161719] border border-[#26272B]">
+                <Smartphone size={14} className={deviceStatus.isOnline ? "text-[#4ADE80]" : "text-amber-400"} />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-semibold text-[#ECECEE] leading-none">
+                    {deviceStatus.name.split("/")[0]} ({deviceStatus.carrier})
+                  </span>
+                  <span className="text-[8px] text-[#76777C]">
+                    {deviceStatus.isOnline
+                      ? "Conectado"
+                      : `Standby (${deviceStatus.diffMinutes} min)`}
+                  </span>
+                </div>
+                <span
+                  className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
+                    deviceStatus.isOnline
+                      ? "bg-[#4ADE80]/15 text-[#4ADE80] border border-[#4ADE80]/30"
+                      : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                  }`}
+                >
+                  {deviceStatus.isOnline ? "EN LÍNEA" : "EN REPOSO"}
+                </span>
+              </div>
+            )}
+
+            {/* Switch: Crear Unidad en Automático */}
+            <button
+              type="button"
+              onClick={() => setAutoWizardMode(!autoWizardMode)}
+              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
+                autoWizardMode
+                  ? "bg-[#F05A28] text-white border-[#F05A28] shadow-[0_0_15px_rgba(240,90,40,0.35)]"
+                  : "bg-[#161719] text-[#CFCFD3] border-[#26272B] hover:border-[#F05A28]/50 hover:text-white"
               }`}
             >
+              <Sparkles size={13} className={autoWizardMode ? "text-white animate-pulse" : "text-[#F05A28]"} />
+              <div className="flex flex-col text-left">
+                <span className="text-[11px] font-bold leading-none">
+                  Crear Unidad en automático
+                </span>
+                <span className={`text-[8px] leading-tight ${autoWizardMode ? "text-orange-100" : "text-[#76777C]"}`}>
+                  {autoWizardMode ? "Asistente 1-Click Activo" : "Activar Pasarela"}
+                </span>
+              </div>
+              {/* Pill Switch */}
               <div
-                className={`w-2.5 h-2.5 rounded-full transition-transform ${
-                  autoWizardMode ? "translate-x-3.5 bg-white" : "translate-x-0 bg-slate-400"
+                className={`w-7 h-3.5 rounded-full relative flex items-center p-0.5 transition-colors ${
+                  autoWizardMode ? "bg-white/30" : "bg-[#121214]"
                 }`}
-              />
-            </div>
-          </button>
+              >
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-transform ${
+                    autoWizardMode ? "translate-x-3.5 bg-white" : "translate-x-0 bg-[#76777C]"
+                  }`}
+                />
+              </div>
+            </button>
 
-          {/* Botón Webhook */}
-          <button
-            onClick={() => setShowWebhookModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1C1F26] border border-white/10 text-[11px] font-semibold text-slate-300 hover:text-white hover:border-[#E85D2F]/50 transition-all cursor-pointer shadow-sm"
-          >
-            <Radio size={13} className={registeredWebhooks && registeredWebhooks.length > 0 ? "text-emerald-400 animate-pulse" : "text-[#E85D2F]"} />
-            <span>Webhook Respuestas</span>
-            {registeredWebhooks && registeredWebhooks.length > 0 && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#2ECC71]" />
-            )}
-          </button>
-        </div>
-      </header>
+            {/* Botón Webhook */}
+            <button
+              onClick={() => setShowWebhookModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#161719] border border-[#26272B] text-[11px] font-semibold text-[#CFCFD3] hover:text-white hover:border-[#F05A28]/50 transition-all cursor-pointer"
+            >
+              <Radio size={13} className={registeredWebhooks && registeredWebhooks.length > 0 ? "text-[#4ADE80] animate-pulse" : "text-[#F05A28]"} />
+              <span>Webhook Respuestas</span>
+              {registeredWebhooks && registeredWebhooks.length > 0 && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4ADE80] shadow-[0_0_8px_#4ADE80]" />
+              )}
+            </button>
+          </div>
+        }
+      />
 
       {autoWizardMode ? (
         <AutoUnitWizard
@@ -1329,35 +1321,35 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         {/* MODELO 01: TELTONIKA */}
         <div
           onClick={() => handleSelectModel("teltonika")}
-          className={`relative p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+          className={`relative p-3 rounded-xl cursor-pointer transition-all duration-200 ${
             selectedModel === "teltonika"
-              ? "bg-[#1C1F26] border-2 border-[#E85D2F] shadow-[0_0_20px_rgba(232,93,47,0.15)]"
-              : "bg-[#16181D] border border-white/5 hover:border-white/20 hover:bg-[#1C1F26]"
+              ? "bg-[#1C1714] border-2 border-[#F05A28] shadow-[0_0_20px_rgba(240,90,40,0.15)]"
+              : "bg-[#161719] border border-[#26272B] hover:border-[#2D2E32] hover:bg-[#1D1E21]"
           }`}
         >
           <div className="flex justify-between items-start">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#8A9099]">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#9B9CA1]">
               MODELO 01
             </span>
             <div
               className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-colors ${
                 selectedModel === "teltonika"
-                  ? "bg-[#E85D2F] text-white shadow-[0_2px_8px_rgba(232,93,47,0.4)]"
-                  : "bg-white/5 text-gray-400"
+                  ? "bg-[#F05A28] text-white shadow-sm"
+                  : "bg-[#121214] text-[#9B9CA1]"
               }`}
             >
               T
             </div>
           </div>
-          <h2 className="text-sm font-bold text-white mt-0.5 mb-0.5">Teltonika</h2>
-          <p className="text-[11px] text-slate-400 line-clamp-1 mb-1.5">
+          <h2 className="text-sm font-bold text-[#ECECEE] mt-0.5 mb-0.5">Teltonika</h2>
+          <p className="text-[11px] text-[#9B9CA1] line-clamp-1 mb-1.5">
             FMB920, FMB120, FMC920 y compatibles
           </p>
-          <div className="flex justify-between items-center text-[10px] pt-1.5 border-t border-white/5">
-            <span className="text-slate-400 font-medium">{TELTONIKA_COMMANDS.length} comandos</span>
+          <div className="flex justify-between items-center text-[10px] pt-1.5 border-t border-[#26272B]">
+            <span className="text-[#9B9CA1] font-mono">{TELTONIKA_COMMANDS.length} comandos</span>
             <span
               className={`text-[9px] font-bold tracking-wider uppercase ${
-                selectedModel === "teltonika" ? "text-[#E85D2F]" : "text-slate-500"
+                selectedModel === "teltonika" ? "text-[#F05A28]" : "text-[#76777C]"
               }`}
             >
               {selectedModel === "teltonika" ? "SELECCIONADO" : "Disponible"}
@@ -1368,35 +1360,35 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         {/* MODELO 02: TK */}
         <div
           onClick={() => handleSelectModel("tk")}
-          className={`relative p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+          className={`relative p-3 rounded-xl cursor-pointer transition-all duration-200 ${
             selectedModel === "tk"
-              ? "bg-[#1C1F26] border-2 border-[#E85D2F] shadow-[0_0_20px_rgba(232,93,47,0.15)]"
-              : "bg-[#16181D] border border-white/5 hover:border-white/20 hover:bg-[#1C1F26]"
+              ? "bg-[#1C1714] border-2 border-[#F05A28] shadow-[0_0_20px_rgba(240,90,40,0.15)]"
+              : "bg-[#161719] border border-[#26272B] hover:border-[#2D2E32] hover:bg-[#1D1E21]"
           }`}
         >
           <div className="flex justify-between items-start">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#8A9099]">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#9B9CA1]">
               MODELO 02
             </span>
             <div
               className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-colors ${
                 selectedModel === "tk"
-                  ? "bg-[#E85D2F] text-white shadow-[0_2px_8px_rgba(232,93,47,0.4)]"
-                  : "bg-white/5 text-gray-400"
+                  ? "bg-[#F05A28] text-white shadow-sm"
+                  : "bg-[#121214] text-[#9B9CA1]"
               }`}
             >
               K
             </div>
           </div>
-          <h2 className="text-sm font-bold text-white mt-0.5 mb-0.5">TK / Coban</h2>
-          <p className="text-[11px] text-slate-400 line-clamp-1 mb-1.5">
+          <h2 className="text-sm font-bold text-[#ECECEE] mt-0.5 mb-0.5">TK / Coban</h2>
+          <p className="text-[11px] text-[#9B9CA1] line-clamp-1 mb-1.5">
             TK103, TK102, TK303 y familia Coban
           </p>
-          <div className="flex justify-between items-center text-[10px] pt-1.5 border-t border-white/5">
-            <span className="text-slate-400 font-medium">{TK_COMMANDS.length} comandos</span>
+          <div className="flex justify-between items-center text-[10px] pt-1.5 border-t border-[#26272B]">
+            <span className="text-[#9B9CA1] font-mono">{TK_COMMANDS.length} comandos</span>
             <span
               className={`text-[9px] font-bold tracking-wider uppercase ${
-                selectedModel === "tk" ? "text-[#E85D2F]" : "text-slate-500"
+                selectedModel === "tk" ? "text-[#F05A28]" : "text-[#76777C]"
               }`}
             >
               {selectedModel === "tk" ? "SELECCIONADO" : "Disponible"}
@@ -1407,35 +1399,35 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         {/* MODELO 03: GT */}
         <div
           onClick={() => handleSelectModel("gt")}
-          className={`relative p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+          className={`relative p-3 rounded-xl cursor-pointer transition-all duration-200 ${
             selectedModel === "gt"
-              ? "bg-[#1C1F26] border-2 border-[#E85D2F] shadow-[0_0_20px_rgba(232,93,47,0.15)]"
-              : "bg-[#16181D] border border-white/5 hover:border-white/20 hover:bg-[#1C1F26]"
+              ? "bg-[#1C1714] border-2 border-[#F05A28] shadow-[0_0_20px_rgba(240,90,40,0.15)]"
+              : "bg-[#161719] border border-[#26272B] hover:border-[#2D2E32] hover:bg-[#1D1E21]"
           }`}
         >
           <div className="flex justify-between items-start">
-            <span className="text-[9px] font-bold uppercase tracking-wider text-[#8A9099]">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-[#9B9CA1]">
               MODELO 03
             </span>
             <div
               className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold transition-colors ${
                 selectedModel === "gt"
-                  ? "bg-[#E85D2F] text-white shadow-[0_2px_8px_rgba(232,93,47,0.4)]"
-                  : "bg-white/5 text-gray-400"
+                  ? "bg-[#F05A28] text-white shadow-sm"
+                  : "bg-[#121214] text-[#9B9CA1]"
               }`}
             >
               G
             </div>
           </div>
-          <h2 className="text-sm font-bold text-white mt-0.5 mb-0.5">GT / Concox</h2>
-          <p className="text-[11px] text-slate-400 line-clamp-1 mb-1.5">
+          <h2 className="text-sm font-bold text-[#ECECEE] mt-0.5 mb-0.5">GT / Concox</h2>
+          <p className="text-[11px] text-[#9B9CA1] line-clamp-1 mb-1.5">
             GT06N, Concox, VL03, ET200 y clones
           </p>
-          <div className="flex justify-between items-center text-[10px] pt-1.5 border-t border-white/5">
-            <span className="text-slate-400 font-medium">{GT_COMMANDS.length} comandos</span>
+          <div className="flex justify-between items-center text-[10px] pt-1.5 border-t border-[#26272B]">
+            <span className="text-[#9B9CA1] font-mono">{GT_COMMANDS.length} comandos</span>
             <span
               className={`text-[9px] font-bold tracking-wider uppercase ${
-                selectedModel === "gt" ? "text-[#E85D2F]" : "text-slate-500"
+                selectedModel === "gt" ? "text-[#F05A28]" : "text-[#76777C]"
               }`}
             >
               {selectedModel === "gt" ? "SELECCIONADO" : "Disponible"}
@@ -1453,18 +1445,18 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         {/* ========================================================= */}
         <div className="lg:col-span-5 flex flex-col gap-3">
           {/* BLOQUE: DESTINO Y ACCESO */}
-          <div className="bg-[#1C1F26] border border-white/5 rounded-xl p-3.5 shadow-sm">
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <Car size={14} className="text-[#E85D2F]" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-[#8A9099] m-0">
+          <div className="bg-[#161719] border border-[#26272B] rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Car size={15} className="text-[#F05A28]" />
+              <h2 className="text-xs font-bold uppercase tracking-wider text-[#9B9CA1] m-0">
                 Destino y Acceso de la Unidad
               </h2>
             </div>
 
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-3">
               {/* Buscador de Placa */}
               <div ref={searchBoxRef} className="relative">
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-[#ECECEE] mb-1.5">
                   Buscar Placa de la Unidad
                 </label>
                 <div className="relative">
@@ -1477,30 +1469,30 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                       setShowPlacaDropdown(true);
                     }}
                     onFocus={() => setShowPlacaDropdown(true)}
-                    className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg px-3 py-1.5 pr-8 text-xs text-white outline-none focus:ring-1 focus:ring-[#E85D2F] transition-all"
+                    className="w-full bg-[#121214] border border-[#2D2E32] rounded-lg px-3 py-2 pr-8 text-xs text-[#ECECEE] placeholder-[#76777C] outline-none focus:border-[#F05A28] transition-all"
                   />
-                  <Search size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#76777C]" />
                 </div>
 
                 {/* Dropdown flotante */}
                 {showPlacaDropdown && vehiculosFiltrados.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#16181D] border border-white/15 rounded-xl z-50 max-h-48 overflow-y-auto shadow-2xl custom-scrollbar">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#161719] border border-[#26272B] rounded-xl z-50 max-h-48 overflow-y-auto shadow-2xl custom-scrollbar">
                     {vehiculosFiltrados.map((v) => (
                       <div
                         key={`${v.accountID}_${v.deviceID}`}
                         onClick={() => handleSelectVehiculo(v)}
-                        className="p-2 border-b border-white/5 hover:bg-white/5 cursor-pointer flex justify-between items-center transition-colors"
+                        className="p-2.5 border-b border-[#222327] hover:bg-[#1D1E21] cursor-pointer flex justify-between items-center transition-colors"
                       >
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-bold text-[#E85D2F]">{v.deviceID}</span>
-                            <span className="text-[10px] text-slate-400 font-medium">({v.accountID})</span>
+                            <span className="text-xs font-bold text-[#F05A28] font-mono">{v.deviceID}</span>
+                            <span className="text-[10px] text-[#9B9CA1] font-medium">({v.accountID})</span>
                           </div>
-                          <span className="text-[11px] text-slate-400 block mt-0.5">
+                          <span className="text-[11px] text-[#9B9CA1] block mt-0.5 font-mono">
                             SIM: {v.simPhoneNumber || "Sin SIM"} • {v.equipmentType || "GPS"}
                           </span>
                         </div>
-                        <ChevronRight size={13} className="text-slate-400" />
+                        <ChevronRight size={13} className="text-[#76777C]" />
                       </div>
                     ))}
                   </div>
@@ -1509,20 +1501,20 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
               {/* INPUT NÚMERO SIM CON PREFIJO +51 FIJO */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-semibold text-slate-300">
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="text-xs font-semibold text-[#ECECEE]">
                     Número de la SIM (Perú)
                   </label>
-                  <span className="text-[10px] text-slate-400 font-mono">
+                  <span className="text-[10px] text-[#9B9CA1] font-mono">
                     {simLocalNumber.length === 9 ? "✓ 9 dígitos" : `${simLocalNumber.length}/9`}
                   </span>
                 </div>
 
-                <div className="flex items-center bg-[#0A0C0F] border border-white/10 rounded-lg overflow-hidden focus-within:border-[#E85D2F] transition-colors">
+                <div className="flex items-center bg-[#121214] border border-[#2D2E32] rounded-lg overflow-hidden focus-within:border-[#F05A28] transition-colors">
                   {/* Badge +51 PERÚ FIJO */}
-                  <div className="flex items-center gap-1 px-2.5 py-1.5 bg-white/[0.04] border-r border-white/10 select-none flex-shrink-0">
+                  <div className="flex items-center gap-1 px-2.5 py-2 bg-[#1A1210] border-r border-[#5A2A18] select-none flex-shrink-0">
                     <span className="text-xs">🇵🇪</span>
-                    <span className="text-xs font-bold text-[#E85D2F] tracking-wide">+51</span>
+                    <span className="text-xs font-bold text-[#F05A28] tracking-wide">+51</span>
                   </div>
 
                   {/* Campo editable de 9 dígitos */}
@@ -1531,13 +1523,13 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                     placeholder="900 000 000"
                     value={formatPeruPhone(simLocalNumber)}
                     onChange={(e) => handleSimNumberChange(e.target.value)}
-                    className="w-full bg-transparent px-2.5 py-1.5 text-xs text-white font-mono font-medium tracking-wider outline-none"
+                    className="w-full bg-transparent px-3 py-2 text-xs text-[#ECECEE] font-mono font-medium tracking-wider outline-none placeholder-[#76777C]"
                   />
                   {simLocalNumber && (
                     <button
                       type="button"
                       onClick={() => setSimLocalNumber("")}
-                      className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer mr-0.5"
+                      className="p-1.5 text-[#76777C] hover:text-[#ECECEE] transition-colors cursor-pointer mr-1"
                       title="Borrar número"
                     >
                       <X size={13} />
@@ -1549,24 +1541,24 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
             {/* Ficha de vehículo seleccionado si existe */}
             {vehiculoSeleccionado && (
-              <div className="mt-2.5 p-2 rounded-lg bg-[#E85D2F]/10 border border-[#E85D2F]/25 flex justify-between items-center">
+              <div className="mt-3 p-2.5 rounded-lg bg-[#1A1210] border border-[#5A2A18] flex justify-between items-center">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-md bg-[#E85D2F]/20 flex items-center justify-center text-[#E85D2F]">
+                  <div className="w-7 h-7 rounded-md bg-[#251814] border border-[#5A2A18] flex items-center justify-center text-[#F05A28]">
                     <Car size={14} />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-white">{vehiculoSeleccionado.deviceID}</span>
-                      <span className="text-[10px] bg-white/10 px-1.5 py-0.2 rounded text-slate-300 font-medium">
+                      <span className="text-xs font-bold text-[#ECECEE] font-mono">{vehiculoSeleccionado.deviceID}</span>
+                      <span className="text-[10px] bg-[#121214] border border-[#26272B] px-1.5 py-0.5 rounded text-[#CFCFD3] font-medium">
                         {vehiculoSeleccionado.equipmentType || "GPS"}
                       </span>
                     </div>
-                    <span className="text-[11px] text-slate-400">Cliente: {vehiculoSeleccionado.accountID}</span>
+                    <span className="text-[11px] text-[#9B9CA1]">Cliente: {vehiculoSeleccionado.accountID}</span>
                   </div>
                 </div>
                 <button
                   onClick={handleClearVehiculo}
-                  className="p-1 text-slate-400 hover:text-red-400 hover:bg-white/5 rounded transition-colors cursor-pointer"
+                  className="p-1 text-[#76777C] hover:text-red-400 hover:bg-[#251814] rounded transition-colors cursor-pointer"
                   title="Quitar selección"
                 >
                   <X size={14} />
@@ -1575,55 +1567,55 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             )}
 
             {/* Clave según modelo */}
-            <div className="mt-2.5 pt-2.5 border-t border-white/5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="mt-3 pt-3 border-t border-[#26272B] grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {selectedModel === "teltonika" ? (
                 <>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Login SMS (Opcional)</label>
+                    <label className="block text-[11px] font-semibold text-[#9B9CA1] mb-1">Login SMS (Opcional)</label>
                     <input
                       type="text"
                       placeholder="ej. admin"
                       value={teltonikaLogin}
                       onChange={(e) => setTeltonikaLogin(e.target.value)}
-                      className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white outline-none focus:border-[#E85D2F]"
+                      className="w-full bg-[#121214] border border-[#2D2E32] rounded-lg px-2.5 py-1.5 text-xs text-[#ECECEE] placeholder-[#76777C] outline-none focus:border-[#F05A28]"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Password SMS (Opcional)</label>
+                    <label className="block text-[11px] font-semibold text-[#9B9CA1] mb-1">Password SMS (Opcional)</label>
                     <input
                       type="text"
                       placeholder="ej. 123456"
                       value={teltonikaPass}
                       onChange={(e) => setTeltonikaPass(e.target.value)}
-                      className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white outline-none focus:border-[#E85D2F]"
+                      className="w-full bg-[#121214] border border-[#2D2E32] rounded-lg px-2.5 py-1.5 text-xs text-[#ECECEE] placeholder-[#76777C] outline-none focus:border-[#F05A28]"
                     />
                   </div>
                 </>
               ) : selectedModel === "tk" ? (
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Password (Fábrica: 123456)</label>
+                  <label className="block text-[11px] font-semibold text-[#9B9CA1] mb-1">Password (Fábrica: 123456)</label>
                   <input
                     type="text"
                     value={tkPass}
                     onChange={(e) => setTkPass(e.target.value)}
-                    className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white outline-none focus:border-[#E85D2F]"
+                    className="w-full bg-[#121214] border border-[#2D2E32] rounded-lg px-2.5 py-1.5 text-xs text-[#ECECEE] font-mono outline-none focus:border-[#F05A28]"
                   />
                 </div>
               ) : (
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Password de Fábrica</label>
+                  <label className="block text-[11px] font-semibold text-[#9B9CA1] mb-1">Password de Fábrica</label>
                   <input
                     type="text"
                     value={gtPass}
                     onChange={(e) => setGtPass(e.target.value)}
-                    className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white outline-none focus:border-[#E85D2F]"
+                    className="w-full bg-[#121214] border border-[#2D2E32] rounded-lg px-2.5 py-1.5 text-xs text-[#ECECEE] font-mono outline-none focus:border-[#F05A28]"
                   />
                 </div>
               )}
 
               {/* Nota de modelo */}
-              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-white/[0.02] border border-white/5 text-[11px] text-slate-400 sm:col-span-2">
-                <Info size={14} className="text-[#E85D2F] flex-shrink-0" />
+              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-[#121214] border border-[#26272B] text-[11px] text-[#9B9CA1] sm:col-span-2">
+                <Info size={14} className="text-[#F05A28] flex-shrink-0" />
                 <span>
                   {selectedModel === "teltonika" && "Teltonika agrega 2 espacios automáticos si no hay login/pass."}
                   {selectedModel === "tk" && "TK103 integra la contraseña de 6 dígitos en cada comando."}
@@ -1634,15 +1626,15 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           </div>
 
           {/* BLOQUE: MENSAJE FINAL A ENVIAR */}
-          <div className="bg-[#1C1F26] border border-white/5 rounded-xl p-3.5 shadow-sm flex flex-col gap-2.5">
+          <div className="bg-[#161719] border border-[#26272B] rounded-xl p-4 shadow-sm flex flex-col gap-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#8A9099]">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#9B9CA1]">
                 Comando ensamblado a enviar
               </span>
               {isCustomEdited && (
                 <button
                   onClick={() => setIsCustomEdited(false)}
-                  className="text-[11px] font-semibold text-[#E85D2F] hover:underline cursor-pointer"
+                  className="text-[11px] font-semibold text-[#F05A28] hover:underline cursor-pointer"
                 >
                   Restaurar automático
                 </button>
@@ -1650,7 +1642,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             </div>
 
             {/* Caja Monospace estilizada */}
-            <div className="relative bg-[#0A0C0F] border border-[#E85D2F]/30 rounded-lg p-2.5 focus-within:border-[#E85D2F] transition-colors">
+            <div className="relative bg-[#121214] border border-[#2D2E32] rounded-lg p-2.5 focus-within:border-[#F05A28] transition-colors">
               <textarea
                 value={assembledMessage}
                 onChange={(e) => {
@@ -1659,20 +1651,20 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                 }}
                 rows={2}
                 placeholder="El comando ensamblado aparecerá aquí..."
-                className="w-full bg-transparent border-none outline-none text-white font-mono text-xs font-medium resize-none"
+                className="w-full bg-transparent border-none outline-none text-[#ECECEE] font-mono text-xs font-medium resize-none placeholder-[#76777C]"
               />
             </div>
 
             {/* Footer de envío */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-              <span className="text-[11px] text-slate-400 font-mono">
+              <span className="text-[11px] text-[#9B9CA1] font-mono">
                 <strong>{charCount}</strong> car. • <strong>{smsParts}</strong> SMS
               </span>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleCopyCommand}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-semibold text-slate-200 hover:bg-white/10 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#121214] border border-[#2D2E32] text-xs font-semibold text-[#CFCFD3] hover:text-[#ECECEE] hover:border-[#F05A28] transition-colors cursor-pointer"
                 >
                   <Copy size={13} />
                   <span>Copiar</span>
@@ -1681,9 +1673,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                 <button
                   onClick={handleSendSms}
                   disabled={isSending}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-md shadow-[#E85D2F]/20 cursor-pointer transition-all ${
-                    isSending ? "bg-[#b8451f] opacity-80" : "bg-[#E85D2F] hover:bg-[#ff6b3d] active:scale-95"
-                  }`}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-[#F05A28] hover:bg-[#FF6A35] active:scale-95 transition-all cursor-pointer shadow"
                 >
                   <Send size={13} className={isSending ? "animate-spin" : ""} />
                   <span>{isSending ? "Enviando..." : "Enviar SMS al GPS"}</span>
@@ -1698,25 +1688,25 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         {/* ========================================================= */}
         <div className="lg:col-span-7 flex flex-col gap-3">
           {/* BLOQUE: CATÁLOGO DE COMANDOS */}
-          <div className="bg-[#1C1F26] border border-white/5 rounded-xl p-3.5 shadow-sm">
+          <div className="bg-[#161719] border border-[#26272B] rounded-xl p-3.5">
             <div className="flex flex-wrap items-center justify-between gap-2.5 mb-2.5">
               <div className="flex items-center gap-1.5">
-                <Sliders size={14} className="text-[#E85D2F]" />
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#8A9099] m-0">
+                <Sliders size={14} className="text-[#F05A28]" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#9B9CA1] m-0">
                   Comandos {selectedModel.toUpperCase()}
                 </h2>
               </div>
 
               {/* Filtros de Categoría */}
-              <div className="flex items-center gap-1 bg-[#0A0C0F] p-0.5 rounded-lg border border-white/5">
+              <div className="flex items-center gap-1 bg-[#121214] p-0.5 rounded-[8px] border border-[#26272B]">
                 {(["TODOS", "LECTURA", "CONFIG", "CRÍTICO"] as const).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold cursor-pointer transition-all ${
+                    className={`px-2 py-0.5 rounded-[6px] text-[10px] font-bold cursor-pointer transition-all ${
                       selectedCategory === cat
-                        ? "bg-[#E85D2F] text-white shadow-sm"
-                        : "text-slate-400 hover:text-white"
+                        ? "bg-[#F05A28] text-white"
+                        : "text-[#9B9CA1] hover:text-[#ECECEE]"
                     }`}
                   >
                     {cat}
@@ -1731,9 +1721,9 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                   placeholder="Buscar comando..."
                   value={commandSearch}
                   onChange={(e) => setCommandSearch(e.target.value)}
-                  className="w-full bg-[#0A0C0F] border border-white/10 rounded-lg px-2.5 py-1 pr-7 text-xs text-white outline-none focus:border-[#E85D2F]"
+                  className="w-full bg-[#121214] border border-[#2D2E32] rounded-[8px] px-2.5 py-1 pr-7 text-xs text-[#ECECEE] placeholder:text-[#76777C] outline-none focus:border-[#F05A28]"
                 />
-                <Search size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#76777C]" />
               </div>
             </div>
 
@@ -1752,21 +1742,21 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                   <div
                     key={cmd.id}
                     onClick={() => handleSelectCommand(cmd)}
-                    className={`p-2 rounded-lg cursor-pointer transition-all duration-150 flex flex-col justify-between gap-1 ${
+                    className={`p-2 rounded-[8px] cursor-pointer transition-all duration-150 flex flex-col justify-between gap-1 ${
                       isSelected
-                        ? "bg-[#E85D2F]/10 border border-[#E85D2F] shadow-[0_0_12px_rgba(232,93,47,0.15)]"
-                        : "bg-[#0A0C0F] border border-white/5 hover:border-white/15 hover:bg-white/[0.02]"
+                        ? "bg-[#1C1714] border border-[#8A3A1C]"
+                        : "bg-[#121214] border border-[#26272B] hover:border-[#3A3B40] hover:bg-[#1D1E21]"
                     }`}
                   >
                     <div className="flex justify-between items-start gap-1.5">
-                      <span className={`text-xs font-bold break-all ${isSelected ? "text-[#E85D2F]" : "text-white"}`}>
+                      <span className={`text-xs font-bold break-all ${isSelected ? "text-[#F05A28]" : "text-[#ECECEE]"}`}>
                         {cmd.name}
                       </span>
                       <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border uppercase flex-shrink-0 ${catColor}`}>
                         {cmd.category}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-tight line-clamp-1 m-0">
+                    <p className="text-[11px] text-[#9B9CA1] leading-tight line-clamp-1 m-0">
                       {cmd.description}
                     </p>
                   </div>
@@ -1776,18 +1766,18 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
             {/* Panel de Parámetros Dinámicos si el comando los requiere */}
             {selectedCommand?.params && selectedCommand.params.length > 0 && (
-              <div className="mt-2.5 p-2.5 rounded-lg bg-[#0A0C0F] border border-[#E85D2F]/20 flex flex-col gap-2">
+              <div className="mt-2.5 p-2.5 rounded-[8px] bg-[#121214] border border-[#26272B] flex flex-col gap-2">
                 <div className="flex items-center gap-1.5">
-                  <Sliders size={13} className="text-[#E85D2F]" />
-                  <span className="text-xs font-bold uppercase tracking-wide text-slate-200">
-                    Parámetros para: <code className="text-[#E85D2F] font-semibold">{selectedCommand.name}</code>
+                  <Sliders size={13} className="text-[#F05A28]" />
+                  <span className="text-xs font-bold uppercase tracking-wide text-[#ECECEE]">
+                    Parámetros para: <code className="text-[#F05A28] font-semibold">{selectedCommand.name}</code>
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {selectedCommand.params.map((param) => (
                     <div key={param.key}>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">
+                      <label className="block text-[11px] font-semibold text-[#CFCFD3] mb-0.5">
                         {param.label}
                       </label>
                       <input
@@ -1798,7 +1788,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                           setParamValues({ ...paramValues, [param.key]: e.target.value });
                           setIsCustomEdited(false);
                         }}
-                        className="w-full bg-[#16181D] border border-white/10 rounded-lg px-2.5 py-1 text-xs text-white font-mono font-medium outline-none focus:border-[#E85D2F]"
+                        className="w-full bg-[#161719] border border-[#2D2E32] rounded-[8px] px-2.5 py-1 text-xs text-[#ECECEE] font-mono outline-none focus:border-[#F05A28]"
                       />
 
                       {/* Chips rápidos de sugerencias (APNs de Perú, Servidores Linux 1 y 2, etc.) */}
@@ -1818,8 +1808,8 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                                 }}
                                 className={`text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer border transition-colors ${
                                   isSelected
-                                    ? "bg-[#E85D2F]/20 text-[#E85D2F] border-[#E85D2F]/40 shadow-sm"
-                                    : "bg-white/5 text-slate-400 border-white/5 hover:text-white"
+                                    ? "bg-[#1C1714] text-[#F05A28] border-[#8A3A1C]"
+                                    : "bg-[#161719] text-[#9B9CA1] border-[#26272B] hover:text-[#ECECEE]"
                                 }`}
                               >
                                 {optLabel}
@@ -1842,18 +1832,18 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       {/* ------------------------------------------------------------- */}
       {/* 4. CONSOLA DE TELEMETRÍA Y RESPUESTAS GPS (FULL WIDTH)         */}
       {/* ------------------------------------------------------------- */}
-      <section className="bg-[#1C1F26] border border-white/5 rounded-xl p-3.5 shadow-sm flex flex-col gap-2.5">
+      <section className="bg-[#161719] border border-[#26272B] rounded-xl p-3.5 flex flex-col gap-2.5">
         {/* Cabecera de la Consola */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-white/5">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 border-b border-[#222327]">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-[#E85D2F]/15 border border-[#E85D2F]/30 flex items-center justify-center text-[#E85D2F]">
+            <div className="w-7 h-7 rounded-[7px] bg-[#1A1210] border border-[#5A2A18] flex items-center justify-center text-[#F05A28]">
               <Terminal size={14} />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white m-0">
+              <h2 className="text-sm font-bold text-[#ECECEE] m-0">
                 Consola de Telemetría y Respuestas GPS
               </h2>
-              <p className="text-[11px] text-[#8A9099] mt-0.5 m-0 leading-tight">
+              <p className="text-[11px] text-[#9B9CA1] mt-0.5 m-0 leading-tight">
                 Historial de comandos y respuestas devueltas por los módems GPS vía Webhook
               </p>
             </div>
@@ -1862,23 +1852,23 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           {/* Acciones y Pestañas de la Consola */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Selector de Pestañas: Enviados vs Entrantes */}
-            <div className="flex items-center bg-[#0A0C0F] p-0.5 rounded-lg border border-white/5">
+            <div className="flex items-center bg-[#121214] p-0.5 rounded-[8px] border border-[#26272B]">
               <button
                 onClick={() => setConsoleTab("sent")}
-                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded-[6px] text-xs font-bold cursor-pointer transition-all ${
                   consoleTab === "sent"
-                    ? "bg-[#E85D2F] text-white shadow-sm"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-[#F05A28] text-white"
+                    : "text-[#9B9CA1] hover:text-[#ECECEE]"
                 }`}
               >
                 Comandos ({history.length})
               </button>
               <button
                 onClick={() => setConsoleTab("incoming")}
-                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer transition-all ${
+                className={`px-2.5 py-1 rounded-[6px] text-xs font-bold cursor-pointer transition-all ${
                   consoleTab === "incoming"
-                    ? "bg-[#E85D2F] text-white shadow-sm"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-[#F05A28] text-white"
+                    : "text-[#9B9CA1] hover:text-[#ECECEE]"
                 }`}
               >
                 SMS Recibidos ({incomingLogs.length})
@@ -1887,7 +1877,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
             <button
               onClick={() => loadGatewayAndHistory(true)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-[8px] bg-[#121214] hover:bg-[#1D1E21] border border-[#2D2E32] text-xs font-semibold text-[#CFCFD3] hover:text-white transition-colors cursor-pointer"
               title="Actualizar registro"
             >
               <RefreshCw size={12} />
@@ -1897,7 +1887,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             {(history.length > 0 || incomingLogs.length > 0) && (
               <button
                 onClick={handleClearHistory}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold text-rose-400 transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-[8px] bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold text-rose-400 transition-colors cursor-pointer"
                 title="Limpiar historial"
               >
                 <Trash2 size={12} />
@@ -1911,12 +1901,12 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         {consoleTab === "sent" && (
           <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
             {history.length === 0 ? (
-              <div className="py-8 flex flex-col items-center justify-center text-center text-slate-400">
-                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 mb-2">
+              <div className="py-8 flex flex-col items-center justify-center text-center text-[#76777C]">
+                <div className="w-8 h-8 rounded-[8px] bg-[#121214] border border-[#26272B] flex items-center justify-center text-[#76777C] mb-2">
                   <MessageSquare size={16} />
                 </div>
-                <span className="text-xs font-bold text-slate-300">Sin Comandos Enviados</span>
-                <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
+                <span className="text-xs font-bold text-[#CFCFD3]">Sin Comandos Enviados</span>
+                <p className="text-[11px] text-[#76777C] mt-0.5 max-w-sm">
                   Selecciona un comando y presiona <strong>Enviar SMS al GPS</strong>. Las respuestas aparecerán aquí en tiempo real.
                 </p>
               </div>
@@ -1929,16 +1919,16 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                 return (
                   <div
                     key={item.id}
-                    className={`p-2.5 rounded-lg border transition-all ${
+                    className={`p-2.5 rounded-[8px] border transition-all ${
                       hasResponse
-                        ? "bg-[#14171D] border-emerald-500/30"
+                        ? "bg-[#121214] border-emerald-500/30"
                         : item.status === "failed"
                         ? "bg-[#161214] border-rose-500/30"
-                        : "bg-[#14171D] border-white/5"
+                        : "bg-[#121214] border-[#26272B]"
                     }`}
                   >
                     {/* Encabezado del Registro */}
-                    <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b border-white/5">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pb-2 border-b border-[#222327]">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {/* Estado */}
                         {hasResponse ? (
@@ -1959,25 +1949,25 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
                         {/* Placa si existe */}
                         {item.placa && (
-                          <span className="text-[10px] font-bold bg-[#E85D2F]/20 border border-[#E85D2F]/40 text-[#E85D2F] px-1.5 py-0.2 rounded">
+                          <span className="text-[10px] font-bold bg-[#1C1714] border border-[#8A3A1C] text-[#F05A28] px-1.5 py-0.2 rounded">
                             {item.placa}
                           </span>
                         )}
 
                         {/* Número destino */}
-                        <span className="text-xs font-semibold text-slate-200 font-mono">
+                        <span className="text-xs font-semibold text-[#ECECEE] font-mono">
                           {item.phoneNumber}
                         </span>
 
                         {/* Modelo */}
                         {item.model && (
-                          <span className="text-[10px] font-bold text-slate-400 bg-white/5 px-1.5 py-0.2 rounded uppercase">
+                          <span className="text-[10px] font-bold text-[#9B9CA1] bg-[#161719] border border-[#26272B] px-1.5 py-0.2 rounded uppercase">
                             {item.model}
                           </span>
                         )}
                       </div>
 
-                      <span className="text-[10px] text-slate-400 font-mono">
+                      <span className="text-[10px] text-[#76777C] font-mono">
                         {new Date(item.sentAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}
                       </span>
                     </div>
@@ -1986,11 +1976,11 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
                       {/* Comando Enviado */}
                       <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A9099]">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#9B9CA1]">
                           Comando Enviado
                         </span>
-                        <div className="bg-[#0A0C0F] border border-white/10 rounded-lg p-2 flex justify-between items-start gap-1.5">
-                          <code className="text-xs font-mono text-white font-medium break-all leading-relaxed">
+                        <div className="bg-[#161719] border border-[#26272B] rounded-[8px] p-2 flex justify-between items-start gap-1.5">
+                          <code className="text-xs font-mono text-[#ECECEE] font-medium break-all leading-relaxed">
                             {item.message}
                           </code>
                           <button
@@ -1998,7 +1988,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                               navigator.clipboard.writeText(item.message);
                               toast.success("Comando copiado");
                             }}
-                            className="text-slate-400 hover:text-white p-0.5 transition-colors cursor-pointer flex-shrink-0"
+                            className="text-[#76777C] hover:text-[#ECECEE] p-0.5 transition-colors cursor-pointer flex-shrink-0"
                             title="Copiar comando"
                           >
                             <Copy size={11} />
@@ -2009,7 +1999,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                       {/* Respuesta Recibida */}
                       <div className="flex flex-col gap-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A9099]">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#9B9CA1]">
                             Respuesta del Dispositivo GPS
                           </span>
                           {item.response && (
@@ -2020,7 +2010,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                         </div>
 
                         {hasResponse ? (
-                          <div className="bg-emerald-950/30 border border-emerald-500/40 rounded-lg p-2 flex flex-col gap-1.5">
+                          <div className="bg-emerald-950/25 border border-emerald-500/35 rounded-[8px] p-2 flex flex-col gap-1.5">
                             <code className="text-xs font-mono text-emerald-300 font-medium break-all leading-relaxed">
                               {item.response?.message}
                             </code>
@@ -2031,7 +2021,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                                   href={mapsUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-colors no-underline shadow-sm"
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[6px] bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-colors no-underline"
                                 >
                                   <span>Abrir en Maps</span>
                                   <ExternalLink size={10} />
@@ -2040,11 +2030,11 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                             )}
                           </div>
                         ) : item.status === "failed" ? (
-                          <div className="bg-rose-950/20 border border-rose-500/30 rounded-lg p-2 text-xs text-rose-300">
+                          <div className="bg-rose-950/20 border border-rose-500/30 rounded-[8px] p-2 text-xs text-rose-300">
                             {item.error || "No se pudo entregar el mensaje al módem"}
                           </div>
                         ) : (
-                          <div className="bg-[#0A0C0F]/60 border border-dashed border-white/10 rounded-lg p-2 text-xs text-slate-400 flex items-center gap-1.5">
+                          <div className="bg-[#161719] border border-dashed border-[#26272B] rounded-[8px] p-2 text-xs text-[#76777C] flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                             <span>Esperando respuesta vía SMS del dispositivo GPS...</span>
                           </div>
@@ -2062,12 +2052,12 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         {consoleTab === "incoming" && (
           <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto pr-1.5 custom-scrollbar">
             {incomingLogs.length === 0 ? (
-              <div className="py-8 flex flex-col items-center justify-center text-center text-slate-400">
-                <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center text-slate-400 mb-2">
+              <div className="py-8 flex flex-col items-center justify-center text-center text-[#76777C]">
+                <div className="w-8 h-8 rounded-[8px] bg-[#121214] border border-[#26272B] flex items-center justify-center text-[#76777C] mb-2">
                   <Radio size={16} />
                 </div>
-                <span className="text-xs font-bold text-slate-300">Sin Mensajes Entrantes Registrados</span>
-                <p className="text-[11px] text-slate-400 mt-0.5 max-w-sm">
+                <span className="text-xs font-bold text-[#CFCFD3]">Sin Mensajes Entrantes Registrados</span>
+                <p className="text-[11px] text-[#76777C] mt-0.5 max-w-sm">
                   Cuando un GPS o número telefónico responda un SMS al celular del módem, la notificación aparecerá aquí inmediatamente vía Webhook.
                 </p>
               </div>
@@ -2081,28 +2071,28 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                 return (
                   <div
                     key={inc.id}
-                    className="p-2.5 rounded-lg border border-white/10 bg-[#14171D] flex flex-col gap-2 hover:border-[#E85D2F]/30 transition-colors"
+                    className="p-2.5 rounded-[8px] border border-[#26272B] bg-[#121214] flex flex-col gap-2 hover:border-[#3A3B40] transition-colors"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1.5 border-b border-white/5">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pb-1.5 border-b border-[#222327]">
                       <div className="flex items-center gap-2">
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                           <Check size={11} />
                           SMS RECIBIDO
                         </span>
 
-                        <span className="text-xs font-mono font-bold text-white">
+                        <span className="text-xs font-mono font-bold text-[#ECECEE]">
                           {inc.sender}
                         </span>
 
                         {inc.matchedRecordId && (
-                          <span className="text-[10px] font-semibold bg-white/5 text-slate-400 px-1.5 py-0.2 rounded">
+                          <span className="text-[10px] font-semibold bg-[#161719] border border-[#26272B] text-[#9B9CA1] px-1.5 py-0.2 rounded">
                             Vinculado a comando
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-mono text-slate-400">
+                        <span className="text-[10px] font-mono text-[#76777C]">
                           {new Date(inc.receivedAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'medium' })}
                         </span>
 
@@ -2114,7 +2104,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                               toast.success(`Número +51 ${peruvian9} cargado en el panel de comandos`, { icon: "📱" });
                             }
                           }}
-                          className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                          className="px-2 py-0.5 rounded-[6px] bg-[#161719] hover:bg-[#1D1E21] border border-[#2D2E32] text-[#CFCFD3] hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
                           title="Cargar número para enviarle un comando"
                         >
                           Cargar Número
@@ -2122,7 +2112,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                       </div>
                     </div>
 
-                    <div className="bg-[#0A0C0F] border border-white/10 rounded-lg p-2 flex justify-between items-start gap-2">
+                    <div className="bg-[#161719] border border-[#26272B] rounded-[8px] p-2 flex justify-between items-start gap-2">
                       <code className="text-xs font-mono text-emerald-300 font-medium break-all leading-relaxed">
                         {inc.message}
                       </code>
@@ -2131,7 +2121,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                           navigator.clipboard.writeText(inc.message);
                           toast.success("Mensaje copiado");
                         }}
-                        className="text-slate-400 hover:text-white p-0.5 transition-colors cursor-pointer flex-shrink-0"
+                        className="text-[#76777C] hover:text-[#ECECEE] p-0.5 transition-colors cursor-pointer flex-shrink-0"
                         title="Copiar contenido"
                       >
                         <Copy size={12} />
@@ -2144,7 +2134,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                           href={mapsUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-colors no-underline shadow-sm"
+                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[6px] bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-colors no-underline"
                         >
                           <span>Abrir en Maps</span>
                           <ExternalLink size={10} />
@@ -2164,20 +2154,17 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       {/* ------------------------------------------------------------- */}
       {showWebhookModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div
-            className="bg-[#1C1F26] border border-white/10 rounded-2xl max-w-xl w-full p-6 flex flex-col gap-4 shadow-2xl"
-            style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
-          >
+          <div className="bg-[#161719] border border-[#26272B] rounded-[12px] max-w-xl w-full p-6 flex flex-col gap-4 shadow-2xl">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#E85D2F]/20 flex items-center justify-center text-[#E85D2F]">
+                <div className="w-8 h-8 rounded-[7px] bg-[#1A1210] border border-[#5A2A18] flex items-center justify-center text-[#F05A28]">
                   <Radio size={16} />
                 </div>
-                <h2 className="text-sm font-bold text-white m-0">Webhook de Respuestas SMS</h2>
+                <h2 className="text-sm font-bold text-[#ECECEE] m-0">Webhook de Respuestas SMS</h2>
               </div>
               <button
                 onClick={() => setShowWebhookModal(false)}
-                className="text-slate-400 hover:text-white cursor-pointer p-1"
+                className="text-[#76777C] hover:text-[#ECECEE] cursor-pointer p-1"
               >
                 <X size={18} />
               </button>
@@ -2185,19 +2172,19 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
             {/* Estado del webhook */}
             <div
-              className={`p-3.5 rounded-xl border flex flex-col gap-2 ${
+              className={`p-3.5 rounded-[8px] border flex flex-col gap-2 ${
                 registeredWebhooks === null
-                  ? "bg-white/5 border-white/10 text-slate-300"
+                  ? "bg-[#121214] border-[#26272B] text-[#9B9CA1]"
                   : registeredWebhooks.length > 0
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                  : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                  ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-300"
+                  : "bg-amber-950/20 border-amber-500/30 text-amber-300"
               }`}
             >
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold tracking-wide flex items-center gap-2">
                   {registeredWebhooks === null ? (
                     <>
-                      <RefreshCw size={13} className="animate-spin text-[#E85D2F]" />
+                      <RefreshCw size={13} className="animate-spin text-[#F05A28]" />
                       <span>CONSULTANDO ESTADO EN SMS-GATE.APP...</span>
                     </>
                   ) : registeredWebhooks.length > 0 ? (
@@ -2209,7 +2196,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                 {registeredWebhooks && registeredWebhooks.length > 0 && (
                   <button
                     onClick={() => handleDeleteWebhook(registeredWebhooks[0]?.id || "gps-respuestas")}
-                    className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
+                    className="px-2.5 py-1 rounded-[6px] bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold hover:bg-rose-500 hover:text-white transition-colors cursor-pointer"
                   >
                     Eliminar Webhook
                   </button>
@@ -2217,20 +2204,20 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
               </div>
 
               {registeredWebhooks === null ? (
-                <p className="text-xs text-slate-400 m-0">
+                <p className="text-xs text-[#76777C] m-0">
                   Verificando conexión con el servidor del SMS Gateway...
                 </p>
               ) : registeredWebhooks.length > 0 ? (
-                <div className="text-xs text-white mt-1">
+                <div className="text-xs text-[#ECECEE] mt-1">
                   <p className="font-mono text-[11px] break-all m-0">
                     URL: <strong>{registeredWebhooks[0]?.url}</strong>
                   </p>
-                  <span className="text-[10px] text-slate-400 mt-1 block">
+                  <span className="text-[10px] text-[#76777C] mt-1 block">
                     Evento suscrito: {registeredWebhooks[0]?.event || "sms:received"}
                   </span>
                 </div>
               ) : (
-                <p className="text-xs text-slate-300 m-0">
+                <p className="text-xs text-[#CFCFD3] m-0">
                   sms-gate.app no tiene ninguna URL registrada donde enviar las respuestas que recibe tu celular.
                 </p>
               )}
@@ -2238,7 +2225,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
             {/* Input URL */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-[#CFCFD3] mb-1.5">
                 URL Pública del Webhook (debe iniciar con https://):
               </label>
               <div className="flex gap-2">
@@ -2247,23 +2234,23 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
                   placeholder="https://tu-dominio.com/api/gps-webhook"
                   value={webhookInputUrl}
                   onChange={(e) => setWebhookInputUrl(e.target.value)}
-                  className="flex-1 bg-[#0A0C0F] border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono outline-none focus:border-[#E85D2F]"
+                  className="flex-1 bg-[#121214] border border-[#2D2E32] rounded-[8px] px-3 py-2 text-xs text-[#ECECEE] font-mono outline-none focus:border-[#F05A28]"
                 />
                 <button
                   onClick={handleSaveWebhook}
-                  className="px-4 py-2 rounded-xl bg-[#E85D2F] hover:bg-[#ff6b3d] text-white text-xs font-bold cursor-pointer transition-colors whitespace-nowrap"
+                  className="px-4 py-2 rounded-[8px] bg-[#F05A28] hover:bg-[#FF6A35] text-white text-xs font-bold cursor-pointer transition-colors whitespace-nowrap"
                 >
                   Registrar (1 Clic)
                 </button>
               </div>
-              <span className="text-[10px] text-slate-400 mt-1 block">
+              <span className="text-[10px] text-[#76777C] mt-1 block">
                 En producción usa tu enlace de Vercel (ej: <code>https://tu-app.vercel.app/api/gps-webhook</code>).
               </span>
             </div>
 
             {/* Ayuda */}
-            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-slate-400">
-              <span className="font-bold text-[#E85D2F] block mb-1">💡 ¿Cómo funciona en producción?</span>
+            <div className="p-3 rounded-[8px] bg-[#121214] border border-[#26272B] text-xs text-[#9B9CA1]">
+              <span className="font-bold text-[#F05A28] block mb-1">💡 ¿Cómo funciona en producción?</span>
               <p className="m-0 leading-relaxed text-[11px]">
                 Cuando subas tu web a Vercel, abres este modal, pegas tu URL con <code>/api/gps-webhook</code> y presionas <strong>Registrar</strong>. Quedará activo de forma permanente sin necesidad de terminales.
               </p>
@@ -2272,7 +2259,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setShowWebhookModal(false)}
-                className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-bold text-white transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-[8px] bg-[#121214] hover:bg-[#1D1E21] border border-[#2D2E32] text-xs font-semibold text-[#ECECEE] transition-colors cursor-pointer"
               >
                 Cerrar
               </button>

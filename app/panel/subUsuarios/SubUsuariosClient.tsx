@@ -1,10 +1,11 @@
 "use client";
+
 import useSWR, { mutate } from "swr";
 import { useState, useMemo } from "react";
 import ButtonBase from "@/app/components/ui/ButtonBase";
-import TablaBase from "@/app/components/tablas/TablaBase";
+import TablaBase, { Column } from "@/app/components/tablas/TablaBase";
 import ModalBase from "@/app/components/modal/ModalBase";
-import { Pencil, Server, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Download, Plus, Search } from "lucide-react";
 import axios from "axios";
 import { SubUsuario } from "@/app/interfaces/usuario.interface";
 import InputBase1 from "@/app/components/ui/InputBase1";
@@ -12,7 +13,8 @@ import ModalEliminar from "@/app/components/modal/ModalEliminar";
 import toast from "react-hot-toast";
 import { Role } from "@/app/constants/roles";
 import { getSubUsuariosApi } from "@/app/services/subUsuariosApi";
-import ImputBuscar from "@/app/components/ui/ImputBuscar";
+import PanelHeader from "@/app/components/nav/PanelHeader";
+import * as XLSX from "xlsx";
 
 type Props = {
   role: Role;
@@ -21,6 +23,7 @@ type Props = {
 
 export default function SubUsuariosClient({ role, actor }: Props) {
   const [busqueda, setBusqueda] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<"todos" | "activos" | "inactivos">("todos");
   const [loading, setLoading] = useState(false);
 
   const [openModal, setOpenModal] = useState(false);
@@ -49,15 +52,23 @@ export default function SubUsuariosClient({ role, actor }: Props) {
     { revalidateOnFocus: false, keepPreviousData: true }
   );
 
+  const total = usuarios.length;
+  const totalActivos = useMemo(() => usuarios.filter((u) => u.status === "1").length, [usuarios]);
+  const totalInactivos = total - totalActivos;
+
   const usuariosFiltrados = useMemo(() => {
-    if (!busqueda) return usuarios;
-    return usuarios.filter((u) =>
-      [u.userId, u.deviceName, u.deviceID]
+    return usuarios.filter((u) => {
+      const isActivo = u.status === "1";
+      if (filtroEstado === "activos" && !isActivo) return false;
+      if (filtroEstado === "inactivos" && isActivo) return false;
+
+      if (!busqueda) return true;
+      return [u.userId, u.deviceName, u.deviceID]
         .join(" ")
         .toLowerCase()
-        .includes(busqueda.toLowerCase())
-    );
-  }, [busqueda, usuarios]);
+        .includes(busqueda.toLowerCase());
+    });
+  }, [busqueda, filtroEstado, usuarios]);
 
   const usuariosOrdenados = useMemo(() => {
     return [...usuariosFiltrados].sort((a, b) => {
@@ -94,24 +105,45 @@ export default function SubUsuariosClient({ role, actor }: Props) {
     setSubmitAttempt(false);
   };
 
+  const exportarExcel = () => {
+    if (usuariosOrdenados.length === 0) {
+      toast.error("No hay registros para exportar");
+      return;
+    }
+    const dataToExport = usuariosOrdenados.map((u, i) => ({
+      "N°": i + 1,
+      "User ID": u.userId || "",
+      "Device Name": u.deviceName || "",
+      "Device ID": u.deviceID || "",
+      Estado: u.status === "1" ? "ACTIVO" : "INACTIVO",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "SubUsuarios");
+    XLSX.writeFile(workbook, `SubUsuarios_Velsat_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success("Archivo Excel exportado con éxito");
+  };
+
   const guardarUsuario = async (usuario: SubUsuario) => {
     setLoading(true);
     const payloadG = { userId: usuario.userId, deviceName: usuario.deviceName, deviceID: usuario.deviceID };
     const payloadU = { id: usuario.id, userId: usuario.userId, devicename: usuario.deviceName, deviceID: usuario.deviceID };
+
     try {
       if (modo === "editar" && seleccionado) {
         await axios.put(api.update(actor, motivo), payloadU);
-        toast.success("Usuario actualizado correctamente");
+        toast.success("Sub usuario actualizado correctamente");
       } else {
         await axios.post(api.insert(actor, motivo), payloadG);
-        toast.success("Usuario guardado correctamente");
+        toast.success("Sub usuario guardado correctamente");
       }
       setOpenModal(false);
       setSeleccionado(null);
       setMotivo("");
       mutate(["subusuarios", role]);
     } catch {
-      toast.error("No es posible guardar cambios");
+      toast.error("No es posible guardar los cambios");
     } finally {
       setLoading(false);
     }
@@ -123,74 +155,81 @@ export default function SubUsuariosClient({ role, actor }: Props) {
     if (!motivoValido(motivoEliminar)) return;
     setLoading(true);
     try {
-      await axios.delete(api.delete((usuarioAEliminar.id).toString(), actor, motivoEliminar), {
+      await axios.delete(api.delete(usuarioAEliminar.id.toString(), actor, motivoEliminar), {
         data: { id: usuarioAEliminar.id },
       });
-      toast.success("Usuario eliminado");
+      toast.success("Sub usuario eliminado");
       setOpenEliminarModal(false);
       setUsuarioAEliminar(null);
       setMotivoEliminar("");
       mutate(["subusuarios", role]);
     } catch {
-      toast.error("Error al eliminar usuario");
+      toast.error("Error al eliminar sub usuario");
     } finally {
       setLoading(false);
     }
   };
 
-  const columns = [
-    { key: "userId", label: "USER ID" },
-    { key: "deviceName", label: "DEVICE NAME" },
-    { key: "deviceID", label: "DEVICE ID" },
+  const columns: Column<SubUsuario>[] = [
+    {
+      key: "userId",
+      label: "USER ID",
+      width: "25%",
+      render: (row) => (
+        <span className="font-mono text-[13px] text-[#ECECEE] font-medium">
+          {row.userId}
+        </span>
+      ),
+    },
+    {
+      key: "deviceName",
+      label: "DEVICE NAME",
+      width: "30%",
+      render: (row) => (
+        <span className="text-[13.5px] text-[#CFCFD3] font-medium">
+          {row.deviceName}
+        </span>
+      ),
+    },
+    {
+      key: "deviceID",
+      label: "DEVICE ID",
+      width: "25%",
+      render: (row) => (
+        <span className="font-mono text-[13px] text-[#9B9CA1]">
+          {row.deviceID}
+        </span>
+      ),
+    },
     {
       key: "status",
-      label: "ACTIVO",
-      render: (row: SubUsuario) => (
+      label: "ESTADO",
+      width: "12%",
+      render: (row) => (
         <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 5,
-            fontSize: 9,
-            fontWeight: 600,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: row.status === "1" ? "#2ECC71" : "#E85D2F",
-          }}
+          className={`inline-flex items-center gap-1.5 text-[11px] font-bold tracking-wider uppercase ${
+            row.status === "1" ? "text-[#4ADE80]" : "text-[#A6A7AB]"
+          }`}
         >
           <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: row.status === "1" ? "#2ECC71" : "#E85D2F",
-              flexShrink: 0,
-            }}
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+              row.status === "1" ? "bg-[#4ADE80]" : "bg-[#A6A7AB]"
+            }`}
           />
-          {row.status === "1" ? "Activo" : "Inactivo"}
+          {row.status === "1" ? "ACTIVO" : "INACTIVO"}
         </span>
       ),
     },
     {
       key: "acciones",
       label: "ACCIONES",
-      render: (row: SubUsuario) => (
-        <div style={{ display: "flex", gap: 6 }}>
+      width: "88px",
+      render: (row) => (
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => abrirEditar(row)}
-            style={{
-              padding: "6px 8px",
-              borderRadius: 7,
-              border: "1px solid rgba(232,93,47,0.2)",
-              background: "rgba(232,93,47,0.06)",
-              color: "#E85D2F",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.15)")}
-            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.06)")}
+            title="Editar sub usuario"
+            className="w-[32px] h-[32px] rounded-[7px] bg-[#1A1210] border border-[#5A2A18] text-[#F05A28] hover:border-[#F05A28] hover:bg-[#251814] flex items-center justify-center cursor-pointer transition-colors"
           >
             <Pencil size={14} />
           </button>
@@ -198,19 +237,12 @@ export default function SubUsuariosClient({ role, actor }: Props) {
           <button
             disabled={row.status !== "1"}
             onClick={() => abrirEliminar(row)}
-            style={{
-              padding: "6px 8px",
-              borderRadius: 7,
-              border: row.status === "1" ? "1px solid rgba(232,93,47,0.3)" : "1px solid rgba(255,255,255,0.06)",
-              background: row.status === "1" ? "rgba(232,93,47,0.08)" : "rgba(255,255,255,0.03)",
-              color: row.status === "1" ? "#E85D2F" : "#5F5E5A",
-              cursor: row.status === "1" ? "pointer" : "not-allowed",
-              display: "flex",
-              alignItems: "center",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => { if (row.status === "1") (e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.18)"; }}
-            onMouseLeave={e => { if (row.status === "1") (e.currentTarget as HTMLButtonElement).style.background = "rgba(232,93,47,0.08)"; }}
+            title={row.status === "1" ? "Eliminar sub usuario" : "Inactivo"}
+            className={`w-[32px] h-[32px] rounded-[7px] bg-[#1A1210] border border-[#5A2A18] text-[#F05A28] flex items-center justify-center transition-colors ${
+              row.status === "1"
+                ? "hover:border-[#F05A28] hover:bg-[#251814] cursor-pointer"
+                : "opacity-30 cursor-not-allowed pointer-events-none"
+            }`}
           >
             <Trash2 size={14} />
           </button>
@@ -220,122 +252,169 @@ export default function SubUsuariosClient({ role, actor }: Props) {
   ];
 
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          height: "100%",
-          minHeight: 0,
-          fontFamily: "'DM Sans', system-ui, sans-serif",
-        }}
-      >
-        {/* ---------- HEADER ---------- */}
-        <section
-          style={{
-            marginBottom: 20,
-            paddingBottom: 16,
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: "#F4F5F7", margin: 0, lineHeight: 1.2 }}>
-              Gestión de <span style={{ color: "#E85D2F" }}>Sub Usuarios</span>
-            </h1>
-            <p style={{ fontSize: 12, color: "#8A9099", margin: "4px 0 0" }}>
-              Administra los sub usuarios del sistema
-            </p>
-          </div>
+    <div className="flex flex-col h-full min-h-0 bg-[#121214]">
+      {/* ---------- HEADER (68px) ---------- */}
+      <PanelHeader
+        title={
+          <span>
+            Gestión de <span className="text-[#F05A28]">Sub Usuarios</span>
+          </span>
+        }
+        subtitle={`${total} sub usuarios registrados · ${totalActivos} activos`}
+        role={role}
+      />
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "6px 12px",
-              borderRadius: 8,
-              background: "#1C1F26",
-              border: "1px solid rgba(255,255,255,0.06)",
-              fontSize: 12,
-              color: "#ADB5BD",
-            }}
-          >
-            <Server size={13} style={{ color: "#E85D2F" }} />
-            <span>
-              Conectado a{" "}
-              <strong style={{ color: "#E85D2F" }}>
-                {role === "Servidor_125_2" ? "Urbano_125" : role}
-              </strong>
-            </span>
-          </div>
-        </section>
-
-        {/* ---------- TABLA ---------- */}
-        <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-          <TablaBase
-            leftActions={
-              <div style={{ width: 384 }}>
-                <ImputBuscar
-                  placeholder="Buscar por UserId, DeviceName o DeviceId"
+      {/* ---------- TABLA ---------- */}
+      <div className="flex-1 min-h-0 p-6 overflow-hidden">
+        <TablaBase
+          leftActions={
+            <div className="flex items-center gap-3 flex-wrap flex-1">
+              <div className="relative w-[340px]">
+                <Search
+                  size={15}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777C] pointer-events-none"
+                />
+                <input
+                  type="search"
+                  placeholder="Buscar por User ID, Device Name o Device ID"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
+                  className="w-full h-[36px] pl-9 pr-3.5 bg-[#121214] border border-[#2D2E32] rounded-[8px] text-[13px] text-[#ECECEE] placeholder-[#76777C] outline-none transition-colors focus:border-[#F05A28]"
                 />
               </div>
-            }
-            rightActions={
-              <ButtonBase onClick={abrirAgregar}>Agregar Nuevo +</ButtonBase>
-            }
-            columns={columns}
-            data={usuariosOrdenados}
-            loading={isLoading}
-          />
-        </div>
+
+              <div className="inline-flex items-center p-1 bg-[#121214] border border-[#26272B] rounded-[8px] gap-1">
+                <button
+                  type="button"
+                  onClick={() => setFiltroEstado("todos")}
+                  className={`px-3 py-1 text-xs rounded-[6px] transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    filtroEstado === "todos"
+                      ? "bg-[#212226] text-[#ECECEE] font-medium"
+                      : "text-[#76777C] hover:text-[#ECECEE]"
+                  }`}
+                >
+                  <span>Todos</span>
+                  <span className="font-mono text-[11px] text-[#9B9CA1]">{total}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFiltroEstado("activos")}
+                  className={`px-3 py-1 text-xs rounded-[6px] transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    filtroEstado === "activos"
+                      ? "bg-[#212226] text-[#ECECEE] font-medium"
+                      : "text-[#76777C] hover:text-[#ECECEE]"
+                  }`}
+                >
+                  <span>Activos</span>
+                  <span className="font-mono text-[11px] text-[#9B9CA1]">{totalActivos}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFiltroEstado("inactivos")}
+                  className={`px-3 py-1 text-xs rounded-[6px] transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    filtroEstado === "inactivos"
+                      ? "bg-[#212226] text-[#ECECEE] font-medium"
+                      : "text-[#76777C] hover:text-[#ECECEE]"
+                  }`}
+                >
+                  <span>Inactivos</span>
+                  <span className="font-mono text-[11px] text-[#9B9CA1]">{totalInactivos}</span>
+                </button>
+              </div>
+            </div>
+          }
+          rightActions={
+            <>
+              <button
+                type="button"
+                onClick={exportarExcel}
+                className="h-[36px] px-3.5 rounded-[8px] bg-[#161719] border border-[#26272B] text-[#ECECEE] hover:bg-[#212226] hover:border-[#2D2E32] transition-colors text-[13px] font-medium flex items-center gap-2 cursor-pointer"
+              >
+                <Download size={15} />
+                <span>Exportar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={abrirAgregar}
+                className="h-[36px] px-4 rounded-[8px] bg-[#F05A28] hover:bg-[#FF6A35] text-white font-semibold text-[13px] flex items-center gap-1.5 cursor-pointer transition-colors shadow-none"
+              >
+                <Plus size={16} />
+                <span>Nuevo sub usuario</span>
+              </button>
+            </>
+          }
+          columns={columns}
+          data={usuariosOrdenados}
+          loading={isLoading}
+        />
       </div>
 
       {/* ---------- MODAL AGREGAR / EDITAR ---------- */}
       <ModalBase
         open={openModal}
-        title={modo === "editar" ? "Editar Sub Usuario" : "Agregar Sub Usuario"}
+        title={modo === "editar" ? "Editar Sub Usuario" : "Agregar Nuevo Sub Usuario"}
         onClose={cerrarModal}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputBase1 label="Servidor" value={role} displayValue={role === "Servidor_125_2" ? "Urbano_125" : role} desabilitar />
+          <InputBase1
+            label="Servidor"
+            value={role}
+            displayValue={role === "Servidor_125_2" ? "Urbano 125" : (role ? role.replace("_", " ") : "Servidor 107")}
+            desabilitar
+          />
 
           <InputBase1
-            label="USER ID"
-            placeholder="User id"
+            label="User ID"
+            desabilitar={modo === "editar"}
+            placeholder="User ID"
             required
             submitAttempt={submitAttempt}
             defaultValue={seleccionado?.userId || ""}
-            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, userId: e.target.value } : ({ userId: e.target.value } as SubUsuario))}
+            onChange={(e) =>
+              setSeleccionado((prev) =>
+                prev
+                  ? { ...prev, userId: e.target.value }
+                  : ({ userId: e.target.value } as SubUsuario)
+              )
+            }
           />
 
           <InputBase1
-            label="DEVICE NAME"
-            placeholder="DeviceName"
+            label="Device Name"
+            placeholder="Device Name"
             required
             submitAttempt={submitAttempt}
             defaultValue={seleccionado?.deviceName || ""}
-            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, deviceName: e.target.value } : ({ deviceName: e.target.value } as SubUsuario))}
+            onChange={(e) =>
+              setSeleccionado((prev) =>
+                prev
+                  ? { ...prev, deviceName: e.target.value }
+                  : ({ deviceName: e.target.value } as SubUsuario)
+              )
+            }
           />
 
           <InputBase1
-            label="DEVICE ID"
-            placeholder="DeviceId"
+            label="Device ID"
+            placeholder="Device ID"
             required
             submitAttempt={submitAttempt}
             defaultValue={seleccionado?.deviceID || ""}
-            onChange={(e) => setSeleccionado((prev) => prev ? { ...prev, deviceID: e.target.value } : ({ deviceID: e.target.value } as SubUsuario))}
+            onChange={(e) =>
+              setSeleccionado((prev) =>
+                prev
+                  ? { ...prev, deviceID: e.target.value }
+                  : ({ deviceID: e.target.value } as SubUsuario)
+              )
+            }
           />
 
           <div className="col-span-2">
             <InputBase1
-              label={modo === "editar" ? "MOTIVO DEL CAMBIO" : "MOTIVO DEL ALTA"}
+              label={modo === "editar" ? "Motivo del cambio" : "Motivo del alta"}
               placeholder="Explica por qué se realiza esta acción (mín. 6 caracteres)"
               required
               submitAttempt={submitAttempt}
@@ -343,27 +422,34 @@ export default function SubUsuariosClient({ role, actor }: Props) {
               onChange={(e) => setMotivo(e.target.value)}
             />
             {submitAttempt && motivo.trim().length > 0 && !motivoValido(motivo) && (
-              <span style={{ fontSize: 11, color: "#E85D2F" }}>
+              <span className="text-[11px] text-[#F05A28] mt-1 block">
                 El motivo debe tener al menos 6 caracteres
               </span>
             )}
           </div>
 
-          <div className="col-span-2 flex justify-between gap-4 mt-4">
-            <ButtonBase variant="secondary" onClick={() => setOpenModal(false)}>Cancelar</ButtonBase>
+          <div className="col-span-2 flex justify-between gap-4 mt-4 pt-3 border-t border-[#26272B]">
+            <ButtonBase variant="secondary" onClick={() => setOpenModal(false)}>
+              Cancelar
+            </ButtonBase>
+
             <ButtonBase
-              variant="personalizado"
-              disabled={loading}
               onClick={() => {
                 setSubmitAttempt(true);
                 if (
-                  !seleccionado?.userId || !seleccionado?.deviceName || !seleccionado?.deviceID ||
+                  !seleccionado?.userId ||
+                  !seleccionado?.deviceName ||
+                  !seleccionado?.deviceID ||
                   !motivoValido(motivo)
-                ) return;
+                ) {
+                  return;
+                }
                 guardarUsuario(seleccionado);
               }}
+              variant="primary"
+              disabled={loading}
             >
-              {loading ? "Guardando..." : "Guardar"}
+              {loading ? "Guardando..." : "Guardar sub usuario"}
             </ButtonBase>
           </div>
         </div>
@@ -372,41 +458,26 @@ export default function SubUsuariosClient({ role, actor }: Props) {
       {/* ---------- MODAL ELIMINAR ---------- */}
       <ModalEliminar
         open={openEliminarModal}
-        title="Eliminar"
-        onClose={cerrarModal}
+        title="Eliminar Sub Usuario"
+        onClose={() => setOpenEliminarModal(false)}
         tamaño="w-full max-w-sm"
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-            gap: 16,
-            minHeight: 160,
-          }}
-        >
-          <div
-            style={{
-              width: 48, height: 48, borderRadius: "50%",
-              background: "rgba(232,93,47,0.1)",
-              border: "1px solid rgba(232,93,47,0.25)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <Trash2 size={20} style={{ color: "#E85D2F" }} />
+        <div className="flex flex-col items-center justify-center text-center gap-4 py-2">
+          <div className="w-12 h-12 rounded-full bg-[#1A1210] border border-[#5A2A18] flex items-center justify-center">
+            <Trash2 size={20} className="text-[#F05A28]" />
           </div>
 
-          <p style={{ fontSize: 14, color: "#ADB5BD", margin: 0 }}>
-            ¿Está seguro de eliminar el sub usuario
+          <p className="text-[13.5px] text-[#CFCFD3] m-0">
+            ¿Está seguro de eliminar el sub usuario?
             <br />
-            <strong style={{ color: "#F4F5F7" }}>{usuarioAEliminar?.id}</strong>?
+            <strong className="text-[#ECECEE] text-base block mt-1">
+              {usuarioAEliminar?.deviceName}
+            </strong>
           </p>
 
-          <div style={{ width: "100%", textAlign: "left" }}>
+          <div className="w-full text-left">
             <InputBase1
-              label="MOTIVO DE LA ELIMINACIÓN"
+              label="Motivo de la eliminación"
               placeholder="Explica por qué se elimina (mín. 6 caracteres)"
               required
               submitAttempt={submitAttemptEliminar}
@@ -414,20 +485,30 @@ export default function SubUsuariosClient({ role, actor }: Props) {
               onChange={(e) => setMotivoEliminar(e.target.value)}
             />
             {submitAttemptEliminar && motivoEliminar.trim().length > 0 && !motivoValido(motivoEliminar) && (
-              <span style={{ fontSize: 11, color: "#E85D2F" }}>
+              <span className="text-[11px] text-[#F05A28] mt-1 block">
                 El motivo debe tener al menos 6 caracteres
               </span>
             )}
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <ButtonBase variant="secondary" onClick={() => setOpenEliminarModal(false)}>Cancelar</ButtonBase>
-            <ButtonBase variant="danger" disabled={loading} onClick={eliminarUsuario}>
+          <div className="flex gap-3 w-full justify-end mt-2">
+            <ButtonBase
+              variant="secondary"
+              onClick={() => setOpenEliminarModal(false)}
+            >
+              Cancelar
+            </ButtonBase>
+
+            <ButtonBase
+              variant="danger"
+              disabled={loading}
+              onClick={eliminarUsuario}
+            >
               {loading ? "Eliminando..." : "Eliminar"}
             </ButtonBase>
           </div>
         </div>
       </ModalEliminar>
-    </>
+    </div>
   );
 }

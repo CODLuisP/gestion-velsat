@@ -1,22 +1,19 @@
 "use client";
 
-import { Card, CardContent } from "@/app/components/ui/Card";
 import {
-  Server,
   Users,
   Car,
-  Activity,
-  BarChart3,
   User,
   RefreshCw,
   TrendingUp,
   TrendingDown,
+  BarChart3,
 } from "lucide-react";
-
 import { Role } from "@/app/constants/roles";
 import { getDashBoardApi } from "@/app/services/dashBoardApi";
 import { useDashboard } from "./useDashboard";
 import { mutate } from "swr";
+import PanelHeader from "@/app/components/nav/PanelHeader";
 
 type Props = {
   role: Role;
@@ -27,9 +24,9 @@ export default function DashBoardClient({ role }: Props) {
 
   const { usuarios, subUsuarios, vehiculos, isLoading } = useDashboard(role);
 
-  const totalUsuarios    = usuarios.length;
+  const totalUsuarios = usuarios.length;
   const totalSubUsuarios = subUsuarios.length;
-  const totalVehiculos   = vehiculos.length;
+  const totalVehiculos = vehiculos.length;
 
   const { usuariosActivos, usuariosInactivos } = usuarios.reduce(
     (acc, u) => {
@@ -58,172 +55,60 @@ export default function DashBoardClient({ role }: Props) {
   );
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: "32px",
-       
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-      }}
-    >
-      {/* ---------- HEADER ---------- */}
-      <header
-        style={{
-          marginBottom: 32,
-          paddingBottom: 24,
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 16,
-        }}
-      >
-        <div>
-          <h1
-            style={{
-              fontSize: 26,
-              fontWeight: 700,
-              color: "#F4F5F7",
-              lineHeight: 1.2,
-              margin: 0,
-            }}
-          >
-            Dashboard{" "}
-            <span style={{ color: "#E85D2F" }}>Velsat</span>
-          </h1>
-          <p style={{ fontSize: 13, color: "#8A9099", marginTop: 4 }}>
-            Monitoreo general de usuarios, sub usuarios y unidades
-          </p>
-        </div>
-
-        {/* Badge sistema + botón actualizar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 14px",
-              borderRadius: 8,
-              background: "#1C1F26",
-              border: "1px solid rgba(255,255,255,0.06)",
-            }}
-          >
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 7,
-                background: "rgba(232,93,47,0.12)",
-                border: "1px solid rgba(232,93,47,0.25)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Server style={{ width: 15, height: 15, color: "#E85D2F", stroke: "#E85D2F" }} />
-            </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 600, color: "#F4F5F7", margin: 0 }}>
-                {role === "Servidor_125_2" ? "Urbano_125" : role}
-              </p>
-              <p style={{ fontSize: 10, color: "#8A9099", margin: 0 }}>Estado del sistema</p>
-            </div>
-            <span
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                padding: "3px 8px",
-                borderRadius: 20,
-                background: "rgba(46,204,113,0.1)",
-                border: "1px solid rgba(46,204,113,0.25)",
-                color: "#2ECC71",
-                marginLeft: 4,
-              }}
-            >
-              <Activity style={{ width: 10, height: 10 }} />
-              Online
-            </span>
-          </div>
-
+    <div className="flex flex-col h-full min-h-0 bg-[#121214]">
+      {/* ---------- HEADER (68px) ---------- */}
+      <PanelHeader
+        title={
+          <span>
+            Dashboard <span className="text-[#F05A28]">Velsat</span>
+          </span>
+        }
+        subtitle="Monitoreo general de usuarios, sub usuarios y unidades de la flota"
+        role={role}
+        actions={
           <button
             onClick={() => mutate(["dashboard", role], undefined, { revalidate: true })}
             disabled={isLoading}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "16px 16px",
-              borderRadius: 8,
-              border: "none",
-              background: "#E85D2F",
-              color: "#fff",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: isLoading ? "not-allowed" : "pointer",
-              opacity: isLoading ? 0.6 : 1,
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => !isLoading && ((e.currentTarget as HTMLButtonElement).style.background = "#cf4e24")}
-            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.background = "#E85D2F")}
+            className="h-[36px] px-3.5 rounded-[8px] bg-[#161719] border border-[#26272B] text-[#ECECEE] hover:bg-[#212226] hover:border-[#2D2E32] transition-colors text-[13px] font-medium flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <RefreshCw
-              style={{
-                width: 14,
-                height: 14,
-                animation: isLoading ? "spin 1s linear infinite" : "none",
-              }}
+              size={14}
+              className={isLoading ? "animate-spin text-[#F05A28]" : "text-[#76777C]"}
             />
-            {isLoading ? "Actualizando..." : "Actualizar"}
+            <span>{isLoading ? "Actualizando..." : "Actualizar"}</span>
           </button>
+        }
+      />
+
+      {/* ---------- CONTENIDO ---------- */}
+      <div className="flex-1 min-h-0 p-6 overflow-y-auto velsat-scroll">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl">
+          <KpiBox
+            title="Usuarios"
+            value={totalUsuarios}
+            activos={usuariosActivos}
+            inactivos={usuariosInactivos}
+            icon={<User size={18} className="text-[#F05A28]" />}
+          />
+          <KpiBox
+            title="Sub Usuarios"
+            value={totalSubUsuarios}
+            activos={SubsuariosActivos}
+            inactivos={SubsuariosInactivos}
+            icon={<Users size={18} className="text-[#F05A28]" />}
+          />
+          <KpiBox
+            title="Unidades"
+            value={totalVehiculos}
+            activos={vehiculosActivos}
+            inactivos={vehiculosInactivos}
+            icon={<Car size={18} className="text-[#F05A28]" />}
+          />
         </div>
-      </header>
-
-      {/* ---------- KPIs ---------- */}
-      <section
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 16,
-        }}
-      >
-        <KpiBox
-          title="Usuarios"
-          value={totalUsuarios}
-          activos={usuariosActivos}
-          inactivos={usuariosInactivos}
-          icon={<User style={{ width: 16, height: 16, color: "#fff", stroke: "#fff" }} />}
-        />
-        <KpiBox
-          title="Sub Usuarios"
-          value={totalSubUsuarios}
-          activos={SubsuariosActivos}
-          inactivos={SubsuariosInactivos}
-          icon={<Users style={{ width: 16, height: 16, color: "#fff", stroke: "#fff" }} />}
-        />
-        <KpiBox
-          title="Unidades"
-          value={totalVehiculos}
-          activos={vehiculosActivos}
-          inactivos={vehiculosInactivos}
-          icon={<Car style={{ width: 16, height: 16, color: "#fff", stroke: "#fff" }} />}
-        />
-      </section>
-
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+      </div>
     </div>
   );
 }
-
-/* ---------- KPI BOX ---------- */
 
 function KpiBox({
   title,
@@ -239,110 +124,68 @@ function KpiBox({
   icon: React.ReactNode;
 }) {
   const total = activos + inactivos || 1;
-  const pctActivos   = Math.round((activos   / total) * 100);
+  const pctActivos = Math.round((activos / total) * 100);
   const pctInactivos = Math.round((inactivos / total) * 100);
 
   return (
-    <div
-      style={{
-        background: "#1C1F26",
-        border: "1px solid rgba(255,255,255,0.06)",
-        borderRadius: 14,
-        padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-        transition: "border-color 0.2s",
-      }}
-      onMouseEnter={e => ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(232,93,47,0.25)")}
-      onMouseLeave={e => ((e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.06)")}
-    >
+    <div className="bg-[#161719] border border-[#26272B] rounded-[12px] p-5 flex flex-col gap-5 hover:border-[#2D2E32] transition-colors">
       {/* Top row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "14px 16px",
-          borderRadius: 10,
-          background: "rgba(232,93,47,0.06)",
-          border: "1px solid rgba(232,93,47,0.14)",
-        }}
-      >
+      <div className="flex items-center justify-between p-4 rounded-[8px] bg-[#121214] border border-[#222327]">
         <div>
-          <p style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "#8A9099", margin: 0 }}>
+          <p className="text-[11px] font-bold tracking-wider uppercase text-[#76777C] m-0">
             {title}
           </p>
-          <p style={{ fontSize: 32, fontWeight: 700, color: "#F4F5F7", margin: "4px 0 0", lineHeight: 1 }}>
+          <p className="text-[32px] font-bold font-mono text-[#ECECEE] m-0 mt-1 leading-none">
             {value}
           </p>
         </div>
-        <div
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            background: "#E85D2F",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+        <div className="w-[42px] h-[42px] rounded-[8px] bg-[#1A1210] border border-[#5A2A18] flex items-center justify-center flex-shrink-0">
           {icon}
         </div>
       </div>
 
-      {/* Distribución label */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <BarChart3 style={{ width: 14, height: 14, color: "#8A9099" }} />
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#8A9099", margin: 0 }}>
-          Distribución
-        </p>
-      </div>
-
-      {/* Barras */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {/* Activos */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ fontSize: 12, color: "#ADB5BD", display: "flex", alignItems: "center", gap: 4 }}>
-              <TrendingUp style={{ width: 12, height: 12, color: "#2ECC71" }} />
-              Activos ({activos})
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#2ECC71" }}>{pctActivos}%</span>
-          </div>
-          <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,0.06)" }}>
-            <div
-              style={{
-                height: "100%",
-                borderRadius: 99,
-                background: "#2ECC71",
-                width: `${pctActivos}%`,
-                transition: "width 0.6s ease",
-              }}
-            />
-          </div>
+      {/* Distribución */}
+      <div>
+        <div className="flex items-center gap-1.5 mb-3 text-[#9B9CA1]">
+          <BarChart3 size={14} className="text-[#76777C]" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#76777C]">
+            Distribución
+          </span>
         </div>
 
-        {/* Inactivos */}
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-            <span style={{ fontSize: 12, color: "#ADB5BD", display: "flex", alignItems: "center", gap: 4 }}>
-              <TrendingDown style={{ width: 12, height: 12, color: "#E85D2F" }} />
-              Inactivos ({inactivos})
-            </span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#E85D2F" }}>{pctInactivos}%</span>
+        <div className="flex flex-col gap-3">
+          {/* Activos */}
+          <div>
+            <div className="flex justify-between items-center mb-1.5 text-xs">
+              <span className="text-[#CFCFD3] flex items-center gap-1.5">
+                <TrendingUp size={13} className="text-[#4ADE80]" />
+                <span>Activos ({activos})</span>
+              </span>
+              <span className="font-mono font-bold text-[#4ADE80]">{pctActivos}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-[#1D1E21] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#4ADE80] transition-all duration-500"
+                style={{ width: `${pctActivos}%` }}
+              />
+            </div>
           </div>
-          <div style={{ height: 6, borderRadius: 99, background: "rgba(255,255,255,0.06)" }}>
-            <div
-              style={{
-                height: "100%",
-                borderRadius: 99,
-                background: "#E85D2F",
-                width: `${pctInactivos}%`,
-                transition: "width 0.6s ease",
-              }}
-            />
+
+          {/* Inactivos */}
+          <div>
+            <div className="flex justify-between items-center mb-1.5 text-xs">
+              <span className="text-[#CFCFD3] flex items-center gap-1.5">
+                <TrendingDown size={13} className="text-[#A6A7AB]" />
+                <span>Inactivos ({inactivos})</span>
+              </span>
+              <span className="font-mono font-bold text-[#A6A7AB]">{pctInactivos}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-[#1D1E21] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[#A6A7AB] transition-all duration-500"
+                style={{ width: `${pctInactivos}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>

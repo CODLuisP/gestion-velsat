@@ -13,39 +13,24 @@ type InputBuscarProps = {
 
 export default function ImputBuscar({
   label,
-  placeholder = "Buscar...",
+  placeholder = "Buscar por cuenta, nombre, RUC o correo",
   value,
   defaultValue,
   desabilitar,
   onChange,
 }: InputBuscarProps) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "#8A9099",
-          }}
-        >
+        <label className="text-[11px] font-bold tracking-wider uppercase text-[#76777C]">
           {label}
         </label>
       )}
 
-      <div style={{ position: "relative" }}>
+      <div className="relative w-full">
         <Search
-          size={14}
-          style={{
-            position: "absolute",
-            left: 11,
-            top: "50%",
-            transform: "translateY(-50%)",
-            color: "#8A9099",
-            pointerEvents: "none",
-          }}
+          size={15}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-[#76777C] pointer-events-none"
         />
 
         <input
@@ -55,29 +40,7 @@ export default function ImputBuscar({
           value={value}
           defaultValue={defaultValue}
           onChange={onChange}
-          style={{
-            display: "block",
-            width: "100%",
-            fontSize: 13,
-            paddingLeft: 34,
-            paddingRight: 12,
-            paddingTop: 8,
-            paddingBottom: 8,
-            background: "#1C1F26",
-            border: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 8,
-            color: "#F4F5F7",
-            outline: "none",
-            transition: "border-color 0.15s",
-            opacity: desabilitar ? 0.5 : 1,
-            cursor: desabilitar ? "not-allowed" : "text",
-          }}
-          onFocus={e => {
-            (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(232,93,47,0.5)";
-          }}
-          onBlur={e => {
-            (e.currentTarget as HTMLInputElement).style.borderColor = "rgba(255,255,255,0.08)";
-          }}
+          className="w-full h-[36px] pl-9 pr-3.5 bg-[#121214] border border-[#2D2E32] rounded-[8px] text-[13px] text-[#ECECEE] placeholder-[#76777C] outline-none transition-colors focus:border-[#F05A28] disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
     </div>

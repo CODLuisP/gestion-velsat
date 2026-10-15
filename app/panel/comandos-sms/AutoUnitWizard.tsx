@@ -619,32 +619,24 @@ export default function AutoUnitWizard({
 
   return (
     <div
-      style={{
-        fontFamily: "'DM Sans', system-ui, sans-serif",
-        background: "#0F1218",
-        borderRadius: 14,
-        border: "1px solid rgba(255,255,255,0.08)",
-        overflow: "hidden",
-        boxShadow: "0 20px 40px -15px rgba(0,0,0,0.6)",
-      }}
-      className="w-full max-w-4xl mx-auto my-3 text-slate-200"
+      className="w-full max-w-4xl mx-auto my-3 text-[#ECECEE] bg-[#161719] border border-[#26272B] rounded-[12px] overflow-hidden"
     >
       {/* Top Banner Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 bg-[#141822] border-b border-white/6">
+      <div className="flex items-center justify-between px-5 py-3.5 bg-[#18191C] border-b border-[#26272B]">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#E85D2F]/15 border border-[#E85D2F]/30 flex items-center justify-center text-[#E85D2F]">
+          <div className="w-8 h-8 rounded-[7px] bg-[#1A1210] border border-[#5A2A18] flex items-center justify-center text-[#F05A28]">
             <Sparkles size={16} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-[15px] font-bold text-white tracking-tight leading-none">
+              <h2 className="text-[15px] font-bold text-[#ECECEE] tracking-tight leading-none">
                 Asistente de Alta Automática de Unidades
               </h2>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#E85D2F]/20 text-[#E85D2F] border border-[#E85D2F]/30 uppercase tracking-wide">
+              <span className="px-2 py-0.5 rounded-[6px] text-[10px] font-semibold bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C] uppercase tracking-wide">
                 1-Click Wizard
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-[#9B9CA1] mt-0.5">
               Consulta IMEI por SMS, registra en Traccar y Unidades, y apunta el servidor sin errores.
             </p>
           </div>
@@ -652,7 +644,7 @@ export default function AutoUnitWizard({
 
         <button
           onClick={onClose}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-white/4 hover:bg-white/8 transition-colors border border-white/6"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] text-xs font-medium text-[#CFCFD3] hover:text-[#ECECEE] bg-[#121214] hover:bg-[#1D1E21] transition-colors border border-[#2D2E32] cursor-pointer"
         >
           <X size={14} />
           <span>Volver al Modo Manual</span>
@@ -660,7 +652,7 @@ export default function AutoUnitWizard({
       </div>
 
       {/* Stepper Progress Bar */}
-      <div className="px-6 py-3 bg-[#11151E] border-b border-white/6">
+      <div className="px-6 py-3 bg-[#121214] border-b border-[#222327]">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
           {[
             { num: 1, label: "Vehículo & Chip", icon: Car },
@@ -680,10 +672,10 @@ export default function AutoUnitWizard({
                   }}
                   className={`flex items-center gap-2.5 cursor-pointer select-none transition-all ${
                     isCurrent
-                      ? "text-[#E85D2F]"
+                      ? "text-[#F05A28]"
                       : isDone
                       ? "text-emerald-400 hover:text-emerald-300"
-                      : "text-slate-500 opacity-60"
+                      : "text-[#76777C]"
                   }`}
                 >
                   <div
@@ -691,8 +683,8 @@ export default function AutoUnitWizard({
                       isDone
                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                         : isCurrent
-                        ? "bg-[#E85D2F] text-white shadow-lg shadow-[#E85D2F]/30"
-                        : "bg-white/6 text-slate-400 border border-white/8"
+                        ? "bg-[#F05A28] text-white"
+                        : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                     }`}
                   >
                     {isDone ? <Check size={14} strokeWidth={3} /> : s.num}
@@ -701,7 +693,7 @@ export default function AutoUnitWizard({
                     <div className="text-[11px] font-bold leading-tight flex items-center gap-1">
                       {s.label}
                     </div>
-                    <div className="text-[9px] text-slate-500 font-medium">
+                    <div className="text-[9px] text-[#76777C] font-medium">
                       {isDone ? "Completado" : isCurrent ? "En progreso" : "Pendiente"}
                     </div>
                   </div>
@@ -710,7 +702,7 @@ export default function AutoUnitWizard({
                 {idx < arr.length - 1 && (
                   <div
                     className={`flex-1 mx-3 h-[2px] rounded transition-all ${
-                      step > s.num ? "bg-emerald-500/40" : "bg-white/6"
+                      step > s.num ? "bg-emerald-500/40" : "bg-[#26272B]"
                     }`}
                   />
                 )}
@@ -728,7 +720,7 @@ export default function AutoUnitWizard({
         {step === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-[#9B9CA1] mb-2 uppercase tracking-wider">
                 1. Selecciona el Modelo de GPS Instalado
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -739,28 +731,28 @@ export default function AutoUnitWizard({
                     <div
                       key={mKey}
                       onClick={() => setSelectedModel(mKey)}
-                      className={`p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      className={`p-3.5 rounded-[8px] border cursor-pointer transition-all ${
                         isSel
-                          ? "bg-[#E85D2F]/10 border-[#E85D2F] shadow-md shadow-[#E85D2F]/10"
-                          : "bg-[#141822] border-white/6 hover:border-white/15 hover:bg-[#181D29]"
+                          ? "bg-[#1C1714] border-[#8A3A1C]"
+                          : "bg-[#121214] border-[#26272B] hover:border-[#3A3B40] hover:bg-[#1D1E21]"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
                         <span
                           className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                             isSel
-                              ? "bg-[#E85D2F] text-white"
-                              : "bg-white/8 text-slate-400"
+                              ? "bg-[#F05A28] text-white"
+                              : "bg-[#161719] border border-[#26272B] text-[#9B9CA1]"
                           }`}
                         >
                           {m.badge}
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-[#9B9CA1] font-mono">
                           {m.protocol}
                         </span>
                       </div>
-                      <div className="text-sm font-bold text-white mb-0.5">{m.name}</div>
-                      <div className="text-[10px] text-slate-400 line-clamp-1">{m.imeiDesc}</div>
+                      <div className="text-sm font-bold text-[#ECECEE] mb-0.5">{m.name}</div>
+                      <div className="text-[10px] text-[#9B9CA1] line-clamp-1">{m.imeiDesc}</div>
                     </div>
                   );
                 })}
@@ -770,12 +762,12 @@ export default function AutoUnitWizard({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Placa Input */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                <label className="block text-xs font-semibold text-[#CFCFD3] mb-1.5 flex items-center justify-between">
                   <span>Placa del Vehículo</span>
-                  <span className="text-[10px] text-slate-500 font-normal">Identificador único</span>
+                  <span className="text-[10px] text-[#76777C] font-normal">Identificador único</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#76777C]">
                     <Car size={15} />
                   </div>
                   <input
@@ -783,22 +775,22 @@ export default function AutoUnitWizard({
                     placeholder="Ej. ABC-123"
                     value={placa}
                     onChange={(e) => setPlaca(e.target.value)}
-                    className="w-full bg-[#141822] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-sm text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-[#E85D2F] transition-colors"
+                    className="w-full bg-[#121214] border border-[#2D2E32] rounded-[8px] pl-9 pr-3 py-2 text-sm text-[#ECECEE] font-mono placeholder:text-[#76777C] focus:outline-none focus:border-[#F05A28] transition-colors"
                   />
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1">
-                  Se asignará automáticamente como <code className="text-slate-400">deviceID</code> y nombre en Traccar.
+                <p className="text-[10px] text-[#76777C] mt-1">
+                  Se asignará automáticamente como <code className="text-[#9B9CA1]">deviceID</code> y nombre en Traccar.
                 </p>
               </div>
 
               {/* SIM Phone Input */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+                <label className="block text-xs font-semibold text-[#CFCFD3] mb-1.5 flex items-center justify-between">
                   <span>Número de Chip (SIM GPS)</span>
-                  <span className="text-[10px] text-slate-500 font-normal">9 dígitos Perú</span>
+                  <span className="text-[10px] text-[#76777C] font-normal">9 dígitos Perú</span>
                 </label>
                 <div className="relative flex">
-                  <span className="inline-flex items-center px-2.5 rounded-l-lg border border-r-0 border-white/10 bg-[#1A1F2C] text-slate-400 text-xs font-mono select-none">
+                  <span className="inline-flex items-center px-2.5 rounded-l-[8px] border border-r-0 border-[#2D2E32] bg-[#161719] text-[#9B9CA1] text-xs font-mono select-none">
                     🇵🇪 +51
                   </span>
                   <input
@@ -807,24 +799,24 @@ export default function AutoUnitWizard({
                     value={formatPeruPhone(simDigits)}
                     onChange={(e) => setSimDigits(cleanPeruPhone(e.target.value))}
                     maxLength={11}
-                    className="w-full bg-[#141822] border border-white/10 rounded-r-lg px-3 py-2 text-sm text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-[#E85D2F] transition-colors"
+                    className="w-full bg-[#121214] border border-[#2D2E32] rounded-r-[8px] px-3 py-2 text-sm text-[#ECECEE] font-mono placeholder:text-[#76777C] focus:outline-none focus:border-[#F05A28] transition-colors"
                   />
                 </div>
-                <p className="text-[10px] text-slate-500 mt-1">
+                <p className="text-[10px] text-[#76777C] mt-1">
                   A este número se enviarán los comandos de consulta y configuración.
                 </p>
               </div>
             </div>
 
             {/* Operador Móvil / APN Selector */}
-            <div className="p-3.5 rounded-xl bg-[#141822] border border-white/6 space-y-2.5">
+            <div className="p-3.5 rounded-[8px] bg-[#121214] border border-[#26272B] space-y-2.5">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Signal size={13} className="text-[#E85D2F]" />
+                <label className="text-xs font-semibold text-[#CFCFD3] flex items-center gap-1.5">
+                  <Signal size={13} className="text-[#F05A28]" />
                   <span>Operador Móvil / APN de Internet del Chip</span>
                 </label>
-                <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono bg-[#0D1016] px-2 py-0.5 rounded border border-white/4">
-                  <span className="text-slate-500">Comando:</span>
+                <div className="flex items-center gap-1 text-[10px] text-[#9B9CA1] font-mono bg-[#161719] px-2 py-0.5 rounded border border-[#26272B]">
+                  <span className="text-[#76777C]">Comando:</span>
                   <span className="text-amber-400 font-bold">{resultingApnCommand}</span>
                 </div>
               </div>
@@ -840,14 +832,14 @@ export default function AutoUnitWizard({
                         setSelectedApn(preset.apn);
                         setIsCustomApn(false);
                       }}
-                      className={`px-3 py-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                      className={`px-3 py-2 rounded-[8px] border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                         isSel
-                          ? "bg-[#E85D2F]/20 border-[#E85D2F] text-white shadow-sm"
-                          : "bg-[#0D1016] border-white/6 text-slate-400 hover:text-white hover:border-white/15"
+                          ? "bg-[#1C1714] border-[#8A3A1C] text-[#F05A28]"
+                          : "bg-[#161719] border-[#26272B] text-[#9B9CA1] hover:text-[#ECECEE] hover:border-[#3A3B40]"
                       }`}
                     >
                       <span className="text-[11px]">{preset.name}</span>
-                      <span className="text-[9px] font-mono text-slate-500 font-normal">
+                      <span className="text-[9px] font-mono text-[#76777C] font-normal">
                         {preset.apn}
                       </span>
                     </button>
@@ -858,14 +850,14 @@ export default function AutoUnitWizard({
                 <button
                   type="button"
                   onClick={() => setIsCustomApn(true)}
-                  className={`px-3 py-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                  className={`px-3 py-2 rounded-[8px] border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                     isCustomApn
-                      ? "bg-[#E85D2F]/20 border-[#E85D2F] text-white shadow-sm"
-                      : "bg-[#0D1016] border-white/6 text-slate-400 hover:text-white hover:border-white/15"
+                      ? "bg-[#1C1714] border-[#8A3A1C] text-[#F05A28]"
+                      : "bg-[#161719] border-[#26272B] text-[#9B9CA1] hover:text-[#ECECEE] hover:border-[#3A3B40]"
                   }`}
                 >
                   <span className="text-[11px]">Otro APN</span>
-                  <span className="text-[9px] font-mono text-slate-500 font-normal">
+                  <span className="text-[9px] font-mono text-[#76777C] font-normal">
                     Personalizado
                   </span>
                 </button>
@@ -878,12 +870,12 @@ export default function AutoUnitWizard({
                     placeholder="Escribe el APN (ej. m2m.movistar.pe)..."
                     value={customApn}
                     onChange={(e) => setCustomApn(e.target.value)}
-                    className="w-full bg-[#0D1016] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-[#E85D2F]"
+                    className="w-full bg-[#161719] border border-[#2D2E32] rounded-[8px] px-3 py-1.5 text-xs text-[#ECECEE] font-mono placeholder:text-[#76777C] focus:outline-none focus:border-[#F05A28]"
                   />
                 </div>
               )}
 
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-[#76777C]">
                 Se enviará este comando por SMS durante el alta para que el chip active datos móviles GPRS y reporte a Traccar.
               </p>
             </div>
@@ -891,8 +883,8 @@ export default function AutoUnitWizard({
             {/* Account / Usuario Selector */}
             <div ref={accountRef} className="relative">
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                  <User size={13} className="text-[#E85D2F]" />
+                <label className="text-xs font-semibold text-[#CFCFD3] flex items-center gap-1.5">
+                  <User size={13} className="text-[#F05A28]" />
                   <span>Usuario / Cliente Propietario (accountID)</span>
                 </label>
                 <button
@@ -901,7 +893,7 @@ export default function AutoUnitWizard({
                     setCustomAccountMode(!customAccountMode);
                     setShowAccountDropdown(false);
                   }}
-                  className="text-[11px] text-[#E85D2F] hover:underline"
+                  className="text-[11px] text-[#F05A28] hover:underline cursor-pointer"
                 >
                   {customAccountMode ? "Seleccionar de la lista de usuarios" : "Escribir cuenta manualmente"}
                 </button>
@@ -913,15 +905,15 @@ export default function AutoUnitWizard({
                   placeholder="Ingresa el accountID del cliente..."
                   value={accountID}
                   onChange={(e) => setAccountID(e.target.value)}
-                  className="w-full bg-[#141822] border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-[#E85D2F]"
+                  className="w-full bg-[#121214] border border-[#2D2E32] rounded-[8px] px-3 py-2 text-sm text-[#ECECEE] placeholder:text-[#76777C] focus:outline-none focus:border-[#F05A28]"
                 />
               ) : (
                 <div className="relative">
                   <div
                     onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-                    className="w-full bg-[#141822] border border-white/10 rounded-lg px-3 py-2 text-sm text-white flex items-center justify-between cursor-pointer hover:border-white/20 transition-colors"
+                    className="w-full bg-[#121214] border border-[#2D2E32] rounded-[8px] px-3 py-2 text-sm text-[#ECECEE] flex items-center justify-between cursor-pointer hover:border-[#3A3B40] transition-colors"
                   >
-                    <span className={accountID ? "text-white font-medium" : "text-slate-500"}>
+                    <span className={accountID ? "text-[#ECECEE] font-medium" : "text-[#76777C]"}>
                       {accountID
                         ? accounts.find((a) => a.accountID === accountID)
                           ? `${accountID} • ${accounts.find((a) => a.accountID === accountID)?.description || ""}`
@@ -930,24 +922,24 @@ export default function AutoUnitWizard({
                         ? "Cargando usuarios..."
                         : "Seleccionar usuario / cliente..."}
                     </span>
-                    <ChevronDown size={15} className="text-slate-400" />
+                    <ChevronDown size={15} className="text-[#76777C]" />
                   </div>
 
                   {showAccountDropdown && (
-                    <div className="absolute z-30 left-0 right-0 mt-1 bg-[#141822] border border-white/10 rounded-lg shadow-2xl overflow-hidden max-h-56 flex flex-col">
-                      <div className="p-2 border-b border-white/6 bg-[#181D2A]">
+                    <div className="absolute z-30 left-0 right-0 mt-1 bg-[#161719] border border-[#26272B] rounded-[8px] shadow-2xl overflow-hidden max-h-56 flex flex-col">
+                      <div className="p-2 border-b border-[#222327] bg-[#121214]">
                         <input
                           type="text"
                           placeholder="Buscar usuario por nombre o RUC..."
                           value={accountSearch}
                           onChange={(e) => setAccountSearch(e.target.value)}
-                          className="w-full bg-[#11151E] border border-white/8 rounded px-2.5 py-1 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-[#E85D2F]"
+                          className="w-full bg-[#161719] border border-[#2D2E32] rounded-[6px] px-2.5 py-1 text-xs text-[#ECECEE] placeholder:text-[#76777C] focus:outline-none focus:border-[#F05A28]"
                           autoFocus
                         />
                       </div>
-                      <div className="overflow-y-auto divide-y divide-white/4">
+                      <div className="overflow-y-auto divide-y divide-[#222327]">
                         {filteredAccounts.length === 0 ? (
-                          <div className="p-3 text-center text-xs text-slate-500">
+                          <div className="p-3 text-center text-xs text-[#76777C]">
                             No se encontraron usuarios
                           </div>
                         ) : (
@@ -958,16 +950,16 @@ export default function AutoUnitWizard({
                                 setAccountID(a.accountID);
                                 setShowAccountDropdown(false);
                               }}
-                              className="px-3 py-2 hover:bg-[#E85D2F]/10 cursor-pointer flex items-center justify-between text-xs transition-colors"
+                              className="px-3 py-2 hover:bg-[#1C1714] hover:text-[#F05A28] cursor-pointer flex items-center justify-between text-xs transition-colors"
                             >
                               <div>
-                                <span className="font-bold text-white">{a.accountID}</span>
+                                <span className="font-bold text-[#ECECEE]">{a.accountID}</span>
                                 {a.description && (
-                                  <span className="text-slate-400 ml-2">({a.description})</span>
+                                  <span className="text-[#9B9CA1] ml-2">({a.description})</span>
                                 )}
                               </div>
                               {a.ruc && (
-                                <span className="text-[10px] text-slate-500 font-mono">
+                                <span className="text-[10px] text-[#76777C] font-mono">
                                   RUC: {a.ruc}
                                 </span>
                               )}
@@ -982,11 +974,11 @@ export default function AutoUnitWizard({
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/6">
+            <div className="flex items-center justify-between pt-4 border-t border-[#222327]">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-white/4 hover:bg-white/8 transition-colors"
+                className="px-4 py-2 rounded-[8px] text-xs font-medium text-[#CFCFD3] hover:text-[#ECECEE] bg-[#121214] hover:bg-[#1D1E21] border border-[#2D2E32] transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
@@ -995,10 +987,10 @@ export default function AutoUnitWizard({
                 type="button"
                 disabled={!placa.trim() || simDigits.length !== 9 || !accountID.trim()}
                 onClick={() => setStep(2)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-[8px] text-xs font-bold transition-all ${
                   placa.trim() && simDigits.length === 9 && accountID.trim()
-                    ? "bg-[#E85D2F] text-white hover:bg-[#FF7A45] shadow-lg shadow-[#E85D2F]/20 cursor-pointer"
-                    : "bg-white/5 text-slate-600 border border-white/4 cursor-not-allowed"
+                    ? "bg-[#F05A28] text-white hover:bg-[#FF6A35] cursor-pointer"
+                    : "bg-[#121214] text-[#76777C] border border-[#26272B] cursor-not-allowed"
                 }`}
               >
                 <span>Siguiente: Consultar IMEI</span>
@@ -1013,25 +1005,25 @@ export default function AutoUnitWizard({
         {/* ========================================================================= */}
         {step === 2 && (
           <div className="space-y-5 animate-in fade-in duration-200">
-            <div className="p-4 rounded-xl bg-[#141822] border border-white/6 flex items-start gap-3.5">
-              <div className="w-9 h-9 rounded-lg bg-[#E85D2F]/15 border border-[#E85D2F]/30 flex items-center justify-center text-[#E85D2F] shrink-0 mt-0.5">
+            <div className="p-4 rounded-[8px] bg-[#121214] border border-[#26272B] flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-[7px] bg-[#1A1210] border border-[#5A2A18] flex items-center justify-center text-[#F05A28] shrink-0 mt-0.5">
                 <Radio size={18} />
               </div>
               <div className="flex-1 text-xs">
-                <div className="font-bold text-white text-sm mb-1">
+                <div className="font-bold text-[#ECECEE] text-sm mb-1">
                   Consulta de IMEI Automática vía SMS
                 </div>
-                <p className="text-slate-400 leading-relaxed mb-2">
+                <p className="text-[#9B9CA1] leading-relaxed mb-2">
                   Enviaremos un SMS al número{" "}
-                  <strong className="text-white font-mono">+51 {formatPeruPhone(simDigits)}</strong>{" "}
+                  <strong className="text-[#ECECEE] font-mono">+51 {formatPeruPhone(simDigits)}</strong>{" "}
                   con el comando oficial de lectura para el modelo{" "}
-                  <strong className="text-[#E85D2F]">{currentModelSpec.name}</strong>:
+                  <strong className="text-[#F05A28]">{currentModelSpec.name}</strong>:
                 </p>
 
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-[#0D1016] border border-white/8 font-mono text-xs text-amber-400">
-                  <Send size={13} className="text-slate-500" />
+                <div className="flex items-center gap-2 p-2 rounded-[8px] bg-[#161719] border border-[#26272B] font-mono text-xs text-amber-400">
+                  <Send size={13} className="text-[#76777C]" />
                   <span>{currentModelSpec.imeiCommand}</span>
-                  <span className="text-slate-500 text-[10px] ml-auto">
+                  <span className="text-[#76777C] text-[10px] ml-auto">
                     {currentModelSpec.imeiDesc}
                   </span>
                 </div>
@@ -1039,13 +1031,13 @@ export default function AutoUnitWizard({
             </div>
 
             {/* Waiting State or Action Box */}
-            <div className="p-4 rounded-xl bg-[#11151E] border border-white/6">
+            <div className="p-4 rounded-[8px] bg-[#121214] border border-[#26272B]">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
-                  <div className="text-xs font-bold text-slate-300 mb-0.5">
+                  <div className="text-xs font-bold text-[#CFCFD3] mb-0.5">
                     {isDetectedFromSms ? "IMEI recibido y validado" : "¿Listo para enviar la consulta?"}
                   </div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[11px] text-[#76777C]">
                     {isWaitingSms
                       ? `Esperando respuesta del GPS... (${waitingElapsed}s transcurridos)`
                       : isDetectedFromSms
@@ -1057,14 +1049,14 @@ export default function AutoUnitWizard({
                 <div className="flex items-center gap-2">
                   {isWaitingSms ? (
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-[8px] bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
                         <RefreshCw size={13} className="animate-spin" />
                         <span>Esperando SMS...</span>
                       </div>
                       <button
                         type="button"
                         onClick={() => setIsWaitingSms(false)}
-                        className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 text-xs transition-colors"
+                        className="px-3 py-2 rounded-[8px] bg-[#161719] hover:bg-[#1D1E21] border border-[#2D2E32] text-[#76777C] hover:text-[#ECECEE] text-xs transition-colors cursor-pointer"
                       >
                         Cancelar espera
                       </button>
@@ -1074,7 +1066,7 @@ export default function AutoUnitWizard({
                       type="button"
                       disabled={isSendingSms}
                       onClick={handleSendImeiSms}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#E85D2F] hover:bg-[#FF7A45] text-white text-xs font-bold shadow-lg shadow-[#E85D2F]/20 cursor-pointer transition-all"
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-[8px] bg-[#F05A28] hover:bg-[#FF6A35] text-white text-xs font-bold cursor-pointer transition-all"
                     >
                       {isSendingSms ? (
                         <>
@@ -1094,11 +1086,11 @@ export default function AutoUnitWizard({
 
               {/* Raw SMS Reply Viewer if any */}
               {rawSmsReply && (
-                <div className="mt-3 pt-3 border-t border-white/6 text-xs">
-                  <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block mb-1">
+                <div className="mt-3 pt-3 border-t border-[#222327] text-xs">
+                  <span className="text-[10px] text-[#76777C] font-semibold uppercase tracking-wider block mb-1">
                     Último mensaje recibido del GPS:
                   </span>
-                  <div className="p-2 rounded bg-black/40 border border-white/6 font-mono text-[11px] text-emerald-400 break-all">
+                  <div className="p-2 rounded-[8px] bg-[#161719] border border-[#26272B] font-mono text-[11px] text-emerald-400 break-all">
                     {rawSmsReply}
                   </div>
                 </div>
@@ -1106,10 +1098,10 @@ export default function AutoUnitWizard({
             </div>
 
             {/* Editable IMEI Field */}
-            <div className="p-4 rounded-xl bg-[#141822] border border-white/6">
+            <div className="p-4 rounded-[8px] bg-[#121214] border border-[#26272B]">
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold text-slate-300 flex items-center gap-2">
-                  <Hash size={14} className="text-[#E85D2F]" />
+                <label className="text-xs font-semibold text-[#CFCFD3] flex items-center gap-2">
+                  <Hash size={14} className="text-[#F05A28]" />
                   <span>IMEI del Dispositivo GPS (15 dígitos)</span>
                 </label>
                 {isDetectedFromSms && (
@@ -1129,9 +1121,9 @@ export default function AutoUnitWizard({
                   setIsDetectedFromSms(false);
                 }}
                 maxLength={16}
-                className="w-full bg-[#0D1016] border border-white/10 rounded-lg px-3.5 py-2.5 text-base text-white font-mono placeholder:text-slate-600 focus:outline-none focus:border-[#E85D2F] transition-colors"
+                className="w-full bg-[#161719] border border-[#2D2E32] rounded-[8px] px-3.5 py-2.5 text-base text-[#ECECEE] font-mono placeholder:text-[#76777C] focus:outline-none focus:border-[#F05A28] transition-colors"
               />
-              <p className="text-[10px] text-slate-500 mt-1.5 flex items-center justify-between">
+              <p className="text-[10px] text-[#76777C] mt-1.5 flex items-center justify-between">
                 <span>
                   El IMEI debe tener 15 dígitos numéricos. Puedes editarlo libremente si prefieres ingresarlo a mano.
                 </span>
@@ -1142,11 +1134,11 @@ export default function AutoUnitWizard({
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/6">
+            <div className="flex items-center justify-between pt-4 border-t border-[#222327]">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-white/4 hover:bg-white/8 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-xs font-medium text-[#CFCFD3] hover:text-[#ECECEE] bg-[#121214] hover:bg-[#1D1E21] border border-[#2D2E32] transition-colors cursor-pointer"
               >
                 <ArrowLeft size={14} />
                 <span>Atrás</span>
@@ -1156,10 +1148,10 @@ export default function AutoUnitWizard({
                 type="button"
                 disabled={imei.length < 14}
                 onClick={() => setStep(3)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-[8px] text-xs font-bold transition-all ${
                   imei.length >= 14
-                    ? "bg-[#E85D2F] text-white hover:bg-[#FF7A45] shadow-lg shadow-[#E85D2F]/20 cursor-pointer"
-                    : "bg-white/5 text-slate-600 border border-white/4 cursor-not-allowed"
+                    ? "bg-[#F05A28] text-white hover:bg-[#FF6A35] cursor-pointer"
+                    : "bg-[#121214] text-[#76777C] border border-[#26272B] cursor-not-allowed"
                 }`}
               >
                 <span>Siguiente: Servidor Traccar</span>
@@ -1175,7 +1167,7 @@ export default function AutoUnitWizard({
         {step === 3 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2 uppercase tracking-wider">
+              <label className="block text-xs font-semibold text-[#9B9CA1] mb-2 uppercase tracking-wider">
                 3. Selecciona el Servidor Traccar de Destino
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1185,25 +1177,25 @@ export default function AutoUnitWizard({
                     <div
                       key={srv.id}
                       onClick={() => setSelectedServerId(srv.id as any)}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                      className={`p-4 rounded-[8px] border cursor-pointer transition-all ${
                         isSel
-                          ? "bg-[#E85D2F]/10 border-[#E85D2F] shadow-lg shadow-[#E85D2F]/10"
-                          : "bg-[#141822] border-white/6 hover:border-white/15 hover:bg-[#181D29]"
+                          ? "bg-[#1C1714] border-[#8A3A1C]"
+                          : "bg-[#121214] border-[#26272B] hover:border-[#3A3B40] hover:bg-[#1D1E21]"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span
                           className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                            isSel ? "bg-[#E85D2F] text-white" : "bg-white/8 text-slate-400"
+                            isSel ? "bg-[#F05A28] text-white" : "bg-[#161719] border border-[#26272B] text-[#9B9CA1]"
                           }`}
                         >
                           {srv.badge}
                         </span>
-                        <Server size={15} className={isSel ? "text-[#E85D2F]" : "text-slate-500"} />
+                        <Server size={15} className={isSel ? "text-[#F05A28]" : "text-[#76777C]"} />
                       </div>
 
-                      <div className="text-sm font-bold text-white mb-1">{srv.name}</div>
-                      <div className="text-xs text-slate-400 font-mono space-y-0.5">
+                      <div className="text-sm font-bold text-[#ECECEE] mb-1">{srv.name}</div>
+                      <div className="text-xs text-[#9B9CA1] font-mono space-y-0.5">
                         <div>
                           IP Reporte: <span className="text-amber-400">{srv.ip}</span>
                         </div>
@@ -1211,7 +1203,7 @@ export default function AutoUnitWizard({
                           Puerto {currentModelSpec.name}:{" "}
                           <span className="text-emerald-400 font-bold">{currentModelSpec.port}</span>
                         </div>
-                        <div className="text-[10px] text-slate-500">{srv.url}</div>
+                        <div className="text-[10px] text-[#76777C]">{srv.url}</div>
                       </div>
                     </div>
                   );
@@ -1220,61 +1212,61 @@ export default function AutoUnitWizard({
             </div>
 
             {/* Summary Review Card */}
-            <div className="p-4 rounded-xl bg-[#141822] border border-white/6">
-              <div className="text-xs font-bold text-white mb-3 flex items-center justify-between">
+            <div className="p-4 rounded-[8px] bg-[#121214] border border-[#26272B]">
+              <div className="text-xs font-bold text-[#ECECEE] mb-3 flex items-center justify-between">
                 <span>Resumen de la Configuración a Ejecutar</span>
-                <span className="text-[10px] text-slate-400 font-normal">
+                <span className="text-[10px] text-[#76777C] font-normal">
                   Listo para dar de alta en 1 click
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-2.5 rounded-lg bg-[#0D1016] border border-white/4">
-                  <span className="text-[10px] text-slate-500 block uppercase">Placa / DeviceID</span>
-                  <span className="font-mono font-bold text-white">{placa}</span>
+                <div className="p-2.5 rounded-[6px] bg-[#161719] border border-[#26272B]">
+                  <span className="text-[10px] text-[#76777C] block uppercase">Placa / DeviceID</span>
+                  <span className="font-mono font-bold text-[#ECECEE]">{placa}</span>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-[#0D1016] border border-white/4">
-                  <span className="text-[10px] text-slate-500 block uppercase">IMEI / UniqueID</span>
-                  <span className="font-mono font-bold text-white">{imei}</span>
+                <div className="p-2.5 rounded-[6px] bg-[#161719] border border-[#26272B]">
+                  <span className="text-[10px] text-[#76777C] block uppercase">IMEI / UniqueID</span>
+                  <span className="font-mono font-bold text-[#ECECEE]">{imei}</span>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-[#0D1016] border border-white/4">
-                  <span className="text-[10px] text-slate-500 block uppercase">Número Chip SIM</span>
-                  <span className="font-mono font-bold text-white">+51 {formatPeruPhone(simDigits)}</span>
+                <div className="p-2.5 rounded-[6px] bg-[#161719] border border-[#26272B]">
+                  <span className="text-[10px] text-[#76777C] block uppercase">Número Chip SIM</span>
+                  <span className="font-mono font-bold text-[#ECECEE]">+51 {formatPeruPhone(simDigits)}</span>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-[#0D1016] border border-white/4">
-                  <span className="text-[10px] text-slate-500 block uppercase">Usuario (AccountID)</span>
-                  <span className="font-bold text-[#E85D2F] truncate block">{accountID}</span>
+                <div className="p-2.5 rounded-[6px] bg-[#161719] border border-[#26272B]">
+                  <span className="text-[10px] text-[#76777C] block uppercase">Usuario (AccountID)</span>
+                  <span className="font-bold text-[#F05A28] truncate block">{accountID}</span>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-[#0D1016] border border-white/4">
-                  <span className="text-[10px] text-slate-500 block uppercase">Modelo & Puerto</span>
-                  <span className="font-medium text-white">
+                <div className="p-2.5 rounded-[6px] bg-[#161719] border border-[#26272B]">
+                  <span className="text-[10px] text-[#76777C] block uppercase">Modelo & Puerto</span>
+                  <span className="font-medium text-[#ECECEE]">
                     {currentModelSpec.name} ({currentModelSpec.port})
                   </span>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-[#0D1016] border border-white/4">
-                  <span className="text-[10px] text-slate-500 block uppercase">Servidor Destino</span>
+                <div className="p-2.5 rounded-[6px] bg-[#161719] border border-[#26272B]">
+                  <span className="text-[10px] text-[#76777C] block uppercase">Servidor Destino</span>
                   <span className="font-medium text-emerald-400">{currentServer.name}</span>
                 </div>
               </div>
 
               {/* Resulting SMS Previews (APN + Server) */}
-              <div className="mt-3 pt-3 border-t border-white/6 space-y-2">
+              <div className="mt-3 pt-3 border-t border-[#222327] space-y-2">
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-1 uppercase font-semibold flex items-center justify-between">
+                  <span className="text-[10px] text-[#76777C] block mb-1 uppercase font-semibold flex items-center justify-between">
                     <span>1. Comando SMS de APN Móvil (Internet):</span>
-                    <span className="text-slate-400 font-mono text-[9px]">{effectiveApn}</span>
+                    <span className="text-[#9B9CA1] font-mono text-[9px]">{effectiveApn}</span>
                   </span>
-                  <div className="p-2 rounded bg-[#0D1016] border border-white/6 font-mono text-xs text-amber-300 flex items-center justify-between">
+                  <div className="p-2 rounded-[6px] bg-[#161719] border border-[#26272B] font-mono text-xs text-amber-300 flex items-center justify-between">
                     <span>{resultingApnCommand}</span>
                     <button
                       type="button"
                       onClick={() => handleCopy(resultingApnCommand, "apn_cmd")}
-                      className="text-slate-400 hover:text-white p-1"
+                      className="text-[#76777C] hover:text-[#ECECEE] p-1 cursor-pointer"
                     >
                       {copiedKey === "apn_cmd" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                     </button>
@@ -1282,16 +1274,16 @@ export default function AutoUnitWizard({
                 </div>
 
                 <div>
-                  <span className="text-[10px] text-slate-500 block mb-1 uppercase font-semibold flex items-center justify-between">
+                  <span className="text-[10px] text-[#76777C] block mb-1 uppercase font-semibold flex items-center justify-between">
                     <span>2. Comando SMS de Servidor Traccar:</span>
-                    <span className="text-slate-400 font-mono text-[9px]">{currentServer.ip}:{currentModelSpec.port}</span>
+                    <span className="text-[#9B9CA1] font-mono text-[9px]">{currentServer.ip}:{currentModelSpec.port}</span>
                   </span>
-                  <div className="p-2 rounded bg-[#0D1016] border border-white/6 font-mono text-xs text-amber-300 flex items-center justify-between">
+                  <div className="p-2 rounded-[6px] bg-[#161719] border border-[#26272B] font-mono text-xs text-amber-300 flex items-center justify-between">
                     <span>{resultingConfigCommand}</span>
                     <button
                       type="button"
                       onClick={() => handleCopy(resultingConfigCommand, "cmd")}
-                      className="text-slate-400 hover:text-white p-1"
+                      className="text-[#76777C] hover:text-[#ECECEE] p-1 cursor-pointer"
                     >
                       {copiedKey === "cmd" ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                     </button>
@@ -1301,11 +1293,11 @@ export default function AutoUnitWizard({
             </div>
 
             {/* Bottom Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/6">
+            <div className="flex items-center justify-between pt-4 border-t border-[#222327]">
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-white/4 hover:bg-white/8 transition-colors"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] text-xs font-medium text-[#CFCFD3] hover:text-[#ECECEE] bg-[#121214] hover:bg-[#1D1E21] border border-[#2D2E32] transition-colors cursor-pointer"
               >
                 <ArrowLeft size={14} />
                 <span>Atrás</span>
@@ -1317,7 +1309,7 @@ export default function AutoUnitWizard({
                   setStep(4);
                   handleRunPipeline();
                 }}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-xs font-bold bg-[#E85D2F] hover:bg-[#FF7A45] text-white shadow-lg shadow-[#E85D2F]/20 cursor-pointer transition-all"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-[8px] text-xs font-bold bg-[#F05A28] hover:bg-[#FF6A35] text-white cursor-pointer transition-all"
               >
                 <Sparkles size={14} />
                 <span>Dar de Alta y Configurar Unidad (1-Click)</span>
@@ -1332,7 +1324,7 @@ export default function AutoUnitWizard({
         {step === 4 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div className="text-center py-2">
-              <div className="text-base font-bold text-white mb-1">
+              <div className="text-base font-bold text-[#ECECEE] mb-1">
                 {isExecuting
                   ? "Ejecutando Pipeline de Alta y Configuración..."
                   : executionDone &&
@@ -1343,27 +1335,27 @@ export default function AutoUnitWizard({
                   ? "¡Unidad dada de alta y configurada exitosamente!"
                   : "Proceso completado con observaciones"}
               </div>
-              <p className="text-xs text-slate-400">
-                Placa: <strong className="text-white">{placa}</strong> • IMEI:{" "}
-                <strong className="text-white font-mono">{imei}</strong> • Servidor:{" "}
-                <strong className="text-[#E85D2F]">{currentServer.name}</strong>
+              <p className="text-xs text-[#9B9CA1]">
+                Placa: <strong className="text-[#ECECEE]">{placa}</strong> • IMEI:{" "}
+                <strong className="text-[#ECECEE] font-mono">{imei}</strong> • Servidor:{" "}
+                <strong className="text-[#F05A28]">{currentServer.name}</strong>
               </p>
             </div>
 
             {/* Steps Checklist */}
             <div className="space-y-3 max-w-xl mx-auto">
               {/* Item 1: Traccar */}
-              <div className="p-3.5 rounded-xl bg-[#141822] border border-white/6 flex items-center justify-between">
+              <div className="p-3.5 rounded-[8px] bg-[#121214] border border-[#26272B] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                       pipelineState.traccar.status === "success"
                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                         : pipelineState.traccar.status === "loading"
-                        ? "bg-[#E85D2F]/20 text-[#E85D2F] border border-[#E85D2F]/40"
+                        ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                         : pipelineState.traccar.status === "error"
                         ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                        : "bg-white/6 text-slate-500"
+                        : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                     }`}
                   >
                     {pipelineState.traccar.status === "loading" ? (
@@ -1378,10 +1370,10 @@ export default function AutoUnitWizard({
                   </div>
 
                   <div>
-                    <div className="text-xs font-bold text-white">
+                    <div className="text-xs font-bold text-[#ECECEE]">
                       1. Registro en Servidor Traccar ({currentServer.host})
                     </div>
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[11px] text-[#9B9CA1]">
                       {pipelineState.traccar.message || "Registrando nombre, uniqueId, chip y atributos..."}
                     </div>
                   </div>
@@ -1392,10 +1384,10 @@ export default function AutoUnitWizard({
                     pipelineState.traccar.status === "success"
                       ? "bg-emerald-500/20 text-emerald-400"
                       : pipelineState.traccar.status === "loading"
-                      ? "bg-[#E85D2F]/20 text-[#E85D2F]"
+                      ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                       : pipelineState.traccar.status === "error"
                       ? "bg-red-500/20 text-red-400"
-                      : "bg-white/6 text-slate-500"
+                      : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                   }`}
                 >
                   {pipelineState.traccar.status === "success"
@@ -1409,17 +1401,17 @@ export default function AutoUnitWizard({
               </div>
 
               {/* Item 2: Unidades Velsat */}
-              <div className="p-3.5 rounded-xl bg-[#141822] border border-white/6 flex items-center justify-between">
+              <div className="p-3.5 rounded-[8px] bg-[#121214] border border-[#26272B] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                       pipelineState.unidades.status === "success"
                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                         : pipelineState.unidades.status === "loading"
-                        ? "bg-[#E85D2F]/20 text-[#E85D2F] border border-[#E85D2F]/40"
+                        ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                         : pipelineState.unidades.status === "error"
                         ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                        : "bg-white/6 text-slate-500"
+                        : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                     }`}
                   >
                     {pipelineState.unidades.status === "loading" ? (
@@ -1434,10 +1426,10 @@ export default function AutoUnitWizard({
                   </div>
 
                   <div>
-                    <div className="text-xs font-bold text-white">
+                    <div className="text-xs font-bold text-[#ECECEE]">
                       2. Registro en Módulo de Unidades Velsat
                     </div>
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[11px] text-[#9B9CA1]">
                       {pipelineState.unidades.message || "Creando vehículo en base de datos central..."}
                     </div>
                   </div>
@@ -1448,10 +1440,10 @@ export default function AutoUnitWizard({
                     pipelineState.unidades.status === "success"
                       ? "bg-emerald-500/20 text-emerald-400"
                       : pipelineState.unidades.status === "loading"
-                      ? "bg-[#E85D2F]/20 text-[#E85D2F]"
+                      ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                       : pipelineState.unidades.status === "error"
                       ? "bg-red-500/20 text-red-400"
-                      : "bg-white/6 text-slate-500"
+                      : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                   }`}
                 >
                   {pipelineState.unidades.status === "success"
@@ -1465,17 +1457,17 @@ export default function AutoUnitWizard({
               </div>
 
               {/* Item 3: SMS APN */}
-              <div className="p-3.5 rounded-xl bg-[#141822] border border-white/6 flex items-center justify-between">
+              <div className="p-3.5 rounded-[8px] bg-[#121214] border border-[#26272B] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                       pipelineState.smsApn.status === "success"
                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                         : pipelineState.smsApn.status === "loading"
-                        ? "bg-[#E85D2F]/20 text-[#E85D2F] border border-[#E85D2F]/40"
+                        ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                         : pipelineState.smsApn.status === "error"
                         ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                        : "bg-white/6 text-slate-500"
+                        : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                     }`}
                   >
                     {pipelineState.smsApn.status === "loading" ? (
@@ -1490,10 +1482,10 @@ export default function AutoUnitWizard({
                   </div>
 
                   <div>
-                    <div className="text-xs font-bold text-white">
+                    <div className="text-xs font-bold text-[#ECECEE]">
                       3. Configuración de APN Móvil ({effectiveApn})
                     </div>
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[11px] text-[#9B9CA1]">
                       {pipelineState.smsApn.message || `Enviando comando APN: ${resultingApnCommand}`}
                     </div>
                   </div>
@@ -1504,10 +1496,10 @@ export default function AutoUnitWizard({
                     pipelineState.smsApn.status === "success"
                       ? "bg-emerald-500/20 text-emerald-400"
                       : pipelineState.smsApn.status === "loading"
-                      ? "bg-[#E85D2F]/20 text-[#E85D2F]"
+                      ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                       : pipelineState.smsApn.status === "error"
                       ? "bg-red-500/20 text-red-400"
-                      : "bg-white/6 text-slate-500"
+                      : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                   }`}
                 >
                   {pipelineState.smsApn.status === "success"
@@ -1521,17 +1513,17 @@ export default function AutoUnitWizard({
               </div>
 
               {/* Item 4: SMS Config Servidor */}
-              <div className="p-3.5 rounded-xl bg-[#141822] border border-white/6 flex items-center justify-between">
+              <div className="p-3.5 rounded-[8px] bg-[#121214] border border-[#26272B] flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                       pipelineState.smsConfig.status === "success"
                         ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
                         : pipelineState.smsConfig.status === "loading"
-                        ? "bg-[#E85D2F]/20 text-[#E85D2F] border border-[#E85D2F]/40"
+                        ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                         : pipelineState.smsConfig.status === "error"
                         ? "bg-red-500/20 text-red-400 border border-red-500/40"
-                        : "bg-white/6 text-slate-500"
+                        : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                     }`}
                   >
                     {pipelineState.smsConfig.status === "loading" ? (
@@ -1546,10 +1538,10 @@ export default function AutoUnitWizard({
                   </div>
 
                   <div>
-                    <div className="text-xs font-bold text-white">
+                    <div className="text-xs font-bold text-[#ECECEE]">
                       4. Envío de SMS de Servidor Traccar ({currentServer.ip}:{currentModelSpec.port})
                     </div>
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[11px] text-[#9B9CA1]">
                       {pipelineState.smsConfig.message || "Apuntando el GPS a la IP y puerto correspondientes..."}
                     </div>
                   </div>
@@ -1560,10 +1552,10 @@ export default function AutoUnitWizard({
                     pipelineState.smsConfig.status === "success"
                       ? "bg-emerald-500/20 text-emerald-400"
                       : pipelineState.smsConfig.status === "loading"
-                      ? "bg-[#E85D2F]/20 text-[#E85D2F]"
+                      ? "bg-[#1C1714] text-[#F05A28] border border-[#8A3A1C]"
                       : pipelineState.smsConfig.status === "error"
                       ? "bg-red-500/20 text-red-400"
-                      : "bg-white/6 text-slate-500"
+                      : "bg-[#161719] text-[#76777C] border border-[#26272B]"
                   }`}
                 >
                   {pipelineState.smsConfig.status === "success"
@@ -1578,13 +1570,13 @@ export default function AutoUnitWizard({
             </div>
 
             {/* Bottom Final Actions */}
-            <div className="flex items-center justify-center gap-3 pt-4 border-t border-white/6">
+            <div className="flex items-center justify-center gap-3 pt-4 border-t border-[#222327]">
               {executionDone && (
                 <>
                   <button
                     type="button"
                     onClick={handleResetWizard}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-bold bg-[#E85D2F] hover:bg-[#FF7A45] text-white shadow-lg shadow-[#E85D2F]/20 cursor-pointer transition-all"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-[8px] text-xs font-bold bg-[#F05A28] hover:bg-[#FF6A35] text-white cursor-pointer transition-all"
                   >
                     <Sparkles size={14} />
                     <span>Configurar Otra Unidad</span>
@@ -1593,7 +1585,7 @@ export default function AutoUnitWizard({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-white/6 hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-[8px] text-xs font-medium text-[#CFCFD3] hover:text-[#ECECEE] bg-[#121214] hover:bg-[#1D1E21] border border-[#2D2E32] transition-colors cursor-pointer"
                   >
                     <span>Volver a Comandos SMS</span>
                   </button>
@@ -1601,7 +1593,7 @@ export default function AutoUnitWizard({
               )}
 
               {isExecuting && (
-                <div className="text-xs text-slate-500 font-mono animate-pulse">
+                <div className="text-xs text-[#76777C] font-mono animate-pulse">
                   Por favor no cierres la ventana mientras se completan las peticiones...
                 </div>
               )}

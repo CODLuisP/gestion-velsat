@@ -17,6 +17,7 @@ import {
   X,
 } from "lucide-react";
 import ButtonBase from "@/app/components/ui/ButtonBase";
+import PanelHeader from "@/app/components/nav/PanelHeader";
 
 type Props = {
   actor?: string;
@@ -61,11 +62,11 @@ const MAX_DIAS_RANGO = 62;
 const STORAGE_KEY_JOB = "velsat_carga_job_activo";
 
 const ESTADO_UI: Record<string, { label: string; color: string; fondo: string; borde: string }> = {
-  EN_COLA: { label: "EN COLA", color: "#E8B53D", fondo: "rgba(232,181,61,0.12)", borde: "rgba(232,181,61,0.3)" },
-  PROCESANDO: { label: "PROCESANDO", color: "#E85D2F", fondo: "rgba(232,93,47,0.12)", borde: "rgba(232,93,47,0.3)" },
-  OK: { label: "LISTO", color: "#2ECC71", fondo: "rgba(46,204,113,0.12)", borde: "rgba(46,204,113,0.3)" },
-  PARCIAL: { label: "PARCIAL", color: "#E8B53D", fondo: "rgba(232,181,61,0.12)", borde: "rgba(232,181,61,0.3)" },
-  ERROR: { label: "ERROR", color: "#E8523D", fondo: "rgba(232,82,61,0.12)", borde: "rgba(232,82,61,0.35)" },
+  EN_COLA: { label: "EN COLA", color: "#F05A28", fondo: "rgba(240,90,40,0.12)", borde: "rgba(240,90,40,0.3)" },
+  PROCESANDO: { label: "PROCESANDO", color: "#F05A28", fondo: "rgba(240,90,40,0.12)", borde: "rgba(240,90,40,0.3)" },
+  OK: { label: "LISTO", color: "#4ADE80", fondo: "rgba(74,222,128,0.12)", borde: "rgba(74,222,128,0.3)" },
+  PARCIAL: { label: "PARCIAL", color: "#EAB308", fondo: "rgba(234,179,8,0.12)", borde: "rgba(234,179,8,0.3)" },
+  ERROR: { label: "ERROR", color: "#EF4444", fondo: "rgba(239,68,68,0.12)", borde: "rgba(239,68,68,0.35)" },
 };
 
 const ESTADO_TABLA: Record<string, string> = {
@@ -432,49 +433,42 @@ export default function CargaClient({ actor }: Props) {
       : 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* ---------- Título ---------- */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: "#F4F5F7" }}>
-            Carga de <span style={{ color: "#E85D2F" }}>Data</span>
-          </h1>
-          <p style={{ color: "#8A9099", fontSize: 13, marginTop: 4 }}>
-            Restauración de data histórica de GPS para que el cliente la descargue desde la web de rastreo
-          </p>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "6px 12px",
-            borderRadius: 8,
-            background: "#1C1F26",
-            border: "1px solid rgba(255,255,255,0.06)",
-            fontSize: 12,
-            color: "#ADB5BD",
-          }}
-        >
-          <Server size={13} style={{ color: health?.listo ? "#2ECC71" : "#E85D2F" }} />
-          {health ? (
-            <span>
-              Servicio <strong style={{ color: health.listo ? "#2ECC71" : "#E85D2F" }}>{health.listo ? "activo" : "no disponible"}</strong>
-              {typeof health.colaPendientes === "number" && <> · {health.colaPendientes} en cola</>}
-              {typeof health.discoLibreGb === "number" && <> · {health.discoLibreGb} GB libres</>}
-            </span>
-          ) : (
-            <span>Consultando servicio...</span>
-          )}
-        </div>
-      </div>
+    <div className="flex flex-col gap-5">
+      <PanelHeader
+        title={
+          <span>
+            Carga de <span className="text-[#F05A28]">Data</span>
+          </span>
+        }
+        subtitle="Restauración de data histórica de GPS para descarga desde la web de rastreo"
+        rightContent={
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#161719] border border-[#26272B] text-xs text-[#CFCFD3]">
+            <Server size={14} className={health?.listo ? "text-[#4ADE80]" : "text-[#F05A28]"} />
+            {health ? (
+              <span>
+                Servicio{" "}
+                <strong className={health.listo ? "text-[#4ADE80]" : "text-[#F05A28]"}>
+                  {health.listo ? "activo" : "no disponible"}
+                </strong>
+                {typeof health.colaPendientes === "number" && (
+                  <> · {health.colaPendientes} en cola</>
+                )}
+                {typeof health.discoLibreGb === "number" && (
+                  <> · {health.discoLibreGb} GB libres</>
+                )}
+              </span>
+            ) : (
+              <span>Consultando servicio...</span>
+            )}
+          </div>
+        }
+      />
 
       {/* ---------- Formulario ---------- */}
       <div
         style={{
-          background: "#1C1F26",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "#161719",
+          border: "1px solid #26272B",
           borderRadius: 12,
           padding: "20px 24px",
         }}
@@ -485,12 +479,12 @@ export default function CargaClient({ actor }: Props) {
             alignItems: "center",
             gap: 8,
             marginBottom: 18,
-            color: "#F4F5F7",
+            color: "#ECECEE",
             fontWeight: 600,
             fontSize: 14,
           }}
         >
-          <DatabaseBackup size={16} style={{ color: "#E85D2F" }} />
+          <DatabaseBackup size={16} className="text-[#F05A28]" />
           Nueva solicitud de restauración
         </div>
 
@@ -503,10 +497,10 @@ export default function CargaClient({ actor }: Props) {
                 fontWeight: 600,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                color: "#8A9099",
+                color: "#9B9CA1",
               }}
             >
-              Placas <span style={{ color: "#E85D2F" }}>*</span>
+              Placas <span className="text-[#F05A28]">*</span>
             </label>
 
             <div style={{ position: "relative", marginTop: 4 }}>
@@ -529,16 +523,16 @@ export default function CargaClient({ actor }: Props) {
                   width: "100%",
                   fontSize: 13,
                   padding: "8px 34px 8px 12px",
-                  borderRadius: 7,
-                  background: "#0A0C0F",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  color: "#F4F5F7",
+                  borderRadius: 8,
+                  background: "#121214",
+                  border: "1px solid #2D2E32",
+                  color: "#ECECEE",
                   outline: "none",
                 }}
               />
               <Search
                 size={14}
-                style={{ position: "absolute", right: 11, top: "50%", transform: "translateY(-50%)", color: "#8A9099" }}
+                style={{ position: "absolute", right: 11, top: "50%", transform: "translateY(-50%)", color: "#76777C" }}
               />
 
               {/* Autocompletado */}
@@ -550,11 +544,11 @@ export default function CargaClient({ actor }: Props) {
                     top: "calc(100% + 4px)",
                     left: 0,
                     right: 0,
-                    background: "#12151A",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "#161719",
+                    border: "1px solid #26272B",
                     borderRadius: 8,
                     overflow: "hidden",
-                    boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
+                    boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
                   }}
                 >
                   {sugerencias.length > 0 ? (
@@ -571,17 +565,17 @@ export default function CargaClient({ actor }: Props) {
                           padding: "8px 12px",
                           background: "transparent",
                           border: "none",
-                          borderBottom: "1px solid rgba(255,255,255,0.05)",
-                          color: "#F4F5F7",
+                          borderBottom: "1px solid #222327",
+                          color: "#ECECEE",
                           fontSize: 13,
                           cursor: "pointer",
                           textAlign: "left",
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(232,93,47,0.1)")}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#1D1E21")}
                         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
                       >
                         <span style={{ fontFamily: "monospace", textTransform: "uppercase" }}>{p.placa}</span>
-                        <span style={{ fontSize: 11, color: "#8A9099" }}>
+                        <span style={{ fontSize: 11, color: "#9B9CA1" }}>
                           {p.cuenta} · {p.servidores.join(", ")}
                         </span>
                       </button>
@@ -597,13 +591,13 @@ export default function CargaClient({ actor }: Props) {
                         padding: "8px 12px",
                         background: "transparent",
                         border: "none",
-                        color: "#ADB5BD",
+                        color: "#CFCFD3",
                         fontSize: 12.5,
                         cursor: "pointer",
                         textAlign: "left",
                       }}
                     >
-                      <Plus size={13} style={{ color: "#E85D2F" }} />
+                      <Plus size={13} className="text-[#F05A28]" />
                       No está en la lista. Agregar &quot;{busquedaPlaca.trim().toLowerCase()}&quot; igual
                     </button>
                   )}
@@ -614,7 +608,7 @@ export default function CargaClient({ actor }: Props) {
             {/* Placas elegidas */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, minHeight: 28 }}>
               {placasElegidas.length === 0 ? (
-                <span style={{ fontSize: 12, color: "#8A9099" }}>Ninguna placa agregada todavía</span>
+                <span style={{ fontSize: 12, color: "#76777C" }}>Ninguna placa agregada todavía</span>
               ) : (
                 placasElegidas.map((p) => {
                   const conocida = existeEnCatalogo(p);
@@ -630,9 +624,9 @@ export default function CargaClient({ actor }: Props) {
                         fontSize: 12,
                         fontFamily: "monospace",
                         textTransform: "uppercase",
-                        background: conocida ? "rgba(232,93,47,0.12)" : "rgba(232,181,61,0.12)",
-                        border: `1px solid ${conocida ? "rgba(232,93,47,0.3)" : "rgba(232,181,61,0.35)"}`,
-                        color: conocida ? "#E85D2F" : "#E8B53D",
+                        background: conocida ? "rgba(240,90,40,0.12)" : "rgba(234,179,8,0.12)",
+                        border: `1px solid ${conocida ? "rgba(240,90,40,0.3)" : "rgba(234,179,8,0.35)"}`,
+                        color: conocida ? "#F05A28" : "#EAB308",
                       }}
                       title={conocida ? undefined : "Esta placa no aparece en ningún servidor"}
                     >
@@ -665,10 +659,10 @@ export default function CargaClient({ actor }: Props) {
                       fontWeight: 600,
                       letterSpacing: "0.08em",
                       textTransform: "uppercase",
-                      color: "#8A9099",
+                      color: "#9B9CA1",
                     }}
                   >
-                    {campo.label} <span style={{ color: "#E85D2F" }}>*</span>
+                    {campo.label} <span className="text-[#F05A28]">*</span>
                   </label>
                   <input
                     type={conHora ? "datetime-local" : "date"}
@@ -680,10 +674,10 @@ export default function CargaClient({ actor }: Props) {
                       marginTop: 4,
                       fontSize: 13,
                       padding: "8px 12px",
-                      borderRadius: 7,
-                      background: "#0A0C0F",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      color: "#F4F5F7",
+                      borderRadius: 8,
+                      background: "#121214",
+                      border: "1px solid #2D2E32",
+                      color: "#ECECEE",
                       outline: "none",
                       colorScheme: "dark",
                     }}
@@ -700,7 +694,7 @@ export default function CargaClient({ actor }: Props) {
                 gap: 7,
                 marginTop: 10,
                 fontSize: 12,
-                color: conHora ? "#E85D2F" : "#8A9099",
+                color: conHora ? "#F05A28" : "#9B9CA1",
                 cursor: "pointer",
                 userSelect: "none",
               }}
@@ -709,7 +703,7 @@ export default function CargaClient({ actor }: Props) {
                 type="checkbox"
                 checked={conHora}
                 onChange={(e) => alternarHora(e.target.checked)}
-                style={{ accentColor: "#E85D2F", width: 14, height: 14, cursor: "pointer" }}
+                style={{ accentColor: "#F05A28", width: 14, height: 14, cursor: "pointer" }}
               />
               Especificar hora
             </label>
@@ -720,9 +714,9 @@ export default function CargaClient({ actor }: Props) {
         {/* Pie del formulario */}
         <div
           className="flex flex-wrap items-center justify-between gap-3"
-          style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid #26272B" }}
         >
-          <div style={{ fontSize: 12, color: errorFormulario ? "#E8B53D" : "#8A9099", display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ fontSize: 12, color: errorFormulario ? "#EAB308" : "#9B9CA1", display: "flex", alignItems: "center", gap: 6 }}>
             {errorFormulario ? (
               <>
                 <AlertTriangle size={13} /> {errorFormulario}
@@ -752,7 +746,7 @@ export default function CargaClient({ actor }: Props) {
       {job && ui && (
         <div
           style={{
-            background: "#1C1F26",
+            background: "#161719",
             border: `1px solid ${ui.borde}`,
             borderRadius: 12,
             overflow: "hidden",
@@ -761,7 +755,7 @@ export default function CargaClient({ actor }: Props) {
           <div
             style={{
               padding: "14px 20px",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              borderBottom: "1px solid #26272B",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -779,8 +773,8 @@ export default function CargaClient({ actor }: Props) {
               ) : (
                 <Loader2 size={16} style={{ color: ui.color }} className="animate-spin" />
               )}
-              <span style={{ color: "#F4F5F7", fontWeight: 600, fontSize: 14 }}>
-                Trabajo {job.jobId}
+              <span style={{ color: "#ECECEE", fontWeight: 600, fontSize: 14 }}>
+                Trabajo <span className="font-mono">{job.jobId}</span>
               </span>
               <span
                 style={{
@@ -798,7 +792,7 @@ export default function CargaClient({ actor }: Props) {
               </span>
             </div>
 
-            <span style={{ fontSize: 12, color: "#8A9099" }}>
+            <span style={{ fontSize: 12, color: "#9B9CA1" }}>
               {textoRango(job.desde, job.hasta)}
               {job.placas && job.placas.length > 0 && <> · {job.placas.length} placa(s)</>}
               {!esFinal(job.estado) && <> · se actualiza cada 10 s</>}
@@ -808,7 +802,7 @@ export default function CargaClient({ actor }: Props) {
           <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
             {/* Barra de progreso */}
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#ADB5BD", marginBottom: 6 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#CFCFD3", marginBottom: 6 }}>
                 <span>
                   {job.estado === "EN_COLA"
                     ? `En cola${job.trabajosEnColaAntes ? ` · ${job.trabajosEnColaAntes} trabajo(s) antes` : ""}`
@@ -816,11 +810,11 @@ export default function CargaClient({ actor }: Props) {
                     ? `Procesando ${job.tablaActual}`
                     : "Progreso"}
                 </span>
-                <span>
+                <span className="font-mono">
                   {job.progreso ? `${job.progreso.completadas}/${job.progreso.total} tablas` : "—"}
                 </span>
               </div>
-              <div style={{ height: 8, borderRadius: 6, background: "rgba(255,255,255,0.06)", overflow: "hidden" }}>
+              <div style={{ height: 8, borderRadius: 6, background: "#121214", border: "1px solid #26272B", overflow: "hidden" }}>
                 <div
                   style={{
                     width: `${porcentaje}%`,
@@ -833,16 +827,16 @@ export default function CargaClient({ actor }: Props) {
             </div>
 
             {/* Resumen */}
-            <div className="flex flex-wrap gap-x-8 gap-y-2" style={{ fontSize: 12.5, color: "#ADB5BD" }}>
+            <div className="flex flex-wrap gap-x-8 gap-y-2" style={{ fontSize: 12.5, color: "#CFCFD3" }}>
               <span>
                 Registros insertados:{" "}
-                <strong style={{ color: (job.filasInsertadas ?? 0) > 0 ? "#2ECC71" : "#E8B53D" }}>
+                <strong style={{ color: (job.filasInsertadas ?? 0) > 0 ? "#4ADE80" : "#EAB308" }} className="font-mono">
                   {(job.filasInsertadas ?? 0).toLocaleString("es-PE")}
                 </strong>
               </span>
               {job.solicitante && <span>Solicitante: {job.solicitante}</span>}
-              {job.inicio && <span>Inicio: {formatFecha(job.inicio)}</span>}
-              {job.fin && <span>Fin: {formatFecha(job.fin)}</span>}
+              {job.inicio && <span>Inicio: <span className="font-mono">{formatFecha(job.inicio)}</span></span>}
+              {job.fin && <span>Fin: <span className="font-mono">{formatFecha(job.fin)}</span></span>}
               {duracion(job.inicio, job.fin) && <span>Duración: {duracion(job.inicio, job.fin)}</span>}
             </div>
 
@@ -852,9 +846,9 @@ export default function CargaClient({ actor }: Props) {
                 style={{
                   padding: "10px 12px",
                   borderRadius: 8,
-                  background: "rgba(232,181,61,0.1)",
-                  border: "1px solid rgba(232,181,61,0.3)",
-                  color: "#E8B53D",
+                  background: "rgba(234,179,8,0.1)",
+                  border: "1px solid rgba(234,179,8,0.3)",
+                  color: "#EAB308",
                   fontSize: 12.5,
                 }}
               >
@@ -867,9 +861,9 @@ export default function CargaClient({ actor }: Props) {
                 style={{
                   padding: "10px 12px",
                   borderRadius: 8,
-                  background: "rgba(46,204,113,0.1)",
-                  border: "1px solid rgba(46,204,113,0.3)",
-                  color: "#2ECC71",
+                  background: "rgba(74,222,128,0.1)",
+                  border: "1px solid rgba(74,222,128,0.3)",
+                  color: "#4ADE80",
                   fontSize: 12.5,
                 }}
               >
@@ -882,9 +876,9 @@ export default function CargaClient({ actor }: Props) {
                 style={{
                   padding: "10px 12px",
                   borderRadius: 8,
-                  background: "rgba(232,82,61,0.1)",
-                  border: "1px solid rgba(232,82,61,0.3)",
-                  color: "#E8523D",
+                  background: "rgba(239,68,68,0.1)",
+                  border: "1px solid rgba(239,68,68,0.3)",
+                  color: "#EF4444",
                   fontSize: 12.5,
                 }}
               >
@@ -894,7 +888,7 @@ export default function CargaClient({ actor }: Props) {
 
             {/* Detalle por tabla */}
             {job.detalle && job.detalle.length > 0 && (
-              <div style={{ border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ border: "1px solid #26272B", borderRadius: 8, overflow: "hidden" }}>
                 {job.detalle.map((d) => (
                   <div
                     key={d.tabla}
@@ -904,19 +898,19 @@ export default function CargaClient({ actor }: Props) {
                       justifyContent: "space-between",
                       gap: 10,
                       padding: "8px 12px",
-                      borderBottom: "1px solid rgba(255,255,255,0.05)",
+                      borderBottom: "1px solid #222327",
                       fontSize: 12.5,
                     }}
                   >
-                    <span style={{ fontFamily: "monospace", color: "#F4F5F7" }}>{d.tabla}</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 12, color: "#8A9099" }}>
+                    <span style={{ fontFamily: "monospace", color: "#ECECEE" }}>{d.tabla}</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 12, color: "#9B9CA1" }}>
                       {typeof d.filasInsertadas === "number" && (
-                        <span>{d.filasInsertadas.toLocaleString("es-PE")} filas</span>
+                        <span className="font-mono">{d.filasInsertadas.toLocaleString("es-PE")} filas</span>
                       )}
-                      {typeof d.segundos === "number" && <span>{d.segundos} s</span>}
+                      {typeof d.segundos === "number" && <span className="font-mono">{d.segundos} s</span>}
                       <span
                         style={{
-                          color: d.estado === "OK" ? "#2ECC71" : d.estado === "ERROR" ? "#E8523D" : "#E85D2F",
+                          color: d.estado === "OK" ? "#4ADE80" : d.estado === "ERROR" ? "#EF4444" : "#F05A28",
                         }}
                       >
                         {ESTADO_TABLA[d.estado] || d.estado}
@@ -933,8 +927,8 @@ export default function CargaClient({ actor }: Props) {
       {/* ---------- Historial ---------- */}
       <div
         style={{
-          background: "#1C1F26",
-          border: "1px solid rgba(255,255,255,0.06)",
+          background: "#161719",
+          border: "1px solid #26272B",
           borderRadius: 12,
           overflow: "hidden",
         }}
@@ -942,14 +936,14 @@ export default function CargaClient({ actor }: Props) {
         <div
           style={{
             padding: "14px 20px",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            borderBottom: "1px solid #26272B",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
           }}
         >
-          <span style={{ color: "#F4F5F7", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
-            <History size={15} style={{ color: "#E85D2F" }} />
+          <span style={{ color: "#ECECEE", fontWeight: 600, fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
+            <History size={15} className="text-[#F05A28]" />
             Trabajos recientes
           </span>
           <button
@@ -961,37 +955,36 @@ export default function CargaClient({ actor }: Props) {
               gap: 6,
               padding: "4px 10px",
               borderRadius: 6,
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              color: "#ADB5BD",
+              background: "#121214",
+              border: "1px solid #2D2E32",
+              color: "#CFCFD3",
               fontSize: 12,
               cursor: cargandoHistorial ? "not-allowed" : "pointer",
             }}
           >
-            <RefreshCw size={12} className={cargandoHistorial ? "animate-spin" : undefined} />
+            <RefreshCw size={12} className={cargandoHistorial ? "animate-spin text-[#F05A28]" : undefined} />
             Actualizar
           </button>
         </div>
 
         {historial.length === 0 ? (
-          <div style={{ padding: "18px 20px", fontSize: 13, color: "#8A9099" }}>
+          <div style={{ padding: "18px 20px", fontSize: 13, color: "#76777C" }}>
             {cargandoHistorial ? "Cargando trabajos..." : "Todavía no hay trabajos registrados."}
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
               <thead>
-                <tr style={{ color: "#8A9099", textAlign: "left" }}>
+                <tr style={{ background: "linear-gradient(90deg, #7A3A10 0%, #6A310D 100%)", color: "#FFFFFF", textAlign: "left" }}>
                   {["Trabajo", "Estado", "Placas", "Rango", "Registros", "Solicitante", "Creado"].map((h) => (
                     <th
                       key={h}
                       style={{
-                        padding: "8px 14px",
-                        fontWeight: 600,
+                        padding: "9px 14px",
+                        fontWeight: 700,
                         fontSize: 11,
-                        letterSpacing: "0.06em",
+                        letterSpacing: "0.08em",
                         textTransform: "uppercase",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
                         whiteSpace: "nowrap",
                       }}
                     >
@@ -1010,14 +1003,13 @@ export default function CargaClient({ actor }: Props) {
                         setJob(h);
                         if (!esFinal(h.estado)) localStorage.setItem(STORAGE_KEY_JOB, h.jobId);
                       }}
-                      style={{ color: "#ADB5BD", cursor: "pointer" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      style={{ color: "#CFCFD3", cursor: "pointer" }}
+                      className="hover:bg-[#1D1E21] transition-colors"
                     >
-                      <td style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontFamily: "monospace", color: "#F4F5F7" }}>
+                      <td style={{ padding: "9px 14px", borderBottom: "1px solid #222327", fontFamily: "monospace", color: "#ECECEE" }}>
                         {h.jobId}
                       </td>
-                      <td style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                      <td style={{ padding: "9px 14px", borderBottom: "1px solid #222327" }}>
                         <span
                           style={{
                             fontSize: 10.5,
@@ -1032,20 +1024,20 @@ export default function CargaClient({ actor }: Props) {
                           {hui.label}
                         </span>
                       </td>
-                      <td style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", textTransform: "uppercase", fontFamily: "monospace" }}>
+                      <td style={{ padding: "9px 14px", borderBottom: "1px solid #222327", textTransform: "uppercase", fontFamily: "monospace" }}>
                         {(h.placas || []).slice(0, 3).join(", ")}
                         {(h.placas || []).length > 3 && ` +${(h.placas || []).length - 3}`}
                       </td>
-                      <td style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "9px 14px", borderBottom: "1px solid #222327", whiteSpace: "nowrap" }} className="font-mono text-[11px]">
                         {textoRango(h.desde, h.hasta)}
                       </td>
-                      <td style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                      <td style={{ padding: "9px 14px", borderBottom: "1px solid #222327" }} className="font-mono">
                         {(h.filasInsertadas ?? 0).toLocaleString("es-PE")}
                       </td>
-                      <td style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                      <td style={{ padding: "9px 14px", borderBottom: "1px solid #222327" }}>
                         {h.solicitante || "—"}
                       </td>
-                      <td style={{ padding: "8px 14px", borderBottom: "1px solid rgba(255,255,255,0.04)", whiteSpace: "nowrap" }}>
+                      <td style={{ padding: "9px 14px", borderBottom: "1px solid #222327", whiteSpace: "nowrap" }} className="font-mono text-[11px]">
                         {formatFecha(h.creado)}
                       </td>
                     </tr>

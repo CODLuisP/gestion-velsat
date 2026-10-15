@@ -1,16 +1,18 @@
 "use client";
+
 import React from "react";
 
 type CardProps = {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 };
 
-export function Card({ children, className = "" }: CardProps) {
+export function Card({ children, className = "", style }: CardProps) {
   return (
     <div
-      className={`rounded-2xl border border-slate-200 bg-white shadow-sm 
-    ${className}`}
+      style={style}
+      className={`rounded-[12px] border border-[#26272B] bg-[#161719] shadow-none ${className}`}
     >
       {children}
     </div>
@@ -20,11 +22,17 @@ export function Card({ children, className = "" }: CardProps) {
 type CardContentProps = {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 };
 
 export function CardContent({
   children,
   className = "",
+  style,
 }: CardContentProps) {
-  return <div className={`p-6 ${className}`}>{children}</div>;
+  return (
+    <div style={style} className={`p-5 ${className}`}>
+      {children}
+    </div>
+  );
 }

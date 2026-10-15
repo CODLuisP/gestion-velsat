@@ -16,7 +16,7 @@ type InputBaseProps = {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
-export default function InputBase({
+export default function InputBase1({
   label,
   type = "text",
   placeholder,
@@ -40,38 +40,26 @@ export default function InputBase({
 
   const shouldValidate = touched || submitAttempt;
   const isEmpty = internalValue.trim() === "";
-  const showError   = required && shouldValidate && isEmpty;
-  const showSuccess = required && shouldValidate && !isEmpty;
+  const showError = required && shouldValidate && isEmpty;
 
   const borderColor = showError
-    ? "rgba(232,93,47,0.7)"
-    : showSuccess
-    ? "rgba(46,204,113,0.5)"
-    : "rgba(255,255,255,0.08)";
-
-  const focusBorder = showError ? "rgba(232,93,47,0.9)" : "rgba(232,93,47,0.5)";
+    ? "#F05A28"
+    : "#2D2E32";
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
-
+    <div className="flex flex-col gap-1 w-full">
       {label && (
         <label
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: showError ? "#E85D2F" : "#8A9099",
-          }}
+          className={`text-[11px] font-bold tracking-wider uppercase ${
+            showError ? "text-[#F05A28]" : "text-[#9B9CA1]"
+          }`}
         >
           {label}
-          {required && (
-            <span style={{ color: "#E85D2F", marginLeft: 3 }}>*</span>
-          )}
+          {required && <span className="text-[#F05A28] ml-1">*</span>}
         </label>
       )}
 
-      <div style={{ position: "relative" }}>
+      <div className="relative w-full">
         <input
           disabled={desabilitar}
           required={required}
@@ -83,29 +71,19 @@ export default function InputBase({
             onChange?.(e);
           }}
           onBlur={() => setTouched(true)}
+          className={`w-full h-[36px] px-3 bg-[#121214] rounded-[8px] text-[13px] text-[#ECECEE] placeholder-[#76777C] outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isPassword ? "pr-10" : ""
+          }`}
+          style={{
+            border: `1px solid ${borderColor}`,
+          }}
           onFocus={(e) => {
-            if (!desabilitar)
-              (e.currentTarget as HTMLInputElement).style.borderColor = focusBorder;
+            if (!desabilitar && !showError) {
+              e.currentTarget.style.borderColor = "#F05A28";
+            }
           }}
           onBlurCapture={(e) => {
-            (e.currentTarget as HTMLInputElement).style.borderColor = borderColor;
-          }}
-          style={{
-            display: "block",
-            width: "100%",
-            fontSize: 13,
-            paddingLeft: 12,
-            paddingRight: isPassword ? 36 : 12,
-            paddingTop: 8,
-            paddingBottom: 8,
-            borderRadius: 7,
-            background: "#0A0C0F",              // mismo fondo siempre
-            border: `1px solid ${borderColor}`,
-            color: desabilitar ? "#8A9099" : "#F4F5F7",
-            outline: "none",
-            transition: "border-color 0.15s",
-            opacity: desabilitar ? 0.55 : 1,    // solo baja la opacidad global
-            cursor: desabilitar ? "not-allowed" : "text",
+            e.currentTarget.style.borderColor = borderColor;
           }}
         />
 
@@ -113,22 +91,7 @@ export default function InputBase({
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            style={{
-              position: "absolute",
-              right: 10,
-              top: "50%",
-              transform: "translateY(-50%)",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#8A9099",
-              display: "flex",
-              alignItems: "center",
-              padding: 0,
-              transition: "color 0.15s",
-            }}
-            onMouseEnter={e => ((e.currentTarget as HTMLButtonElement).style.color = "#E85D2F")}
-            onMouseLeave={e => ((e.currentTarget as HTMLButtonElement).style.color = "#8A9099")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#76777C] hover:text-[#F05A28] transition-colors p-1"
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -137,7 +100,7 @@ export default function InputBase({
       </div>
 
       {showError && (
-        <span style={{ fontSize: 11, color: "#E85D2F", marginTop: 2 }}>
+        <span className="text-[11px] text-[#F05A28] mt-0.5">
           Campo obligatorio
         </span>
       )}
