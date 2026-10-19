@@ -433,7 +433,7 @@ export default function CargaClient({ actor }: Props) {
       : 0;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col">
       <PanelHeader
         title={
           <span>
@@ -464,6 +464,7 @@ export default function CargaClient({ actor }: Props) {
         }
       />
 
+      <div className="flex flex-col gap-5 px-6 pt-5 pb-6">
       {/* ---------- Formulario ---------- */}
       <div
         style={{
@@ -1047,6 +1048,7 @@ export default function CargaClient({ actor }: Props) {
             </table>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -111,7 +111,7 @@ export default function AuditoriaClient({ role }: Props) {
   }, [busqueda, registros]);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col">
       {/* Título */}
       <PanelHeader
         title={
@@ -122,6 +122,7 @@ export default function AuditoriaClient({ role }: Props) {
         subtitle="Historial de operaciones y cambios de usuarios en la plataforma"
       />
 
+      <div className="flex flex-col gap-5 px-6 pt-5 pb-6">
       {/* Filtros */}
       <div
         style={{
@@ -246,6 +247,7 @@ export default function AuditoriaClient({ role }: Props) {
             </table>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

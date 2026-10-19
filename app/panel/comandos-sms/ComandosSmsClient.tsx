@@ -26,12 +26,15 @@ import {
   Sparkles,
   Info,
   Check,
+  BookOpen,
+  AlertTriangle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Vehiculo } from "@/app/interfaces/vehiculo.interface";
 import { Role } from "@/app/constants/roles";
 import AutoUnitWizard from "./AutoUnitWizard";
 import PanelHeader from "@/app/components/nav/PanelHeader";
+import { obtenerAyuda, type AyudaComando } from "./comandosAyuda";
 
 type GpsModel = "teltonika" | "tk" | "gt";
 type CommandCategory = "LECTURA" | "CONFIG" | "CRÍTICO";
@@ -48,6 +51,26 @@ interface CommandParam {
   defaultValue: string;
   quickOptions?: (string | QuickOption)[];
 }
+
+const IO_OPTIONS: QuickOption[] = [
+  { label: "1 · Entrada DIN1", value: "1" },
+  { label: "21 · Señal GSM", value: "21" },
+  { label: "66 · Voltaje del vehículo", value: "66" },
+  { label: "67 · Batería interna GPS", value: "67" },
+  { label: "179 · Relé de corte (DOUT1)", value: "179" },
+  { label: "180 · Salida DOUT2", value: "180" },
+  { label: "239 · Ignición", value: "239" },
+  { label: "240 · Movimiento", value: "240" },
+];
+
+const PARAM_OPTIONS: QuickOption[] = [
+  { label: "2001 · APN", value: "2001" },
+  { label: "2002 · Usuario APN", value: "2002" },
+  { label: "2003 · Clave APN", value: "2003" },
+  { label: "2004 · IP del servidor", value: "2004" },
+  { label: "2005 · Puerto", value: "2005" },
+  { label: "2006 · Protocolo", value: "2006" },
+];
 
 const SERVER_IP_OPTIONS: QuickOption[] = [
   { label: "Linux 1 (164.92.70.28)", value: "164.92.70.28" },
@@ -142,9 +165,15 @@ const TELTONIKA_COMMANDS: GpsCommand[] = [
     name: "readio",
     rawTemplate: "readio {id}",
     category: "LECTURA",
-    description: "Estado de una IO específica por su ID (ej. 1 = ignición, 21 = batería)",
+    description: "Estado de una IO específica: voltaje, batería interna, relé, ignición",
     params: [
-      { key: "id", label: "ID de Entrada/Salida (IO)", placeholder: "1", defaultValue: "1", quickOptions: ["1", "21", "66", "179"] },
+      {
+        key: "id",
+        label: "ID de Entrada/Salida (IO)",
+        placeholder: "1",
+        defaultValue: "66",
+        quickOptions: IO_OPTIONS,
+      },
     ],
   },
   {
@@ -154,7 +183,7 @@ const TELTONIKA_COMMANDS: GpsCommand[] = [
     category: "LECTURA",
     description: "Devuelve el valor de un parámetro del equipo por su ID",
     params: [
-      { key: "id", label: "ID del Parámetro", placeholder: "2001", defaultValue: "2001", quickOptions: ["2001", "2004", "2005", "2006"] },
+      { key: "id", label: "ID del Parámetro", placeholder: "2001", defaultValue: "2001", quickOptions: PARAM_OPTIONS },
     ],
   },
   {
@@ -640,6 +669,9 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
   });
   const [customMessage, setCustomMessage] = useState("");
   const [isCustomEdited, setIsCustomEdited] = useState(false);
+  // Guía del comando seleccionado (panel inferior derecho). Oculta por defecto:
+  // el usuario la despliega cuando quiere saber qué hace el comando.
+  const [mostrarAyuda, setMostrarAyuda] = useState(false);
 
   // Gateway & Execution state
   const [gatewayConfigured, setGatewayConfigured] = useState<boolean | null>(null);
@@ -971,6 +1003,9 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
       } else if (p.key === "ip" || p.key === "dominio") {
         const prev = paramValues[p.key];
         initialParams[p.key] = (prev === "165.227.9.191" || prev === "164.92.70.28") ? prev : p.defaultValue;
+      } else if (p.key === "id") {
+        // Cada comando tiene sus propios IDs: no se hereda el del comando anterior
+        initialParams[p.key] = p.defaultValue;
       } else {
         initialParams[p.key] = paramValues[p.key] || p.defaultValue;
       }
@@ -1076,6 +1111,12 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
     teltonikaPass,
     tkPass,
   ]);
+
+  // Guía del comando seleccionado. En readio/getparam cambia según el ID elegido.
+  const ayuda = useMemo(
+    () => obtenerAyuda(selectedCommand?.id, paramValues),
+    [selectedCommand, paramValues]
+  );
 
   const charCount = assembledMessage.length;
   const smsParts = charCount <= 160 ? 1 : Math.ceil(charCount / 153);
@@ -1194,7 +1235,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
 
   return (
     <div
-      className="flex flex-col gap-3 pb-6 text-[#F4F5F7]"
+      className="flex flex-col text-[#F4F5F7]"
       style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }}
     >
       {/* ------------------------------------------------------------- */}
@@ -1303,6 +1344,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
         }
       />
 
+      <div className="flex flex-col gap-3 px-6 pt-5 pb-6">
       {autoWizardMode ? (
         <AutoUnitWizard
           role={role}
@@ -2148,6 +2190,7 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           </div>
         )}
       </section>
+      </div>
 
       {/* ------------------------------------------------------------- */}
       {/* 4. MODAL DE CONFIGURACIÓN DE WEBHOOK RESPUESTAS                */}
@@ -2267,8 +2310,116 @@ export default function ComandosSmsClient({ role = "Servidor_125", actor }: Prop
           </div>
         </div>
       )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* 5. GUÍA DEL COMANDO SELECCIONADO (abajo a la izquierda)        */}
+      {/* ------------------------------------------------------------- */}
+      {selectedCommand && (ayuda.general || ayuda.especifica) && (
+        mostrarAyuda ? (
+          <aside className="fixed bottom-4 right-4 z-40 w-[400px] max-w-[calc(100vw-290px)] max-h-[64vh] overflow-y-auto velsat-scroll bg-[#181C24] border border-[#343B4A] rounded-[12px] shadow-[0_18px_50px_rgba(0,0,0,0.65)]">
+            <div className="sticky top-0 bg-[#1E2330] border-b border-[#343B4A] px-3.5 py-2.5 flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-[7px] bg-[#1A1210] border border-[#5A2A18] flex items-center justify-center text-[#F05A28] flex-shrink-0">
+                  <BookOpen size={14} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[12.5px] font-bold text-[#ECECEE] m-0 leading-tight">
+                    ¿Qué hace este comando?
+                  </p>
+                  <p className="text-[11px] font-mono text-[#F05A28] m-0 truncate leading-tight">
+                    {assembledMessage || selectedCommand.name}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setMostrarAyuda(false)}
+                title="Ocultar la guía"
+                className="text-[#76777C] hover:text-[#ECECEE] transition-colors cursor-pointer flex-shrink-0"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <div className="p-3.5 flex flex-col gap-3.5">
+              {ayuda.general && <BloqueAyuda ayuda={ayuda.general} />}
+              {ayuda.especifica && (
+                <div className="pt-3 border-t border-[#343B4A] flex flex-col gap-3.5">
+                  <BloqueAyuda ayuda={ayuda.especifica} destacado />
+                </div>
+              )}
+            </div>
+          </aside>
+        ) : (
+          <button
+            onClick={() => setMostrarAyuda(true)}
+            className="fixed bottom-4 right-4 z-40 flex items-center gap-2 px-3 py-2 rounded-[8px] bg-[#181C24] border border-[#343B4A] text-[12px] text-[#CFD3DC] hover:text-[#ECECEE] hover:border-[#4A5365] shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-colors cursor-pointer"
+          >
+            <Info size={14} className="text-[#F05A28]" />
+            ¿Qué hace <span className="font-mono text-[#ECECEE]">{selectedCommand.name}</span>?
+          </button>
+        )
+      )}
     </div>
   );
 }
 
 
+
+// ---------------------------------------------------------------------------
+// Bloque de la guía: para qué sirve, qué responde, ejemplo y cómo leerlo
+// ---------------------------------------------------------------------------
+function BloqueAyuda({ ayuda, destacado = false }: { ayuda: AyudaComando; destacado?: boolean }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div>
+        <p className={`text-[10px] font-bold uppercase tracking-wider m-0 mb-1 ${destacado ? "text-[#F05A28]" : "text-[#76777C]"}`}>
+          {destacado ? "Sobre la opción elegida" : "Para qué sirve"}
+        </p>
+        <p className="text-[12.5px] text-[#D4D8E0] m-0 leading-relaxed">{ayuda.paraQue}</p>
+      </div>
+
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[#8B93A3] m-0 mb-1">
+          Qué te va a responder
+        </p>
+        <p className="text-[12.5px] text-[#D4D8E0] m-0 leading-relaxed">{ayuda.queResponde}</p>
+      </div>
+
+      {ayuda.ejemplo && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8B93A3] m-0 mb-1">
+            Ejemplo de respuesta
+          </p>
+          <pre className="text-[11.5px] font-mono text-[#5EE89B] bg-[#10131A] border border-[#2B3140] rounded-[8px] p-2.5 m-0 whitespace-pre-wrap break-words leading-relaxed">
+            {ayuda.ejemplo}
+          </pre>
+        </div>
+      )}
+
+      {ayuda.lectura && ayuda.lectura.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8B93A3] m-0 mb-1.5">
+            Cómo leerlo
+          </p>
+          <div className="flex flex-col gap-1.5">
+            {ayuda.lectura.map((l) => (
+              <div key={l.campo} className="flex gap-2 items-start">
+                <span className="text-[11px] font-mono font-bold text-[#FF8A5B] bg-[#241A16] border border-[#5A2A18] rounded-[5px] px-1.5 py-0.5 flex-shrink-0">
+                  {l.campo}
+                </span>
+                <span className="text-[12px] text-[#AEB5C2] leading-snug pt-0.5">{l.significado}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {ayuda.ojo && (
+        <div className="flex gap-2 items-start p-2.5 rounded-[8px] bg-[#2A2116] border border-[#6B4A1E]">
+          <AlertTriangle size={14} className="text-[#F0A028] flex-shrink-0 mt-0.5" />
+          <p className="text-[12px] text-[#E3C9A8] m-0 leading-relaxed">{ayuda.ojo}</p>
+        </div>
+      )}
+    </div>
+  );
+}
