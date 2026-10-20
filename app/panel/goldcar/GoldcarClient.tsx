@@ -196,7 +196,7 @@ export default function GoldcarClient({ role, actor }: Props) {
         role={role}
       />
 
-      <div className="flex-1 min-h-0 p-6 overflow-y-auto velsat-scroll flex flex-col gap-6 [&>*]:shrink-0">
+      <div className="flex-1 min-h-0 p-6 overflow-hidden flex flex-col gap-6 [&>*]:shrink-0">
         {/* Formulario */}
         <div className="bg-[#161719] border border-[#26272B] rounded-[12px] p-5">
           <div className="flex flex-wrap items-end gap-4">
@@ -298,7 +298,7 @@ export default function GoldcarClient({ role, actor }: Props) {
                 Sin registros para esta consulta.
               </div>
             ) : (
-              <div className="overflow-x-auto velsat-scroll">
+              <div className="max-h-[40vh] overflow-auto velsat-scroll">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr style={{ background: "linear-gradient(90deg, #7A3A10 0%, #6A310D 100%)" }}>
@@ -352,7 +352,7 @@ export default function GoldcarClient({ role, actor }: Props) {
         )}
 
         {/* Unidades con Goldcar habilitado */}
-        <div className="bg-[#161719] border border-[#26272B] rounded-[12px] overflow-hidden">
+        <div className="bg-[#161719] border border-[#26272B] rounded-[12px] overflow-hidden flex flex-col flex-1 min-h-[260px] !shrink">
           <div className="px-5 py-3.5 border-b border-[#26272B] flex items-center justify-between">
             <span className="text-[#ECECEE] font-semibold text-[14px]">
               Unidades con Goldcar habilitado
@@ -399,7 +399,7 @@ export default function GoldcarClient({ role, actor }: Props) {
                 : "Ninguna unidad coincide con la búsqueda."}
             </div>
           ) : (
-            <div className="overflow-x-auto velsat-scroll">
+            <div className="flex-1 min-h-0 overflow-auto velsat-scroll">
               <table className="w-full border-collapse">
                 <thead>
                   <tr style={{ background: "linear-gradient(90deg, #7A3A10 0%, #6A310D 100%)" }}>
