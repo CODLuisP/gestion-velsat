@@ -101,7 +101,7 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
     },
     {
       href: "/panel/agregargpstraccar",
-      label: "+ Traccar",
+      label: "Traccar",
       icon: <Plus size={17} />,
     },
   ];
@@ -131,10 +131,10 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
   ];
 
   return (
-    <aside className="w-[240px] min-w-[240px] max-w-[240px] h-screen flex flex-col bg-[#18191C] border-r border-[#26272B] select-none flex-shrink-0 z-20">
+    <aside className="w-60 min-w-60 max-w-60 h-screen flex flex-col bg-[#18191C] border-r border-[#26272B] select-none shrink-0 z-20">
       {/* ---------- HEADER (68px) ---------- */}
-      <div className="h-[68px] min-h-[68px] px-4 flex items-center gap-3 border-b border-[#26272B] flex-shrink-0">
-        <div className="w-[34px] h-[34px] rounded-[8px] bg-[#F05A28] flex items-center justify-center text-white font-bold text-[17px] flex-shrink-0">
+      <div className="h-17 min-h-17 px-4 flex items-center gap-3 border-b border-[#26272B] shrink-0">
+        <div className="w-8.5 h-8.5 rounded-lg bg-[#F05A28] flex items-center justify-center text-white font-bold text-[17px] shrink-0">
           V
         </div>
         <div className="flex flex-col justify-center overflow-hidden">
@@ -210,9 +210,9 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
       </div>
 
       {/* ---------- FOOTER CON USUARIO Y SALIDA ---------- */}
-      <div className="h-[56px] min-h-[56px] px-3 border-t border-[#26272B] flex items-center justify-between bg-[#18191C] flex-shrink-0">
+      <div className="h-14 min-h-14 px-3 border-t border-[#26272B] flex items-center justify-between bg-[#18191C] shrink-0">
         <div className="flex items-center gap-2.5 overflow-hidden min-w-0">
-          <div className="w-[32px] h-[32px] rounded-[7px] bg-[#222327] border border-[#26272B] flex items-center justify-center text-[11px] font-bold text-[#CFCFD3] flex-shrink-0">
+          <div className="w-8 h-8 rounded-[7px] bg-[#222327] border border-[#26272B] flex items-center justify-center text-[11px] font-bold text-[#CFCFD3] shrink-0">
             AD
           </div>
           <div className="flex flex-col min-w-0 overflow-hidden">
@@ -228,7 +228,7 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
         <button
           onClick={handleLogout}
           title="Cerrar Sesión"
-          className="w-[32px] h-[32px] rounded-[7px] flex items-center justify-center text-[#76777C] hover:text-[#F05A28] hover:bg-[#212226] transition-colors flex-shrink-0 cursor-pointer"
+          className="w-8 h-8 rounded-[7px] flex items-center justify-center text-[#76777C] hover:text-[#F05A28] hover:bg-[#212226] transition-colors shrink-0 cursor-pointer"
         >
           <LogOut size={17} />
         </button>
@@ -251,14 +251,14 @@ function SidebarLink({
   return (
     <Link
       href={href}
-      className={`h-[36px] px-3 rounded-[8px] flex items-center gap-2.5 text-[13.5px] font-medium transition-all duration-150 ${
+      className={`h-9 px-3 rounded-lg flex items-center gap-2.5 text-[13.5px] font-medium transition-all duration-150 ${
         active
           ? "bg-[#1C1714] border border-[#8A3A1C] text-[#ECECEE]"
           : "border border-transparent text-[#9B9CA1] hover:bg-[#212226] hover:text-[#ECECEE]"
       }`}
     >
       <span
-        className={`flex-shrink-0 flex items-center transition-colors ${
+        className={`shrink-0 flex items-center transition-colors ${
           active ? "text-[#F05A28]" : "text-[#9B9CA1] group-hover:text-[#ECECEE]"
         }`}
       >

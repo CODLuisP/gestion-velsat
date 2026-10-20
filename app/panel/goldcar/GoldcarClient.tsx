@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { Search, Plus, Trash2 } from "lucide-react";
+import { Search, Plus, Trash2, X } from "lucide-react";
 import ButtonBase from "@/app/components/ui/ButtonBase";
 import InputBase1 from "@/app/components/ui/InputBase1";
 import { Role } from "@/app/constants/roles";
@@ -91,6 +91,7 @@ export default function GoldcarClient({ role, actor }: Props) {
   const motivoValido = (m: string) => m.trim().length >= 6;
 
   const [unidades, setUnidades] = useState<DeviceGoldcar[]>([]);
+  const [busqueda, setBusqueda] = useState("");
   const [loadingUnidades, setLoadingUnidades] = useState(false);
   const [agregarLoading, setAgregarLoading] = useState(false);
   const [quitarLoading, setQuitarLoading] = useState<string | null>(null);
@@ -173,6 +174,15 @@ export default function GoldcarClient({ role, actor }: Props) {
     }
   }
 
+  const termino = busqueda.trim().toLowerCase();
+  const unidadesFiltradas = termino
+    ? unidades.filter(
+        (u) =>
+          u.accountID.toLowerCase().includes(termino) ||
+          u.deviceID.toLowerCase().includes(termino)
+      )
+    : unidades;
+
   return (
     <div className="flex flex-col h-full min-h-0 bg-[#121214]">
       {/* Header */}
@@ -186,7 +196,7 @@ export default function GoldcarClient({ role, actor }: Props) {
         role={role}
       />
 
-      <div className="flex-1 min-h-0 p-6 overflow-y-auto velsat-scroll flex flex-col gap-6">
+      <div className="flex-1 min-h-0 p-6 overflow-y-auto velsat-scroll flex flex-col gap-6 [&>*]:shrink-0">
         {/* Formulario */}
         <div className="bg-[#161719] border border-[#26272B] rounded-[12px] p-5">
           <div className="flex flex-wrap items-end gap-4">
@@ -348,17 +358,45 @@ export default function GoldcarClient({ role, actor }: Props) {
               Unidades con Goldcar habilitado
             </span>
             <span className="text-xs text-[#9B9CA1] font-mono bg-[#1D1E21] px-2.5 py-1 rounded-[6px] border border-[#26272B]">
-              {loadingUnidades ? "..." : `${unidades.length} ${unidades.length === 1 ? "unidad" : "unidades"}`}
+              {loadingUnidades ? "..." : `${unidadesFiltradas.length} ${unidadesFiltradas.length === 1 ? "unidad" : "unidades"}`}
             </span>
+          </div>
+
+          <div className="px-5 py-3 border-b border-[#26272B] bg-[#1D1E21]">
+            <div className="relative">
+              <Search
+                size={15}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#F05A28] pointer-events-none"
+              />
+              <input
+                type="text"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Buscar en la lista por cuenta o dispositivo..."
+                className="w-full h-10 pl-10 pr-10 rounded-full bg-[#121214] border border-[#F05A28]/40 text-[13px] text-[#ECECEE] placeholder:text-[#9B9CA1] outline-none focus:border-[#F05A28] transition-colors"
+              />
+              {busqueda && (
+                <button
+                  type="button"
+                  onClick={() => setBusqueda("")}
+                  aria-label="Limpiar búsqueda"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9B9CA1] hover:text-[#ECECEE]"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
           </div>
 
           {loadingUnidades ? (
             <div className="p-8 text-center text-[#9B9CA1] text-xs">
               Cargando...
             </div>
-          ) : unidades.length === 0 ? (
+          ) : unidadesFiltradas.length === 0 ? (
             <div className="p-8 text-center text-[#9B9CA1] text-xs">
-              No hay unidades con Goldcar habilitado.
+              {unidades.length === 0
+                ? "No hay unidades con Goldcar habilitado."
+                : "Ninguna unidad coincide con la búsqueda."}
             </div>
           ) : (
             <div className="overflow-x-auto velsat-scroll">
@@ -371,7 +409,7 @@ export default function GoldcarClient({ role, actor }: Props) {
                   </tr>
                 </thead>
                 <tbody>
-                  {unidades.map((u) => {
+                  {unidadesFiltradas.map((u) => {
                     const key = `${u.accountID}|${u.deviceID}`;
                     const removing = quitarLoading === key;
                     return (
