@@ -18,6 +18,7 @@ import {
   Radar,
   MessageSquare,
   DatabaseBackup,
+  Shuffle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Role } from "@/app/constants/roles";
@@ -64,6 +65,12 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
       href: "/panel/subUsuarios",
       label: "Sub usuarios",
       icon: <Users size={17} />,
+    },
+    {
+      href: "/panel/redir-usuarios",
+      label: "Redir. Usuarios",
+      icon: <Shuffle size={17} />,
+      visible: isAdmin && (role === "Servidor_125" || role === "Servidor_125_2"),
     },
     {
       href: "/panel/unidades",
@@ -156,7 +163,7 @@ export default function Sidebar({ isAdmin = false, role }: Props) {
             GENERAL
           </div>
           <div className="flex flex-col gap-1">
-            {generalGroup.map((item) => (
+            {generalGroup.filter((i) => i.visible !== false).map((item) => (
               <SidebarLink
                 key={item.href}
                 href={item.href}
